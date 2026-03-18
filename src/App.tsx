@@ -10,8 +10,7 @@ import { ReportSheet } from "./components/product-detail/ReportSheet";
 import { useReportSheet } from "./hooks/useReportSheet";
 import { verifyCredentials, isSuperAdminUser } from "./data/mockCredentials";
 import { storeSuperAdminSession } from "./dev/mockAuth";
-
-// Core Components - Load immediately (used on every view)
+import { AppStandaloneRenderer } from "./AppStandaloneRenderer";
 import { BottomNav } from "./components/bottom-nav";
 import { Header } from "./components/header";
 import { SearchBar } from "./components/search-bar";
@@ -29,7 +28,6 @@ const SignUpPage = lazy(() => import("./components/SignUpPage"));
 const BillingPage = lazy(() => import("./components/BillingPage"));
 const StatisticsPage = lazy(() => import("./components/StatisticsPage"));
 const ActionCenterPage = lazy(() => import("./components/ActionCenterPage"));
-const MessagesPage = lazy(() => import("./components/MessagesPage"));
 const ChatConversationPage = lazy(() => import("./components/ChatConversationPage"));
 const MyListingsPage = lazy(() => import("./components/MyListingsPage"));
 const ProductDetailPage = lazy(() => import("./components/ProductDetailPage"));
@@ -59,10 +57,8 @@ const EventHubDetailPage = lazy(() => import("./components/menu/EventHubDetailPa
 import { DevTools } from "./components/testing/DevTools";
 
 // Profile Modular System - Lazy load all pages
-const ProfileRouter = lazy(() => import("./components/profile/ProfileRouter"));
 
 // Settings Modular System - Lazy load
-const SettingsRouter = lazy(() => import("./components/settings/SettingsRouter"));
 
 // Help & Support - Standalone page (not in Settings)
 const HelpSupportPage = lazy(() => import("./components/settings/HelpSupportPage"));
@@ -86,6 +82,9 @@ import { useAppFilters } from "./hooks/useAppFilters";
 import { useFilterSheet } from "./components/filter-sheet";
 import { useVisibleProducts } from "./hooks/useVisibleProducts";
 import { useCurrentUser } from "./hooks/useCurrentUser"; // NEW: Centralized user state
+import { useListings } from "./hooks/useListings";
+import { useListingById } from "./hooks/useListingById";
+import { useSuperAdminSession } from "./hooks/useSuperAdminSession";
 
 // Utils & Data
 import { shareContent } from "./utils/helpers";
@@ -166,7 +165,7 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && e.altKey && e.key === 'A') {
         // Check if already logged in as superadmin
-        const session = getSuperAdminSession();
+        const session = getSession();
         startTransition(() => {
           if (session) {
             state.setCurrentView('superadmin-v2');
@@ -185,7 +184,7 @@ export default function App() {
   // SuperAdmin session guard: Redirect to login if accessing dashboard without session
   useEffect(() => {
     if (state.currentView === 'superadmin-v2') {
-      const session = getSuperAdminSession();
+      const session = getSession();
       if (!session) {
         startTransition(() => {
           state.setCurrentView('admin-login');
@@ -196,8 +195,12 @@ export default function App() {
   }, [state.currentView]);
 
   // Apply visibility filtering - CANONICAL NATIVE
+  const listings = useListings();
+  const getListingById = useListingById();
+  const { getSession, clearSession } = useSuperAdminSession();
+  
   const { visibleListings } = useVisibleProducts({
-    listings: canonicalListings,
+    listings: listings,
     currentUser: currentUser,
   });
 
@@ -248,7 +251,7 @@ export default function App() {
   // Handlers
   const handleProductClick = (productId: string) => {
     // ✅ CANONICAL: Find and use canonical listing directly
-    const listing = canonicalListings.find((l) => l.id === productId);
+    const listing = getListingById(productId);
     if (!listing) return;
     
     startTransition(() => {
@@ -319,7 +322,15 @@ export default function App() {
           <GlobalActionModalProvider>
             {/* Toaster for notifications */}
             <Toaster position="top-center" richColors />
-            {state.currentView === "publish" ? (
+            {["profile", "settings", "messages"].includes(state.currentView) ? (
+              <Suspense fallback={<LoadingFallback />}>
+                <AppStandaloneRenderer
+                  currentView={state.currentView as "profile" | "settings" | "messages"}
+                  onNavigateToHome={navigation.navigateToHome}
+                  onNavigateToChat={navigation.navigateToChat}
+                />
+              </Suspense>
+            ) : state.currentView === "publish" ? (
               <Suspense fallback={<LoadingFallback />}>
                 <PublishFlow 
                   currentUser={mockCurrentUser}
@@ -497,9 +508,9 @@ export default function App() {
             ) : state.currentView === "superadmin-v2" ? (
               <Suspense fallback={<LoadingFallback />}>
                 <SuperAdminDashboard
-                  userName={getSuperAdminSession()?.name}
+                  userName={getSession()?.name}
                   onLogout={() => {
-                    clearSuperAdminSession();
+                    clearSession();
                     state.setIsAuthenticated(false);
                     clearUser();
                     toast.success('Logged out successfully');
@@ -508,18 +519,6 @@ export default function App() {
                   onBackToApp={() => {
                     state.setCurrentView('home');
                   }}
-                />
-              </Suspense>
-            ) : state.currentView === "profile" ? (
-              <Suspense fallback={<LoadingFallback />}>
-                <ProfileRouter
-                  onBack={() => navigation.navigateToHome()}
-                />
-              </Suspense>
-            ) : state.currentView === "settings" ? (
-              <Suspense fallback={<LoadingFallback />}>
-                <SettingsRouter
-                  onClose={() => navigation.navigateToHome()}
                 />
               </Suspense>
             ) : state.currentView === "help-support" ? (
@@ -686,13 +685,6 @@ export default function App() {
                     state.setSelectedReportId(reportId);
                     state.setCurrentView("report-detail");
                   }}
-                />
-              </Suspense>
-            ) : state.currentView === "messages" ? (
-              <Suspense fallback={<LoadingFallback />}>
-                <MessagesPage
-                  onBack={() => navigation.navigateToHome()}
-                  onChatClick={(chatId) => navigation.navigateToChat(chatId)}
                 />
               </Suspense>
             ) : state.currentView === "chat-conversation" ? (

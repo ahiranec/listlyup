@@ -333,8 +333,10 @@ export function MenuSheet({
                 <div className="space-y-2">
                   <MenuItem icon={Settings} label="Settings" onClick={() => handleItemClick(onSettingsClick)} />
                   <MenuItem icon={User} label="My Profile" onClick={() => handleItemClick(onProfileClick)} />
+                  {/* OUT OF MVP
                   <MenuItem icon={Building2} label="Organization" onClick={() => handleItemClick(onOrganizationClick)} />
                   <MenuItem icon={CreditCard} label="Subscription & Billing" onClick={() => handleItemClick(onSubscriptionClick)} />
+                  */}
                   <MenuItem icon={BarChart3} label="My Statistics" onClick={() => handleItemClick(onStatisticsClick)} />
                 </div>
 
@@ -348,8 +350,10 @@ export function MenuSheet({
                     badgeVariant="secondary"
                     onClick={() => handleItemClick(onFavoritesClick)} 
                   />
+                  {/* OUT OF MVP
                   <MenuItem icon={MessageSquare} label="Messages" onClick={() => handleItemClick(onMessagesClick)} />
                   <MenuItem icon={Bell} label="Notifications" onClick={() => handleItemClick(onNotificationsClick)} />
+                  */}
                 </div>
 
                 <div className="h-2" />
@@ -358,8 +362,10 @@ export function MenuSheet({
                   <MenuItem icon={Package} label="My Listings" onClick={() => handleItemClick(onMyListingsClick)} />
                   <MenuItem icon={Users} label="My Groups" onClick={() => handleItemClick(onMyGroupsClick)} />
                   <MenuItem icon={MapPin} label="My Trail" onClick={() => handleItemClick(onMyTrailClick)} />
+                  {/* OUT OF MVP
                   <MenuItem icon={Megaphone} label="Campaigns" onClick={() => handleItemClick(onCampaignsClick)} />
                   <MenuItem icon={Calendar} label="Events" onClick={() => handleItemClick(onEventsClick)} />
+                  */}
                 </div>
 
                 <div className="h-2" />
