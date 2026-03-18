@@ -1,39 +1,135 @@
-/**
- * ListingsRepo — Pre-Supabase Repository Layer
- *
- * SOURCE OF TRUTH: canonicalListings (src/data/products.ts)
- * This is the ONLY mock source consumed by this repository.
- *
- * INTENTIONALLY IGNORED legacy mock sources:
- * - mockProducts (legacy Product[] format, raw — not canonical)
- * - mockUserListings (My Listings view, write-path mocks, plan-specific variants)
- * - trailListings (Trail view, out-of-scope read surface)
- * - actionItems (Action Center, out-of-MVP for data layer)
- * - mockListingForEdit (draft/edit flow mocks, write-path)
- *
- * When Supabase is connected:
- * → Replace the body of getAllListings and getListingById
- * → Keep the same return types (CanonicalListing)
- * → No hook changes required
- */
-
 import { canonicalListings } from "../products";
 import type { CanonicalListing } from "../../types/canonical";
+import type {
+  ListingType,
+  OfferMode,
+  VisibilityMode,
+  ContactMethod,
+  AccessMode,
+  ListingStatus,
+  EventDurationType,
+  PricingModel,
+  ProductCondition,
+} from "../../types/canonical";
+import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient";
+
+// ---------------------------------------------------------------------------
+// Mapper REAL Supabase → CanonicalListing
+// ---------------------------------------------------------------------------
+function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
+  return {
+    id: row.id as string,
+
+    // 🔥 FIX CLAVE
+    owner_user_id: row.user_id as string,
+
+    listing_type: row.listing_type as ListingType,
+    offer_mode: row.offer_mode as OfferMode,
+
+    title: row.title as string,
+    description: row.description as string,
+
+    category: row.category as string,
+    subcategory: row.subcategory as string | undefined ?? undefined,
+    tags: (row.tags as string[]) ?? [],
+
+    primary_image_url: row.primary_image_url as string,
+
+    // 🔥 precio real
+    price_amount: row.price_amount != null
+      ? Number(row.price_amount)
+      : undefined,
+
+    price_currency: row.price_currency as string | undefined ?? undefined,
+
+    condition: row.condition as ProductCondition | undefined ?? undefined,
+    pricing_model: row.pricing_model as PricingModel | undefined ?? undefined,
+
+    // 🔥 FIX CLAVE
+    listing_location_id: row.location_id as string,
+
+    visibility_mode: row.visibility_mode as VisibilityMode,
+
+    contact_methods: (row.contact_methods as ContactMethod[]) ?? [],
+    contact_whatsapp_phone: row.contact_whatsapp_phone as string | undefined ?? undefined,
+    contact_website_url: row.contact_website_url as string | undefined ?? undefined,
+    contact_social_url: row.contact_social_url as string | undefined ?? undefined,
+
+    access_mode: (row.access_mode as AccessMode[]) ?? [],
+
+    start_date: row.start_date as string | undefined ?? undefined,
+    end_date: row.end_date as string | undefined ?? undefined,
+    event_time_text: row.event_time_text as string | undefined ?? undefined,
+    event_duration_type: row.event_duration_type as EventDurationType | undefined ?? undefined,
+
+    business_hours: row.business_hours as string | undefined ?? undefined,
+
+    status: row.status as ListingStatus,
+
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+
+    // opcional pero ya lo tienes en BD
+    ticket_type: row.ticket_type as string | undefined ?? undefined,
+  };
+}
 
 export const listingsRepo = {
-  /**
-   * Returns all MVP-safe canonical listings.
-   * Filtering/pagination will be applied here when Supabase is integrated.
-   */
+  // -------------------------------------------------------------------------
+  // SYNC (mock actual)
+  // -------------------------------------------------------------------------
   getAllListings(): CanonicalListing[] {
     return canonicalListings;
   },
 
-  /**
-   * Returns a single listing by ID, or undefined if not found.
-   * Will become a Supabase .eq('id', id).single() call.
-   */
   getListingById(id: string): CanonicalListing | undefined {
     return canonicalListings.find((l) => l.id === id);
+  },
+
+  // -------------------------------------------------------------------------
+  // ASYNC (Supabase)
+  // -------------------------------------------------------------------------
+  async fetchAllListings(): Promise<CanonicalListing[]> {
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn("[listingsRepo] Supabase not configured — fetchAllListings returning empty.");
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("[listingsRepo] fetchAllListings error:", error.message);
+      return [];
+    }
+
+    return (data ?? []).map((row) =>
+      rowToCanonical(row as Record<string, unknown>)
+    );
+  },
+
+  async fetchListingById(id: string): Promise<CanonicalListing | undefined> {
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn("[listingsRepo] Supabase not configured — fetchListingById returning undefined.");
+      return undefined;
+    }
+
+    const { data, error } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("[listingsRepo] fetchListingById error:", error.message);
+      return undefined;
+    }
+
+    return data
+      ? rowToCanonical(data as Record<string, unknown>)
+      : undefined;
   },
 };
