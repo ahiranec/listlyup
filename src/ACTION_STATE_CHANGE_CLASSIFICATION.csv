@@ -1,0 +1,329 @@
+ActionId,Action_Label,Requires_State_Change,Primary_Domain,Target_Entity,State_Change_Type
+action-001,Sign In,TRUE,AUTH,user,TRANSITION
+action-002,(Show/Hide Password),FALSE,SYSTEM,none,NONE
+action-003,Forgot password?,FALSE,AUTH,none,NONE
+action-004,Sign in with Google,TRUE,AUTH,user,TRANSITION
+action-005,Sign in with Apple,TRUE,AUTH,user,TRANSITION
+action-006,Sign in with Facebook,TRUE,AUTH,user,TRANSITION
+action-007,Sign Up,FALSE,AUTH,none,NONE
+action-008,(Back from Sign In),FALSE,SYSTEM,none,NONE
+action-009,Create Account,TRUE,AUTH,user,CREATE
+action-010,Sign Out,TRUE,AUTH,user,TRANSITION
+action-011,(Scroll down),FALSE,SYSTEM,none,NONE
+action-012,(Search input),FALSE,LISTING,none,NONE
+action-013,(Clear search),FALSE,LISTING,none,NONE
+action-014,Advanced Filters,FALSE,LISTING,none,NONE
+action-015,Toggle Map View,FALSE,SYSTEM,none,NONE
+action-016,(Click product card),FALSE,LISTING,none,NONE
+action-017,(Like button on card),TRUE,LISTING,listing,UPDATE
+action-018,(Quick actions on card),FALSE,LISTING,none,NONE
+action-019,Apply Filters,FALSE,LISTING,none,NONE
+action-020,Clear All Filters,FALSE,LISTING,none,NONE
+action-021,(Close filter sheet),FALSE,SYSTEM,none,NONE
+action-022,(Select filter option),FALSE,LISTING,none,NONE
+action-023,(Expand filter section),FALSE,SYSTEM,none,NONE
+action-024,Load More,FALSE,LISTING,none,NONE
+action-025,(Back to List View),FALSE,SYSTEM,none,NONE
+action-026,Zoom In,FALSE,SYSTEM,none,NONE
+action-027,Zoom Out,FALSE,SYSTEM,none,NONE
+action-028,(Click map pin),FALSE,LISTING,none,NONE
+action-029,(Click pin card),FALSE,LISTING,none,NONE
+action-030,(Pan/Drag map),FALSE,SYSTEM,none,NONE
+action-031,(Close pin card),FALSE,SYSTEM,none,NONE
+action-032,(Back),FALSE,SYSTEM,none,NONE
+action-033,Save,TRUE,LISTING,listing,UPDATE
+action-034,Share,FALSE,LISTING,none,NONE
+action-035,Report,TRUE,LISTING,listing,CREATE
+action-036,Message Seller,FALSE,MESSAGE,none,NONE
+action-037,WhatsApp,FALSE,MESSAGE,none,NONE
+action-038,Call,FALSE,MESSAGE,none,NONE
+action-039,Make Offer,FALSE,LISTING,none,NONE
+action-040,Ask Question,FALSE,MESSAGE,none,NONE
+action-041,View Profile,FALSE,PROFILE,none,NONE
+action-042,(Sort Q&A: Recent),FALSE,LISTING,none,NONE
+action-043,(Sort Q&A: Helpful),FALSE,LISTING,none,NONE
+action-044,(Expand description),FALSE,SYSTEM,none,NONE
+action-045,(Navigate carousel),FALSE,SYSTEM,none,NONE
+action-046,(Open location modal),FALSE,LISTING,none,NONE
+action-047,Edit,FALSE,LISTING,none,NONE
+action-048,Pause,FALSE,LISTING,none,NONE
+action-049,View Stats,FALSE,LISTING,none,NONE
+action-050,Duplicate,FALSE,LISTING,none,NONE
+action-051,Mark as Sold,FALSE,LISTING,none,NONE
+action-052,Delete,FALSE,LISTING,none,NONE
+action-053,Reply (Owner Messages),FALSE,MESSAGE,none,NONE
+action-054,Answer (Q&A),FALSE,MESSAGE,none,NONE
+action-055,Edit Answer,FALSE,MESSAGE,none,NONE
+action-056,New Listing,FALSE,LISTING,none,NONE
+action-057,(Filter tab: All),FALSE,LISTING,none,NONE
+action-058,(Filter tab: Messages),FALSE,LISTING,none,NONE
+action-059,(Filter tab: Reported),FALSE,LISTING,none,NONE
+action-060,(Filter tab: Expiring),FALSE,LISTING,none,NONE
+action-061,(Click listing card),FALSE,LISTING,none,NONE
+action-062,(Select for bulk),FALSE,LISTING,none,NONE
+action-063,Select All,FALSE,LISTING,none,NONE
+action-064,Edit (Menu),FALSE,LISTING,none,NONE
+action-065,Share (Menu),FALSE,LISTING,none,NONE
+action-066,Duplicate (Menu),FALSE,LISTING,none,NONE
+action-067,Pause (Menu),FALSE,LISTING,none,NONE
+action-068,Renew (Menu),FALSE,LISTING,none,NONE
+action-069,Mark as Sold (Menu),FALSE,LISTING,none,NONE
+action-070,Delete (Menu),FALSE,LISTING,none,NONE
+action-071,Open Chat (Messages Tab),FALSE,MESSAGE,none,NONE
+action-072,Respond (Messages Tab),FALSE,MESSAGE,none,NONE
+action-073,Review Report (Reported Tab),FALSE,LISTING,none,NONE
+action-074,Bulk Edit,TRUE,LISTING,listing,UPDATE
+action-075,Bulk Delete,TRUE,LISTING,listing,DELETE
+action-076,Bulk Pause,TRUE,LISTING,listing,TRANSITION
+action-077,(Back),FALSE,SYSTEM,none,NONE
+action-078,Settings,FALSE,SYSTEM,none,NONE
+action-079,Notifications,FALSE,SYSTEM,none,NONE
+action-080,(Tab: Personal),FALSE,SYSTEM,none,NONE
+action-081,(Tab: Campaigns),FALSE,SYSTEM,none,NONE
+action-082,(Tab: Events),FALSE,SYSTEM,none,NONE
+action-083,(Tab: Groups),FALSE,SYSTEM,none,NONE
+action-084,(Tab: Admin),FALSE,SYSTEM,none,NONE
+action-085,Reply (Message),FALSE,MESSAGE,none,NONE
+action-086,Answer (Question),FALSE,MESSAGE,none,NONE
+action-087,Accept (Trade),TRUE,LISTING,listing,TRANSITION
+action-088,Counter (Trade),FALSE,LISTING,none,NONE
+action-089,Decline (Trade),TRUE,LISTING,listing,TRANSITION
+action-090,Continue (Draft),FALSE,LISTING,none,NONE
+action-091,Renew (Expiring),TRUE,LISTING,listing,TRANSITION
+action-092,Edit First (Expiring),FALSE,LISTING,none,NONE
+action-093,Resume (Paused),TRUE,LISTING,listing,TRANSITION
+action-094,View Status (Pending),FALSE,LISTING,none,NONE
+action-095,Edit & Resubmit (Rejected),FALSE,LISTING,none,NONE
+action-096,Details (Rejected),FALSE,LISTING,none,NONE
+action-097,Delete (Listing Action),TRUE,LISTING,listing,DELETE
+action-098,Approve (Campaign Request),TRUE,CAMPAIGN,campaign,TRANSITION
+action-099,Reject (Campaign Request),TRUE,CAMPAIGN,campaign,TRANSITION
+action-100,View Details (Campaign),FALSE,CAMPAIGN,none,NONE
+action-101,Approve (Event Request),TRUE,EVENT,event,TRANSITION
+action-102,Reject (Event Request),TRUE,EVENT,event,TRANSITION
+action-103,View Details (Event),FALSE,EVENT,none,NONE
+action-104,Approve (Join Request),TRUE,GROUP,group,TRANSITION
+action-105,Decline (Join Request),TRUE,GROUP,group,TRANSITION
+action-106,Review (Report),FALSE,LISTING,none,NONE
+action-107,Take Action (Report),TRUE,LISTING,listing,TRANSITION
+action-108,Dismiss (Report),TRUE,LISTING,listing,TRANSITION
+action-109,Review (Platform Report),FALSE,LISTING,none,NONE
+action-110,Take Action (Platform Report),TRUE,LISTING,listing,TRANSITION
+action-111,Dismiss (Platform Report),TRUE,LISTING,listing,TRANSITION
+action-112,Review Listing (Flagged),FALSE,LISTING,none,NONE
+action-113,Approve (Flagged),TRUE,LISTING,listing,TRANSITION
+action-114,Remove (Flagged),TRUE,LISTING,listing,DELETE
+action-115,Review Issue (User),FALSE,PROFILE,none,NONE
+action-116,Contact User (Admin),FALSE,MESSAGE,none,NONE
+action-117,Close (Flow),FALSE,SYSTEM,none,NONE
+action-118,(Select listing type),FALSE,LISTING,none,NONE
+action-119,(Upload images),TRUE,LISTING,listing,UPDATE
+action-120,(Remove image),TRUE,LISTING,listing,UPDATE
+action-121,(Reorder images),TRUE,LISTING,listing,UPDATE
+action-122,Next (Media → Basic Info),FALSE,SYSTEM,none,NONE
+action-123,Save Draft (Media),TRUE,LISTING,listing,CREATE
+action-124,Back (Basic Info → Media),FALSE,SYSTEM,none,NONE
+action-125,Next (Basic Info → Location),FALSE,SYSTEM,none,NONE
+action-126,(Input title/description),FALSE,LISTING,none,NONE
+action-127,(Select category),FALSE,LISTING,none,NONE
+action-128,(Select condition),FALSE,LISTING,none,NONE
+action-129,Back (Location → Basic Info),FALSE,SYSTEM,none,NONE
+action-130,Next (Location → Pricing),FALSE,SYSTEM,none,NONE
+action-131,(Input location),FALSE,LISTING,none,NONE
+action-132,(Select location precision),FALSE,LISTING,none,NONE
+action-133,Back (Pricing → Location),FALSE,SYSTEM,none,NONE
+action-134,Next (Pricing → Preview),FALSE,SYSTEM,none,NONE
+action-135,(Input price),FALSE,LISTING,none,NONE
+action-136,(Select offer mode),FALSE,LISTING,none,NONE
+action-137,(Select delivery options),FALSE,LISTING,none,NONE
+action-138,(Select visibility/groups),FALSE,LISTING,none,NONE
+action-139,Back (Preview → Pricing),FALSE,SYSTEM,none,NONE
+action-140,Publish Now,TRUE,LISTING,listing,CREATE
+action-141,Save Changes,TRUE,LISTING,listing,UPDATE
+action-142,Save as Draft,TRUE,LISTING,listing,CREATE
+action-143,Edit (step name),FALSE,SYSTEM,none,NONE
+action-144,(Back from Groups),FALSE,SYSTEM,none,NONE
+action-145,Explore Groups,FALSE,GROUP,none,NONE
+action-146,Create Group,TRUE,GROUP,group,CREATE
+action-147,(Filter groups),FALSE,GROUP,none,NONE
+action-148,(Select group card),FALSE,GROUP,none,NONE
+action-149,Share (Group),FALSE,GROUP,none,NONE
+action-150,Mute (Group),TRUE,GROUP,group,UPDATE
+action-151,Leave (Group),TRUE,GROUP,group,DELETE
+action-152,(Tab: All),FALSE,SYSTEM,none,NONE
+action-153,(Tab: Admin),FALSE,SYSTEM,none,NONE
+action-154,(Tab: Member),FALSE,SYSTEM,none,NONE
+action-155,(Back from Group Detail),FALSE,SYSTEM,none,NONE
+action-156,Join Group,TRUE,GROUP,group,CREATE
+action-157,Request to Join,TRUE,GROUP,group,CREATE
+action-158,Request Invitation,TRUE,GROUP,group,CREATE
+action-159,Cancel Request,TRUE,GROUP,group,DELETE
+action-160,Share (Group Detail),FALSE,GROUP,none,NONE
+action-161,Report Group,TRUE,GROUP,group,CREATE
+action-162,Leave Group (Member),TRUE,GROUP,group,DELETE
+action-163,Invite Members,FALSE,GROUP,none,NONE
+action-164,Mute Notifications (Member),TRUE,GROUP,group,UPDATE
+action-165,Publish to Group,FALSE,LISTING,none,NONE
+action-166,(Tab: About),FALSE,SYSTEM,none,NONE
+action-167,(Tab: Products),FALSE,SYSTEM,none,NONE
+action-168,(Tab: Members),FALSE,SYSTEM,none,NONE
+action-169,(Tab: Pending),FALSE,SYSTEM,none,NONE
+action-170,(Tab: Settings),FALSE,SYSTEM,none,NONE
+action-171,Message (Member),FALSE,MESSAGE,none,NONE
+action-172,Report Member,TRUE,GROUP,group,CREATE
+action-173,Change Role,TRUE,GROUP,group,UPDATE
+action-174,Remove Member,TRUE,GROUP,group,DELETE
+action-175,Hide Listing (Mod),TRUE,LISTING,listing,TRANSITION
+action-176,Remove Listing (Mod),TRUE,LISTING,listing,DELETE
+action-177,Approve (Pending Member),TRUE,GROUP,group,TRANSITION
+action-178,Decline (Pending Member),TRUE,GROUP,group,TRANSITION
+action-179,Approve (Pending Listing),TRUE,LISTING,listing,TRANSITION
+action-180,Reject (Pending Listing),TRUE,LISTING,listing,TRANSITION
+action-181,(Edit group settings),FALSE,GROUP,none,NONE
+action-182,Save Settings,TRUE,GROUP,group,UPDATE
+action-183,(Back from Notifications),FALSE,SYSTEM,none,NONE
+action-184,Filter Notifications,FALSE,SYSTEM,none,NONE
+action-185,Mark All as Read,TRUE,MESSAGE,message,UPDATE
+action-186,(Expand section),FALSE,SYSTEM,none,NONE
+action-187,Mark Section as Read,TRUE,MESSAGE,message,UPDATE
+action-188,Clear Section,TRUE,MESSAGE,message,DELETE
+action-189,(Click notification card),FALSE,SYSTEM,none,NONE
+action-190,Accept (Trade Offer Notif),TRUE,LISTING,listing,TRANSITION
+action-191,Decline (Trade Offer Notif),TRUE,LISTING,listing,TRANSITION
+action-192,Reply (Message Notif),FALSE,MESSAGE,none,NONE
+action-193,Answer (Question Notif),FALSE,MESSAGE,none,NONE
+action-194,Accept (Group Invite Notif),TRUE,GROUP,group,TRANSITION
+action-195,Decline (Group Invite Notif),TRUE,GROUP,group,TRANSITION
+action-196,Renew (Expiring Notif),TRUE,LISTING,listing,TRANSITION
+action-197,View (Report Status Notif),FALSE,LISTING,none,NONE
+action-198,(Apply notification filters),FALSE,SYSTEM,none,NONE
+action-199,(Clear notification filters),FALSE,SYSTEM,none,NONE
+action-200,(Navigate to Campaigns),FALSE,SYSTEM,none,NONE
+action-201,Create Campaign,TRUE,CAMPAIGN,campaign,CREATE
+action-202,(Click campaign card),FALSE,CAMPAIGN,none,NONE
+action-203,Edit Campaign,TRUE,CAMPAIGN,campaign,UPDATE
+action-204,Pause Campaign,TRUE,CAMPAIGN,campaign,TRANSITION
+action-205,Share Campaign,FALSE,CAMPAIGN,none,NONE
+action-206,Delete Campaign,TRUE,CAMPAIGN,campaign,DELETE
+action-207,Apply to Campaign,TRUE,CAMPAIGN,campaign,CREATE
+action-208,(Back from Campaign Detail),FALSE,SYSTEM,none,NONE
+action-209,(Navigate to Events),FALSE,SYSTEM,none,NONE
+action-210,Create Event Hub,TRUE,EVENT,event,CREATE
+action-211,(Click event hub card),FALSE,EVENT,none,NONE
+action-212,Edit Event Hub,TRUE,EVENT,event,UPDATE
+action-213,Pause Event Hub,TRUE,EVENT,event,TRANSITION
+action-214,Share Event Hub,FALSE,EVENT,none,NONE
+action-215,Delete Event Hub,TRUE,EVENT,event,DELETE
+action-216,Apply to Event Hub,TRUE,EVENT,event,CREATE
+action-217,(Back from Event Hub Detail),FALSE,SYSTEM,none,NONE
+action-218,(Navigate to Profile),FALSE,SYSTEM,none,NONE
+action-219,Edit Personal Info,FALSE,PROFILE,none,NONE
+action-220,Edit Publishing Defaults,FALSE,PROFILE,none,NONE
+action-221,Manage Addresses,FALSE,PROFILE,none,NONE
+action-222,Manage Organizations,FALSE,PROFILE,none,NONE
+action-223,Verify Account,FALSE,PROFILE,none,NONE
+action-224,(Save personal info),TRUE,PROFILE,user,UPDATE
+action-225,(Save publishing defaults),TRUE,PROFILE,user,UPDATE
+action-226,Add Address,TRUE,PROFILE,user,CREATE
+action-227,Edit Address,TRUE,PROFILE,user,UPDATE
+action-228,Delete Address,TRUE,PROFILE,user,DELETE
+action-229,Add Organization,TRUE,PROFILE,user,CREATE
+action-230,Edit Organization,TRUE,PROFILE,user,UPDATE
+action-231,Delete Organization,TRUE,PROFILE,user,DELETE
+action-232,(Navigate to Settings),FALSE,SYSTEM,none,NONE
+action-233,Notification Preferences,FALSE,PROFILE,none,NONE
+action-234,Privacy Settings,FALSE,PROFILE,none,NONE
+action-235,Password & Security,FALSE,PROFILE,none,NONE
+action-236,Saved Searches,FALSE,PROFILE,none,NONE
+action-237,Delete Account,FALSE,PROFILE,none,NONE
+action-238,(Toggle notification),FALSE,PROFILE,none,NONE
+action-239,(Save notification preferences),TRUE,PROFILE,user,UPDATE
+action-240,(Toggle privacy setting),FALSE,PROFILE,none,NONE
+action-241,(Save privacy settings),TRUE,PROFILE,user,UPDATE
+action-242,Change Password,TRUE,AUTH,user,UPDATE
+action-243,Enable 2FA,TRUE,AUTH,user,UPDATE
+action-244,(Save security settings),TRUE,PROFILE,user,UPDATE
+action-245,Delete Saved Search,TRUE,PROFILE,user,DELETE
+action-246,Confirm Delete Account,TRUE,AUTH,user,DELETE
+action-247,(Navigate to Messages),FALSE,SYSTEM,none,NONE
+action-248,(Click conversation),FALSE,MESSAGE,none,NONE
+action-249,(Archive conversation),TRUE,MESSAGE,message,TRANSITION
+action-250,(Delete conversation),TRUE,MESSAGE,message,DELETE
+action-251,(Back from Chat),FALSE,SYSTEM,none,NONE
+action-252,(Type message),FALSE,MESSAGE,none,NONE
+action-253,Send Message,TRUE,MESSAGE,message,CREATE
+action-254,Make Offer (Chat),FALSE,LISTING,none,NONE
+action-255,Mark as Sold (Chat),FALSE,LISTING,none,NONE
+action-256,View Listing (Chat),FALSE,LISTING,none,NONE
+action-257,(Navigate to Saved),FALSE,SYSTEM,none,NONE
+action-258,(Click saved item),FALSE,LISTING,none,NONE
+action-259,(Remove from saved),TRUE,LISTING,listing,UPDATE
+action-260,(Filter saved items),FALSE,LISTING,none,NONE
+action-261,Open Menu,FALSE,SYSTEM,none,NONE
+action-262,Close Menu,FALSE,SYSTEM,none,NONE
+action-263,My Listings (Menu),FALSE,SYSTEM,none,NONE
+action-264,Action Center (Menu),FALSE,SYSTEM,none,NONE
+action-265,Campaigns (Menu),FALSE,SYSTEM,none,NONE
+action-266,Events (Menu),FALSE,SYSTEM,none,NONE
+action-267,My Trail (Menu),FALSE,SYSTEM,none,NONE
+action-268,Billing (Menu),FALSE,SYSTEM,none,NONE
+action-269,Statistics (Menu),FALSE,SYSTEM,none,NONE
+action-270,Profile (Menu),FALSE,SYSTEM,none,NONE
+action-271,Settings (Menu),FALSE,SYSTEM,none,NONE
+action-272,Sign Out (Menu),TRUE,AUTH,user,TRANSITION
+action-273,Home (Bottom Nav),FALSE,SYSTEM,none,NONE
+action-274,Messages (Bottom Nav),FALSE,SYSTEM,none,NONE
+action-275,Publish (Bottom Nav),FALSE,SYSTEM,none,NONE
+action-276,Saved (Bottom Nav),FALSE,SYSTEM,none,NONE
+action-277,Groups (Bottom Nav),FALSE,SYSTEM,none,NONE
+action-278,Share via WhatsApp,FALSE,MESSAGE,none,NONE
+action-279,Share to Groups,TRUE,LISTING,listing,CREATE
+action-280,Copy Link,FALSE,SYSTEM,none,NONE
+action-281,QR Code,FALSE,LISTING,none,NONE
+action-282,Copy Referral Link,FALSE,SYSTEM,none,NONE
+action-283,(Select group for share),FALSE,SYSTEM,none,NONE
+action-284,Share to Selected Groups,TRUE,LISTING,listing,CREATE
+action-285,(Close share sheet),FALSE,SYSTEM,none,NONE
+action-286,(Select report reason),FALSE,LISTING,none,NONE
+action-287,(Input additional details),FALSE,LISTING,none,NONE
+action-288,Submit Report,TRUE,LISTING,listing,CREATE
+action-289,Cancel Report,FALSE,SYSTEM,none,NONE
+action-290,(Input offer amount),FALSE,LISTING,none,NONE
+action-291,(Input offer message),FALSE,LISTING,none,NONE
+action-292,Submit Offer,TRUE,LISTING,listing,CREATE
+action-293,Cancel Offer,FALSE,SYSTEM,none,NONE
+action-294,(Input counter offer),FALSE,LISTING,none,NONE
+action-295,Submit Counter Offer,TRUE,LISTING,listing,CREATE
+action-296,Manage Offers,FALSE,LISTING,none,NONE
+action-297,(Select quick question),FALSE,MESSAGE,none,NONE
+action-298,(Input custom question),FALSE,MESSAGE,none,NONE
+action-299,Post Question,TRUE,MESSAGE,message,CREATE
+action-300,Cancel Question,FALSE,SYSTEM,none,NONE
+action-301,(Input answer),FALSE,MESSAGE,none,NONE
+action-302,Post Answer,TRUE,MESSAGE,message,CREATE
+action-303,(Upvote question),TRUE,MESSAGE,message,UPDATE
+action-304,(Select pause duration),FALSE,LISTING,none,NONE
+action-305,(Input pause reason),FALSE,LISTING,none,NONE
+action-306,Confirm Pause,TRUE,LISTING,listing,TRANSITION
+action-307,Cancel Pause,FALSE,SYSTEM,none,NONE
+action-308,(Select sold to),FALSE,LISTING,none,NONE
+action-309,(Input sale price),FALSE,LISTING,none,NONE
+action-310,Confirm Mark as Sold,TRUE,LISTING,listing,TRANSITION
+action-311,Cancel Mark as Sold,FALSE,SYSTEM,none,NONE
+action-312,(implicit) Auto-refresh,TRUE,SYSTEM,none,UPDATE
+action-313,(implicit) Load on scroll,TRUE,LISTING,none,UPDATE
+action-314,(implicit) Network retry,FALSE,SYSTEM,none,NONE
+action-315,(implicit) Form auto-save,TRUE,LISTING,listing,UPDATE
+action-316,(implicit) Session timeout,TRUE,AUTH,user,TRANSITION
+action-317,(implicit) Optimistic update,TRUE,LISTING,listing,UPDATE
+action-318,(implicit) Toast dismiss,FALSE,SYSTEM,none,NONE
+action-319,(implicit) Modal backdrop click,FALSE,SYSTEM,none,NONE
+action-320,(implicit) Swipe to go back,FALSE,SYSTEM,none,NONE
+action-321,(implicit) Pull to refresh,TRUE,LISTING,none,UPDATE
+action-322,(implicit) Image lazy load,TRUE,SYSTEM,none,UPDATE
+action-323,(implicit) Keyboard shortcuts,FALSE,SYSTEM,none,NONE
+action-324,Open SuperAdmin Panel,FALSE,SYSTEM,none,NONE
+action-325,(Toggle feature flag),TRUE,SYSTEM,none,UPDATE
+action-326,(Reload app data),TRUE,SYSTEM,none,UPDATE
+action-327,(View system logs),FALSE,SYSTEM,none,NONE
+action-328,(Switch mock user),TRUE,AUTH,user,TRANSITION
