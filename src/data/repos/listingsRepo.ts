@@ -138,7 +138,12 @@ export const listingsRepo = {
 
     const { data, error } = await supabase
       .from("listings")
-      .select("*")
+      .select(`
+    *,
+    locations (
+      location_text
+    )
+  `)
       .eq("id", id)
       .single();
 

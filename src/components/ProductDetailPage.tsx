@@ -106,6 +106,7 @@ export function ProductDetailPage({
   const [isSaved, setIsSaved] = useState(false);
 
   const { dispatch } = useGlobalActionModal();
+  console.log("DETAIL location_name:", product.location_name, product);
 
   // Canonical field helpers
   const priceDisplay = product.price_amount && product.price_currency
