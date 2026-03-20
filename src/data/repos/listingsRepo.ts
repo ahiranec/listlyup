@@ -29,8 +29,19 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
     title: row.title as string,
     description: row.description as string,
 
-    category: row.category as string,
-    subcategory: (row.subcategory as string | undefined) ?? undefined,
+    category:
+      (row.category as string) ||
+      (row.listing_type === "product"
+        ? "Producto"
+        : row.listing_type === "service"
+          ? "Servicio"
+          : row.listing_type === "event"
+            ? "Evento"
+            : "Sin categoría"),
+
+    subcategory:
+      (row.subcategory as string | undefined) ??
+      ((row.tags as string[] | undefined)?.[0] ?? "General"),
     tags: (row.tags as string[]) ?? [],
 
     primary_image_url: row.primary_image_url as string,

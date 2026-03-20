@@ -26,9 +26,16 @@ export async function runSupabaseListingByIdTest() {
 
         console.log('Shape check:', {
             id: single.id,
+            title: single.title,
+
+            // 🎯 CAMPOS QUE QUEREMOS VER
+            category: single.category,
+            subcategory: single.subcategory,
+            location_name: single.location_name,
+
+            // 👤 SELLER
             owner_user_id: single.owner_user_id,
-            listing_type: single.listing_type,
-            listing_location_id: single.listing_location_id,
+            owner_name: single.owner_user?.name,
         });
 
         console.groupEnd();
