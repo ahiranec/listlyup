@@ -28,13 +28,13 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./ui/accordion";
-import { 
-  ProductImageCarousel, 
+import {
+  ProductImageCarousel,
   ProductHeaderCompact,
   ProductMetadataCompact,
   ProductDescription,
-  ProductGroupsInfo, 
-  ProductActions, 
+  ProductGroupsInfo,
+  ProductActions,
   RelatedProducts,
   DeliveryOptions,
   ContactMethods,
@@ -42,7 +42,7 @@ import {
   LocationModal,
   SellerSheet,
   ReportSheet,
-  type ExtendedListing 
+  type ExtendedListing
 } from "./product-detail";
 
 import { shareContent } from "../utils/helpers";
@@ -76,14 +76,14 @@ interface ProductDetailPageProps {
   onNavigateToProduct?: (productId: string) => void;
 }
 
-export function ProductDetailPage({ 
-  product, 
-  productImage, 
-  onBack, 
-  isOwner = false, 
+export function ProductDetailPage({
+  product,
+  productImage,
+  onBack,
+  isOwner = false,
   isAuthenticated = false,
   onAuthRequired,
-  onNavigateToHome, 
+  onNavigateToHome,
   onNavigateToChat,
   allProducts,
   onNavigateToProduct
@@ -96,20 +96,20 @@ export function ProductDetailPage({
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const [isMakeOfferSheetOpen, setIsMakeOfferSheetOpen] = useState(false);
   const [isAskQuestionSheetOpen, setIsAskQuestionSheetOpen] = useState(false);
-  
+
   const [isManageOffersSheetOpen, setIsManageOffersSheetOpen] = useState(false);
   const [isMarkAsSoldSheetOpen, setIsMarkAsSoldSheetOpen] = useState(false);
   const [isPauseListingSheetOpen, setIsPauseListingSheetOpen] = useState(false);
   const [selectedQuestionToRespond, setSelectedQuestionToRespond] = useState<any>(null);
   const [isEditingReply, setIsEditingReply] = useState(false);
-  
+
   const [isSaved, setIsSaved] = useState(false);
 
   const { dispatch } = useGlobalActionModal();
 
   // Canonical field helpers
-  const priceDisplay = product.price_amount && product.price_currency 
-    ? `${product.price_amount} ${product.price_currency}` 
+  const priceDisplay = product.price_amount && product.price_currency
+    ? `${product.price_amount} ${product.price_currency}`
     : undefined;
   const imageUrl = productImage || product.primary_image_url || '';
   const legacyType = product.listing_type === 'product' ? product.offer_mode : product.listing_type;
@@ -117,23 +117,23 @@ export function ProductDetailPage({
   useEffect(() => {
     // Check if product is saved on mount
     setIsSaved(isItemSaved(product.id));
-    
+
     // ✅ TRACK PRODUCT VIEW (Recently Viewed) - Auto-track for buyers only
     if (!isOwner && product) {
       trackProductView(product);
     }
-    
+
     // Initialize Open Graph tags for rich sharing
     initializeProductShareTags({
       id: product.id,
       title: product.title,
       price: priceDisplay,
-      location: 'Location not available',
+      location: product.location_name || 'Sin ubicación',
       image: imageUrl,
       description: product.description || '',
       type: legacyType,
     });
-    
+
     // Scroll to top when product changes
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [product.id, isOwner, productImage, product.title, product.price_amount, product.price_currency, product.description, product.listing_type, product.offer_mode, product.primary_image_url]);
@@ -145,25 +145,26 @@ export function ProductDetailPage({
       onAuthRequired?.('favorites');
       return;
     }
-    
+
     const newSavedState = toggleSaveItem({
       id: product.id,
       title: product.title,
       price: priceDisplay,
       image: imageUrl,
-      location: 'Location not available',
+      location: product.location_name || 'Sin ubicación',
       type: legacyType,
     });
-    
+
+
     setIsSaved(newSavedState);
-    
+
     if (newSavedState) {
       toast.success('Saved to your collection! 💾');
     } else {
       toast.info('Removed from favorites');
     }
   };
-  
+
   // AUTH GATE: Make Offer action
   const handleMakeOfferClick = () => {
     // Intercept if not authenticated
@@ -171,7 +172,7 @@ export function ProductDetailPage({
       onAuthRequired?.('offer');
       return;
     }
-    
+
     // ✅ P2: Migrated to GAM
     dispatch({
       actionId: 'make-offer',
@@ -189,7 +190,7 @@ export function ProductDetailPage({
       },
     });
   };
-  
+
   // AUTH GATE: Ask Question action
   const handleAskQuestionClick = () => {
     // Intercept if not authenticated
@@ -199,7 +200,7 @@ export function ProductDetailPage({
     }
     setIsAskQuestionSheetOpen(true);
   };
-  
+
   // Mock: Usuario puede calificar solo si compró el producto
   // ❌ MVP: Rating feature removed - no rating system in MVP
   // const canRate = !isOwner && product.id === "4"; // Solo para demo: Coffee Maker comprado
@@ -210,10 +211,13 @@ export function ProductDetailPage({
   // ❌ MVP: Reviews removed - no rating system in MVP
   const hasProductReviews = false; // Disabled for MVP
   const hasSellerRating = false; // Disabled for MVP
-  
+
   // 🆕 GET SELLER INFO DYNAMICALLY from owner_user_id
-  const sellerInfo = getSellerInfo(product.owner_user_id);
-  
+  const sellerInfo = {
+    ...getSellerInfo(product.owner_user_id),
+    name: product.owner_user?.name || "Usuario Desconocido",
+  };
+
   const extendedProduct: ExtendedListing = {
     ...product,
     originalPrice: hasDiscount ? "35 USD" : undefined,
@@ -235,7 +239,10 @@ export function ProductDetailPage({
       email: false
     },
     paymentMethods: ["Cash", "Bank Transfer", "PayPal"],
-    category: { main: "Home & Garden", sub: "Kitchen Appliances" },
+    category: {
+      main: product.category || "Sin categoría",
+      sub: product.subcategory || "Sin subcategoría",
+    },
     tags: product.tags || [],
     privacyPin: { enabled: true, radius: "10km" },
     questions: [
@@ -287,7 +294,7 @@ export function ProductDetailPage({
   // Calcular tiempo desde publicación
   const getTimeAgo = (dateString?: string) => {
     if (!dateString) return "Recently";
-    
+
     const now = new Date();
     const past = new Date(dateString);
     const diffMs = now.getTime() - past.getTime();
@@ -304,13 +311,13 @@ export function ProductDetailPage({
   // Calcular estado del listing
   const getListingStatus = (dateString?: string) => {
     if (!dateString) return { status: 'active', label: 'Active', color: 'green', daysLeft: 30 };
-    
+
     const now = new Date();
     const created = new Date(dateString);
     const diffDays = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     const daysUntilExpiry = 30 - diffDays;
-    
+
     if (diffDays < 1) {
       return { status: 'new', label: 'New Listing', color: 'blue', daysLeft: daysUntilExpiry };
     } else if (daysUntilExpiry <= 3 && daysUntilExpiry > 0) {
@@ -332,7 +339,7 @@ export function ProductDetailPage({
         text: `Check out this ${product.title}!`,
         url: window.location.href,
       });
-      
+
       if (result.success) {
         if (result.method === "clipboard" || result.method === "manual") {
           toast.success('Link copied to clipboard!');
@@ -359,53 +366,53 @@ export function ProductDetailPage({
   const OfferIcon = getOfferTypeIcon(legacyType);
 
   // ========== FILTRADO DE PRODUCTOS SIMILARES Y DEL SELLER ==========
-  
+
   /**
    * Similar Listings - Usa la misma lógica que el searchbar
    * Filtrado por: categoría, subcategoría, tags, tipo, ubicación
    */
   const getSimilarProducts = () => {
     if (!allProducts || allProducts.length === 0) return [];
-    
+
     return allProducts
       .filter(p => {
         // Excluir el producto actual
         if (p.id === product.id) return false;
-        
+
         // Mismo tipo de listing (product/service/event)
         const sameListingType = product.listing_type === p.listing_type;
-        
+
         if (!sameListingType) return false;
-        
+
         // Score de similitud
         let score = 0;
-        
+
         // +3 puntos: misma categoría
         if (product.category && p.category && product.category === p.category) {
           score += 3;
         }
-        
+
         // +2 puntos: misma subcategoría
         if (product.subcategory && p.subcategory && product.subcategory === p.subcategory) {
           score += 2;
         }
-        
+
         // +1 punto por cada tag compartido
         if (product.tags && p.tags) {
           const sharedTags = product.tags.filter(tag => p.tags?.includes(tag));
           score += sharedTags.length;
         }
-        
+
         // +1 punto: misma ubicación (TODO: resolve from listing_location_id)
         // if (product.listing_location_id && p.listing_location_id && product.listing_location_id === p.listing_location_id) {
         //   score += 1;
         // }
-        
+
         // +1 punto: mismo tipo de oferta (sell/trade/free/etc)
         if (product.offer_mode === p.offer_mode) {
           score += 1;
         }
-        
+
         // Requiere al menos 2 puntos para ser considerado similar
         return score >= 2;
       })
@@ -413,20 +420,20 @@ export function ProductDetailPage({
         // Ordenar por relevancia (calcular score nuevamente)
         let scoreA = 0;
         let scoreB = 0;
-        
+
         if (product.category && a.category === product.category) scoreA += 3;
         if (product.category && b.category === product.category) scoreB += 3;
-        
+
         if (product.subcategory && a.subcategory === product.subcategory) scoreA += 2;
         if (product.subcategory && b.subcategory === product.subcategory) scoreB += 2;
-        
+
         if (product.tags && a.tags) {
           scoreA += product.tags.filter(tag => a.tags?.includes(tag)).length;
         }
         if (product.tags && b.tags) {
           scoreB += product.tags.filter(tag => b.tags?.includes(tag)).length;
         }
-        
+
         return scoreB - scoreA;
       })
       .slice(0, 6) // Máximo 6 productos similares
@@ -444,18 +451,18 @@ export function ProductDetailPage({
         };
       });
   };
-  
+
   /**
    * More from Seller - Otras publicaciones del mismo vendedor
    * Solo aparece si hay 2+ publicaciones del seller (incluyendo la actual)
    */
   const getSellerProducts = () => {
     if (!allProducts || allProducts.length === 0 || !product.owner_user_id) return [];
-    
-    const sellerProducts = allProducts.filter(p => 
+
+    const sellerProducts = allProducts.filter(p =>
       p.owner_user_id === product.owner_user_id && p.id !== product.id
     );
-    
+
     return sellerProducts
       .sort((a, b) => {
         // Ordenar por fecha de creación (más recientes primero)
@@ -478,15 +485,15 @@ export function ProductDetailPage({
         };
       });
   };
-  
+
   const similarProducts = getSimilarProducts();
   const sellerProducts = getSellerProducts();
-  
+
   /**
    * Recently Viewed - Historial personal del buyer
    * Excluye el producto actual y limita a 6 items
    */
-  const recentlyViewedProducts = !isOwner && allProducts ? 
+  const recentlyViewedProducts = !isOwner && allProducts ?
     getRecentlyViewedExcluding(product.id, 6)
       .map(item => {
         // Enriquecer con data completa de allProducts si está disponible
@@ -514,7 +521,7 @@ export function ProductDetailPage({
         };
       })
     : [];
-  
+
   // 🔍 DEBUG: Log recently viewed data (remove in production)
   if (typeof window !== 'undefined' && !isOwner) {
     console.log('📊 Recently Viewed Debug:', {
@@ -526,7 +533,7 @@ export function ProductDetailPage({
       rawHistoryCount: getRecentlyViewedExcluding(product.id, 20).length,
     });
   }
-  
+
   // Handler para limpiar historial
   const handleClearHistory = () => {
     clearRecentlyViewed();
@@ -537,11 +544,11 @@ export function ProductDetailPage({
 
   return (
     <div className="min-h-screen bg-white max-w-[480px] lg:max-w-[1024px] mx-auto">
-      
+
       {/* ========== HEADER - Sticky Top ========== */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 h-14">
         <div className="flex items-center justify-between h-full px-4">
-          <button 
+          <button
             onClick={onBack}
             className="icon-button hover:bg-muted transition-fast"
             aria-label="Go back"
@@ -615,7 +622,7 @@ export function ProductDetailPage({
 
       {/* ========== MAIN CONTENT ========== */}
       <main className="pb-[calc(60px+var(--space-lg))]">
-        
+
         {/* SECTION 1: Photo Carousel */}
         <ProductImageCarousel
           mediaItems={extendedProduct.mediaItems}
@@ -655,14 +662,14 @@ export function ProductDetailPage({
 
         {/* SECTION 5-9: Interactive Sections */}
         <section className="space-y-0">
-          
+
           {/* 5. Delivery Methods */}
           <DeliveryOptions deliveryOptions={extendedProduct.deliveryOptions} />
 
           <Separator className="my-0 mx-4 opacity-30" />
 
           {/* 6. Contact Methods */}
-          <ContactMethods 
+          <ContactMethods
             contact_methods={product.contact_methods}
             contact_whatsapp_phone={product.contact_whatsapp_phone}
             contact_website_url={product.contact_website_url}
@@ -678,7 +685,7 @@ export function ProductDetailPage({
           <Separator className="my-0 mx-4 opacity-30" />
 
           {/* 8. Questions & Answers */}
-          <QuestionsAnswers 
+          <QuestionsAnswers
             questions={extendedProduct.questions}
             isOwner={isOwner}
             onAnswerClick={(question) => {
@@ -728,8 +735,8 @@ export function ProductDetailPage({
       </main>
 
       {/* ========== FOOTER - Sticky Bottom ========== */}
-      <ProductActions 
-        isOwner={isOwner} 
+      <ProductActions
+        isOwner={isOwner}
         product={product}
         isAuthenticated={isAuthenticated} // NEW: Pass auth status
         onAuthRequired={onAuthRequired} // NEW: Pass auth gate handler
@@ -809,7 +816,7 @@ export function ProductDetailPage({
       />
 
       {/* ========== SELLER/OWNER SHEETS ========== */}
-      
+
       {/* Manage Offers Sheet (Owner only) */}
       {isOwner && (
         <ManageOffersSheet

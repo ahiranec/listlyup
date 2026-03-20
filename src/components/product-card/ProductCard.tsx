@@ -1,18 +1,27 @@
 /**
- * ProductCard Component (Refactored)
+ * ProductCard Component
  * Premium marketplace listing card
- * 
- * DB Mapping:
- * - image: listing_images.image_url (where is_primary = true)
+ *
+ * Qué hace:
+ * - Renderiza una card visual para un listing del marketplace.
+ * - Recibe datos ya preparados desde App/UI layer.
+ * - No resuelve datos desde repos ni desde Supabase.
+ *
+ * Contrato actual esperado desde UI:
+ * - id: listings.id
+ * - image: listings.primary_image_url
  * - title: listings.title
- * - price: listings.price_amount + listings.currency
+ * - price: string ya formateado en la capa superior
  * - condition: listings.condition
- * - type: listings.subtype (sale | trade)
- * - location: listing_locations.meetup_place_note OR locations.address_line1 + city
- * - onClick: Navigate to listing detail using listings.id
- * - pricingModel: pricing metadata for services/rentals
- * - ticketType: ticket type for events
- * - duration: single or multi-day for events
+ * - visibility: derivado desde listings.visibility_mode
+ * - location: texto ya resuelto para mostrar
+ * - ownerName: nombre ya resuelto del owner_user
+ * - type: derivado desde listing_type / offer_mode
+ * - eventDate / eventEndDate / eventTime: metadata de eventos
+ * - pricingModel: metadata de pricing para servicios/arriendos
+ * - ticketType: metadata de eventos
+ * - duration: single | multi
+ * - onClick: navegación al detail usando listings.id
  */
 
 import { motion } from 'motion/react';
@@ -21,22 +30,38 @@ import { ProductCardContent } from './ProductCardContent';
 import { useProductCard } from './useProductCard';
 
 interface ProductCardProps {
-  id: string;          // DB: listings.id - REQUIRED for save functionality
-  image: string;       // DB: listing_images.image_url (is_primary = true)
-  title: string;       // DB: listings.title
-  price?: string;      // DB: listings.price_amount + listings.currency
-  condition?: string;  // DB: listings.condition
-  visibility?: string; // DB: listings.visibility (if applicable)
-  location?: string;   // DB: listing_locations.meetup_place_note or locations.address_line1
-  type?: "sale" | "trade" | "free" | "sale_or_trade" | "rent" | "service" | "event";  // DB: listings.subtype
-  eventDate?: string;  // Event start date (only for type === "event")
-  eventEndDate?: string; // Event end date (only for multi-day events)
-  eventTime?: string;  // Event start time (only for type === "event")
-  eventTimeEnd?: string; // Event end time (only for type === "event")
-  pricingModel?: 'hourly' | 'fixed' | 'quote' | 'session' | 'daily' | 'monthly'; // Pricing model for services/rentals
-  ticketType?: 'free' | 'paid'; // Ticket type for events
-  duration?: 'single' | 'multi'; // Duration for events
-  onClick?: () => void; // Navigate using listings.id
+  // Canonical listing ID
+  id: string;
+
+  // Main visual content
+  image: string;
+  title: string;
+
+  // Already formatted display values from parent
+  price?: string;
+  location?: string;
+  ownerName?: string;
+
+  // Listing metadata
+  condition?: string;
+  visibility?: string;
+
+  // UI card mode
+  type?: "sale" | "trade" | "free" | "sale_or_trade" | "rent" | "service" | "event";
+
+  // Event metadata
+  eventDate?: string;
+  eventEndDate?: string;
+  eventTime?: string;
+  eventTimeEnd?: string;
+
+  // Service / rental / event metadata
+  pricingModel?: 'hourly' | 'fixed' | 'quote' | 'session' | 'daily' | 'monthly';
+  ticketType?: 'free' | 'paid';
+  duration?: 'single' | 'multi';
+
+  // Navigation / interaction
+  onClick?: () => void;
 }
 
 export function ProductCard({
@@ -47,6 +72,7 @@ export function ProductCard({
   condition,
   visibility,
   location,
+  ownerName,
   type = "sale",
   eventDate,
   eventEndDate,
@@ -57,6 +83,13 @@ export function ProductCard({
   duration,
   onClick,
 }: ProductCardProps) {
+  /**
+   * Local UI behavior only
+   * - saved state
+   * - save button interaction
+   *
+   * No data fetching here.
+   */
   const { isSaved, handleSaveClick } = useProductCard({
     id,
     title,
@@ -70,20 +103,20 @@ export function ProductCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        type: "spring", 
-        stiffness: 260, 
-        damping: 20 
+      transition={{
+        type: "spring",
+        stiffness: 260,
+        damping: 20,
       }}
-      whileHover={{ 
+      whileHover={{
         y: -4,
-        transition: { type: "spring", stiffness: 400, damping: 10 }
+        transition: { type: "spring", stiffness: 400, damping: 10 },
       }}
       whileTap={{ scale: 0.98 }}
       className="group relative flex flex-col h-full bg-gradient-to-b from-white to-gray-50/30 rounded-xl border border-gray-200/60 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer"
       onClick={onClick}
     >
-      {/* Image Section */}
+      {/* Top image / badges / save action */}
       <ProductCardImage
         image={image}
         title={title}
@@ -93,11 +126,12 @@ export function ProductCard({
         onSaveClick={handleSaveClick}
       />
 
-      {/* Content Section */}
+      {/* Main textual content */}
       <ProductCardContent
         title={title}
         price={price}
         location={location}
+        ownerName={ownerName}
         visibility={visibility}
         type={type}
         eventDate={eventDate}

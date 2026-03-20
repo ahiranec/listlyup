@@ -129,15 +129,15 @@ function LoadingFallback() {
 export default function App() {
   // Consolidated state management
   const state = useAppState();
-  
+
   // Centralized user state - SINGLE SOURCE OF TRUTH
-  const { currentUser, userId, setLoginMethod, clearUser } = useCurrentUser({ 
-    isAuthenticated: state.isAuthenticated 
+  const { currentUser, userId, setLoginMethod, clearUser } = useCurrentUser({
+    isAuthenticated: state.isAuthenticated
   });
-  
+
   // Global Report Sheet state
   const reportSheet = useReportSheet();
-  
+
   // Navigation handlers
   const navigation = useAppNavigation({
     setActiveTab: state.setActiveTab,
@@ -198,7 +198,7 @@ export default function App() {
   const listings = useListings();
   const getListingById = useListingById();
   const { getSession, clearSession } = useSuperAdminSession();
-  
+
   const { visibleListings } = useVisibleProducts({
     listings: listings,
     currentUser: currentUser,
@@ -210,14 +210,14 @@ export default function App() {
     searchQuery: state.searchQuery,
     filteredGroupId: state.filteredGroupId,
   });
-  
+
   // Map-specific filtering: Use ONLY accessible listings
   const mapFilters = useAppFilters({
     visibleListings: visibleListings,
     searchQuery: state.searchQuery,
     filteredGroupId: state.filteredGroupId,
   });
-  
+
   // Map filters are independent - no sync needed
   // Each view (home vs map) maintains its own filter state
 
@@ -226,7 +226,7 @@ export default function App() {
 
   // Badge counts for bottom nav - ONLY if authenticated
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   // ✅ PHASE 3.5: Trail status management (minimal local state)
   const [trailStatuses, setTrailStatuses] = useState<Record<string, 'pending' | 'in-progress' | 'completed' | 'cancelled'>>({
     'trail-1': 'in-progress',
@@ -234,14 +234,14 @@ export default function App() {
     'trail-3': 'completed',
     'trail-4': 'completed',
   });
-  
+
   // Update unread count periodically - ONLY if authenticated
   useEffect(() => {
     if (!state.isAuthenticated) {
       setUnreadCount(0);
       return;
     }
-    
+
     const updateCount = () => setUnreadCount(getUnreadMessageCount());
     updateCount(); // Initial
     const interval = setInterval(updateCount, 3000); // Every 3s
@@ -249,11 +249,11 @@ export default function App() {
   }, [state.currentView, state.isAuthenticated]); // Re-check when view or auth changes
 
   // Handlers
-  const handleProductClick = (productId: string) => {
+  const handleProductClick = async (productId: string) => {
     // ✅ CANONICAL: Find and use canonical listing directly
-    const listing = getListingById(productId);
+    const listing = await getListingById(productId);
     if (!listing) return;
-    
+
     startTransition(() => {
       state.setPreviousView(state.currentView); // 🔒 Save origin before navigation
       state.setSelectedProduct(listing);
@@ -296,17 +296,17 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const data = saved ? JSON.parse(saved) : { savedSearches: [], storage: {} };
-      
+
       const savedSearch: SavedSearch = {
         ...newSearch,
         id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         notifyEnabled: false,
       };
-      
+
       data.savedSearches = [savedSearch, ...(data.savedSearches || [])];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      
+
       toast.success('Search saved! Check Settings > Saved Searches');
       state.setIsFilterOpen(false); // Close filter sheet after saving
     } catch (error) {
@@ -332,33 +332,33 @@ export default function App() {
               </Suspense>
             ) : state.currentView === "publish" ? (
               <Suspense fallback={<LoadingFallback />}>
-                <PublishFlow 
+                <PublishFlow
                   currentUser={mockCurrentUser}
-                initialData={
-                  state.republishData
-                    ? state.republishData // Re-publish with pre-filled data
-                    : state.preselectedGroupId
-                    ? {
-                        selectedGroups: [state.preselectedGroupId],
-                        lockedGroups: true,
-                      }
-                    : undefined
-                }
-                onClose={() => {
-                  state.setPreselectedGroupId(null); // Clear context
-                  state.setRepublishData(null); // Clear re-publish data
-                  navigation.navigateToHome();
-                }}
-                onPublish={(data) => {
-                  // TODO: Save to backend
-                  state.setPreselectedGroupId(null); // Clear context
-                  state.setRepublishData(null); // Clear re-publish data
-                }}
-              />
+                  initialData={
+                    state.republishData
+                      ? state.republishData // Re-publish with pre-filled data
+                      : state.preselectedGroupId
+                        ? {
+                          selectedGroups: [state.preselectedGroupId],
+                          lockedGroups: true,
+                        }
+                        : undefined
+                  }
+                  onClose={() => {
+                    state.setPreselectedGroupId(null); // Clear context
+                    state.setRepublishData(null); // Clear re-publish data
+                    navigation.navigateToHome();
+                  }}
+                  onPublish={(data) => {
+                    // TODO: Save to backend
+                    state.setPreselectedGroupId(null); // Clear context
+                    state.setRepublishData(null); // Clear re-publish data
+                  }}
+                />
               </Suspense>
             ) : state.currentView === "edit-listing" ? (
               <Suspense fallback={<LoadingFallback />}>
-                <PublishFlow 
+                <PublishFlow
                   mode="edit"
                   initialData={mockListingForEdit}
                   currentUser={mockCurrentUser}
@@ -383,23 +383,23 @@ export default function App() {
                     console.log('🔐 [SignIn] Email:', email);
                     console.log('🔐 [SignIn] Password length:', password?.length || 0);
                     console.log('🔐 [SignIn] Calling verifyCredentials...');
-                    
+
                     // Verify credentials against mock database
                     const user = verifyCredentials(email, password);
-                    
+
                     console.log('🔐 [SignIn] verifyCredentials returned:', user);
-                    
+
                     if (!user) {
                       console.log('❌ [SignIn] Invalid credentials - BLOCKING LOGIN');
                       toast.error("Invalid email or password");
                       return;
                     }
-                    
+
                     console.log('✅ [SignIn] Valid credentials for:', user.name, '- Role:', user.role);
-                    
+
                     // Set authenticated state
                     state.setIsAuthenticated(true);
-                    
+
                     // If SuperAdmin, create SuperAdmin session
                     if (isSuperAdminUser(user)) {
                       console.log('⚡ [SignIn] SuperAdmin detected - creating session...');
@@ -409,7 +409,7 @@ export default function App() {
                         email: user.email,
                         role: 'super_admin',
                       });
-                      
+
                       // Add delay to ensure localStorage is written before navigation
                       setTimeout(() => {
                         console.log('✅ [SignIn] SuperAdmin session created');
@@ -420,7 +420,7 @@ export default function App() {
                     } else {
                       toast.success(`Welcome back, ${user.name}!`);
                     }
-                    
+
                     // Navigate to home
                     navigation.navigateToHome();
                   }}
@@ -484,12 +484,12 @@ export default function App() {
                 <AdminLoginPage
                   onSuccess={() => {
                     console.log('🎯 [App] AdminLoginPage onSuccess called');
-                    
+
                     // Add a small delay to ensure localStorage is written
                     setTimeout(() => {
                       const session = getSuperAdminSession();
                       console.log('🎯 [App] session after delay:', session);
-                      
+
                       if (session) {
                         console.log('✅ [App] Valid session found, authenticating...');
                         state.setIsAuthenticated(true);
@@ -1082,85 +1082,86 @@ export default function App() {
 
                       {/* Main Content Area */}
                       <main className="flex-1 p-2 pb-20 lg:p-4 lg:pb-4 overflow-auto">
-                      {state.isLoading ? (
-                        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4">
-                          {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i}>
-                              <ProductCardSkeleton />
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <>
-                          <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
-                            {(filters.filteredAndSortedListings || []).map((listing, index) => (
-                              <div
-                                key={listing.id}
-                                className="animate-in fade-in slide-in-from-bottom-4"
-                                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "backwards" }}
-                              >
-                                <ProductCard
-                                  id={listing.id}
-                                  image={listing.primary_image_url || ''}
-                                  title={listing.title}
-                                  price={listing.price_amount ? `${listing.price_amount} ${listing.price_currency || 'USD'}` : undefined}
-                                  condition={listing.condition}
-                                  visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
-                                  location={undefined} // TODO: Resolve via listing_location_id
-                                  type={listing.listing_type === 'product' ? listing.offer_mode : listing.listing_type}
-                                  eventDate={listing.start_date}
-                                  eventEndDate={listing.end_date}
-                                  eventTime={listing.event_time_text}
-                                  eventTimeEnd={undefined} // Not in canonical contract
-                                  pricingModel={listing.pricing_model}
-                                  ticketType={listing.ticket_type}
-                                  duration={listing.event_duration_type === 'multi_day' ? 'multi' : 'single'}
-                                  onClick={() => handleProductClick(listing.id)}
-                                />
+                        {state.isLoading ? (
+                          <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4">
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                              <div key={i}>
+                                <ProductCardSkeleton />
                               </div>
                             ))}
                           </div>
-
-                          {(filters.filteredAndSortedListings?.length || 0) === 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                              className="flex flex-col items-center justify-center py-16 px-6"
-                            >
-                              <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                <SearchX className="w-12 h-12 text-muted-foreground" />
-                              </div>
-                              
-                              <h3 className="text-xl font-semibold text-foreground mb-2">
-                                No products found
-                              </h3>
-                              
-                              <p className="text-sm text-muted-foreground text-center mb-6">
-                                Try adjusting your filters or search terms
-                              </p>
-                              
-                              {filters.hasActiveFilters && (
-                                <motion.button 
-                                  onClick={handleClearFilters}
-                                  className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:shadow-lg hover:shadow-primary/30 transition-all"
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
+                              {(filters.filteredAndSortedListings || []).map((listing, index) => (
+                                <div
+                                  key={listing.id}
+                                  className="animate-in fade-in slide-in-from-bottom-4"
+                                  style={{ animationDelay: `${index * 50}ms`, animationFillMode: "backwards" }}
                                 >
-                                  Clear Filters
-                                </motion.button>
-                              )}
-                            </motion.div>
-                          )}
-                        </>
-                      )}
+                                  <ProductCard
+                                    id={listing.id}
+                                    image={listing.primary_image_url || ''}
+                                    title={listing.title}
+                                    price={listing.price_amount ? `${listing.price_amount} ${listing.price_currency || 'USD'}` : undefined}
+                                    condition={listing.condition}
+                                    visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
+                                    location={listing.location_name} // TODO: Resolve via listing_location_id
+                                    ownerName={listing.owner_user?.name}
+                                    type={listing.listing_type === 'product' ? listing.offer_mode : listing.listing_type}
+                                    eventDate={listing.start_date}
+                                    eventEndDate={listing.end_date}
+                                    eventTime={listing.event_time_text} S
+                                    eventTimeEnd={undefined} // Not in canonical contract
+                                    pricingModel={listing.pricing_model}
+                                    ticketType={listing.ticket_type}
+                                    duration={listing.event_duration_type === 'multi_day' ? 'multi' : 'single'}
+                                    onClick={() => handleProductClick(listing.id)}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+
+                            {(filters.filteredAndSortedListings?.length || 0) === 0 && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                                className="flex flex-col items-center justify-center py-16 px-6"
+                              >
+                                <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                  <SearchX className="w-12 h-12 text-muted-foreground" />
+                                </div>
+
+                                <h3 className="text-xl font-semibold text-foreground mb-2">
+                                  No products found
+                                </h3>
+
+                                <p className="text-sm text-muted-foreground text-center mb-6">
+                                  Try adjusting your filters or search terms
+                                </p>
+
+                                {filters.hasActiveFilters && (
+                                  <motion.button
+                                    onClick={handleClearFilters}
+                                    className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:shadow-lg hover:shadow-primary/30 transition-all"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                  >
+                                    Clear Filters
+                                  </motion.button>
+                                )}
+                              </motion.div>
+                            )}
+                          </>
+                        )}
                       </main>
                     </div>
 
-                    <BottomNav 
-                      activeTab={state.activeTab} 
-                      onTabChange={navigation.handleTabChange} 
-                      badges={{ messages: unreadCount || undefined }} 
+                    <BottomNav
+                      activeTab={state.activeTab}
+                      onTabChange={navigation.handleTabChange}
+                      badges={{ messages: unreadCount || undefined }}
                     />
                   </>
                 )}
@@ -1291,14 +1292,14 @@ export default function App() {
                     product={{
                       id: state.selectedProduct.id,
                       title: state.selectedProduct.title,
-                      price: state.selectedProduct.price_amount && state.selectedProduct.price_currency 
+                      price: state.selectedProduct.price_amount && state.selectedProduct.price_currency
                         ? `${state.selectedProduct.price_amount} ${state.selectedProduct.price_currency}`
                         : 'Price not available',
                       location: 'Location not available', // TODO: Resolve from listing_location_id
                       image: state.selectedProduct.primary_image_url || '',
                       rating: undefined, // Not in canonical model
-                      type: state.selectedProduct.listing_type === 'product' 
-                        ? state.selectedProduct.offer_mode 
+                      type: state.selectedProduct.listing_type === 'product'
+                        ? state.selectedProduct.offer_mode
                         : state.selectedProduct.listing_type,
                     }}
                     isOwner={state.selectedProduct.owner_user_id === mockCurrentUser.id}
@@ -1339,12 +1340,12 @@ export default function App() {
                         // Map trail-1 to existing product (Laptop Stand = uer-1)
                         const productId = 'uer-1'; // Mock: Map trail transaction to actual product
                         const canonical = canonicalListings.find((l) => l.id === productId);
-                        
+
                         if (!canonical) {
                           toast.error('Listing not found');
                           return;
                         }
-                        
+
                         startTransition(() => {
                           state.setPreviousView(state.currentView);
                           state.setSelectedProduct(canonical);
@@ -1382,13 +1383,13 @@ export default function App() {
                 </Suspense>
               </div>
             )}
-            
+
             {/* Global Report Sheet */}
             <ReportSheet
               open={reportSheet.isOpen}
               onOpenChange={reportSheet.close}
             />
-            
+
             {/* Developer Tools - Only in development */}
             <DevTools />
           </GlobalActionModalProvider>

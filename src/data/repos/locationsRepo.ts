@@ -18,15 +18,39 @@
  * → ProductCard map pins + filter-by-location features will use this repo
  */
 
-import type { CanonicalLocation } from "../../types/canonical";
+import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient";
+
+const cache: Record<string, string> = {};
 
 export const locationsRepo = {
-  /**
-   * Stub: Returns undefined for now.
-   * No normalized locations table exists in the current mock layer.
-   * Will become supabase.from('locations').eq('id', id).single().
-   */
-  getLocationById(_id: string): CanonicalLocation | undefined {
-    return undefined;
+  async getLocationNameById(id: string | undefined): Promise<string | undefined> {
+    if (!id) return undefined;
+
+    // cache simple
+    if (cache[id]) return cache[id];
+
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn("[locationsRepo] Supabase not configured");
+      return undefined;
+    }
+
+    const { data, error } = await supabase
+      .from("locations")
+      .select("location_text")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("[locationsRepo] error:", error.message);
+      return undefined;
+    }
+
+    const name = data?.name as string | undefined;
+
+    if (name) {
+      cache[id] = name;
+    }
+
+    return name;
   },
 };

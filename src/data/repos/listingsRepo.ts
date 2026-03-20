@@ -1,4 +1,5 @@
 import { canonicalListings } from "../products";
+import { usersRepo } from "./usersRepo";
 import type { CanonicalListing } from "../../types/canonical";
 import type {
   ListingType,
@@ -20,7 +21,6 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
   return {
     id: row.id as string,
 
-    // 🔥 FIX CLAVE
     owner_user_id: row.user_id as string,
 
     listing_type: row.listing_type as ListingType,
@@ -30,47 +30,47 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
     description: row.description as string,
 
     category: row.category as string,
-    subcategory: row.subcategory as string | undefined ?? undefined,
+    subcategory: (row.subcategory as string | undefined) ?? undefined,
     tags: (row.tags as string[]) ?? [],
 
     primary_image_url: row.primary_image_url as string,
 
-    // 🔥 precio real
-    price_amount: row.price_amount != null
-      ? Number(row.price_amount)
-      : undefined,
+    price_amount:
+      row.price_amount != null ? Number(row.price_amount) : undefined,
 
-    price_currency: row.price_currency as string | undefined ?? undefined,
+    price_currency: (row.price_currency as string | undefined) ?? undefined,
 
-    condition: row.condition as ProductCondition | undefined ?? undefined,
-    pricing_model: row.pricing_model as PricingModel | undefined ?? undefined,
+    condition: (row.condition as ProductCondition | undefined) ?? undefined,
+    pricing_model: (row.pricing_model as PricingModel | undefined) ?? undefined,
 
-    // 🔥 FIX CLAVE
     listing_location_id: row.location_id as string,
 
     visibility_mode: row.visibility_mode as VisibilityMode,
 
     contact_methods: (row.contact_methods as ContactMethod[]) ?? [],
-    contact_whatsapp_phone: row.contact_whatsapp_phone as string | undefined ?? undefined,
-    contact_website_url: row.contact_website_url as string | undefined ?? undefined,
-    contact_social_url: row.contact_social_url as string | undefined ?? undefined,
+    contact_whatsapp_phone:
+      (row.contact_whatsapp_phone as string | undefined) ?? undefined,
+    contact_website_url:
+      (row.contact_website_url as string | undefined) ?? undefined,
+    contact_social_url:
+      (row.contact_social_url as string | undefined) ?? undefined,
 
     access_mode: (row.access_mode as AccessMode[]) ?? [],
 
-    start_date: row.start_date as string | undefined ?? undefined,
-    end_date: row.end_date as string | undefined ?? undefined,
-    event_time_text: row.event_time_text as string | undefined ?? undefined,
-    event_duration_type: row.event_duration_type as EventDurationType | undefined ?? undefined,
+    start_date: (row.start_date as string | undefined) ?? undefined,
+    end_date: (row.end_date as string | undefined) ?? undefined,
+    event_time_text: (row.event_time_text as string | undefined) ?? undefined,
+    event_duration_type:
+      (row.event_duration_type as EventDurationType | undefined) ?? undefined,
 
-    business_hours: row.business_hours as string | undefined ?? undefined,
+    business_hours: (row.business_hours as string | undefined) ?? undefined,
 
     status: row.status as ListingStatus,
 
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
 
-    // opcional pero ya lo tienes en BD
-    ticket_type: row.ticket_type as string | undefined ?? undefined,
+    ticket_type: (row.ticket_type as string | undefined) ?? undefined,
   };
 }
 
@@ -91,7 +91,9 @@ export const listingsRepo = {
   // -------------------------------------------------------------------------
   async fetchAllListings(): Promise<CanonicalListing[]> {
     if (!isSupabaseConfigured || !supabase) {
-      console.warn("[listingsRepo] Supabase not configured — fetchAllListings returning empty.");
+      console.warn(
+        "[listingsRepo] Supabase not configured — fetchAllListings returning empty."
+      );
       return [];
     }
 
@@ -106,14 +108,25 @@ export const listingsRepo = {
       return [];
     }
 
-    return (data ?? []).map((row) =>
+    const canonicalListings = (data ?? []).map((row) =>
       rowToCanonical(row as Record<string, unknown>)
+    );
+
+    return await Promise.all(
+      canonicalListings.map(async (listing) => ({
+        ...listing,
+        owner_user: listing.owner_user_id
+          ? await usersRepo.getUserById(listing.owner_user_id)
+          : null,
+      }))
     );
   },
 
   async fetchListingById(id: string): Promise<CanonicalListing | undefined> {
     if (!isSupabaseConfigured || !supabase) {
-      console.warn("[listingsRepo] Supabase not configured — fetchListingById returning undefined.");
+      console.warn(
+        "[listingsRepo] Supabase not configured — fetchListingById returning undefined."
+      );
       return undefined;
     }
 
@@ -128,8 +141,15 @@ export const listingsRepo = {
       return undefined;
     }
 
-    return data
-      ? rowToCanonical(data as Record<string, unknown>)
-      : undefined;
+    if (!data) return undefined;
+
+    const listing = rowToCanonical(data as Record<string, unknown>);
+
+    return {
+      ...listing,
+      owner_user: listing.owner_user_id
+        ? await usersRepo.getUserById(listing.owner_user_id)
+        : null,
+    };
   },
 };
