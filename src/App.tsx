@@ -854,7 +854,7 @@ export default function App() {
                           type: l.listing_type,
                           offerType: l.offer_mode,
                           price: l.price_amount ? `${l.price_amount} ${l.price_currency || 'USD'}` : 'Free',
-                          location: '', // TODO: Resolve location via listing_location_id
+                          location: l.location_name || 'Sin ubicación',
                           thumbnail: l.primary_image_url || '',
                           username: currentUser?.username || '',
                           lifecycle: l.status as 'active' | 'paused' | 'draft' | 'expired' | 'archived' | 'sold',
@@ -1295,7 +1295,7 @@ export default function App() {
                       price: state.selectedProduct.price_amount && state.selectedProduct.price_currency
                         ? `${state.selectedProduct.price_amount} ${state.selectedProduct.price_currency}`
                         : 'Price not available',
-                      location: 'Location not available', // TODO: Resolve from listing_location_id
+                      location: state.selectedProduct.location_name || 'Sin ubicación',
                       image: state.selectedProduct.primary_image_url || '',
                       rating: undefined, // Not in canonical model
                       type: state.selectedProduct.listing_type === 'product'

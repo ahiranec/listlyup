@@ -13,14 +13,14 @@
 
 export type ListingType = 'product' | 'service' | 'event';
 
-export type OfferMode = 
-  | 'sell' 
-  | 'trade' 
-  | 'giveaway' 
-  | 'sell_or_trade' 
-  | 'for_sale' 
-  | 'for_rent' 
-  | 'free' 
+export type OfferMode =
+  | 'sell'
+  | 'trade'
+  | 'giveaway'
+  | 'sell_or_trade'
+  | 'for_sale'
+  | 'for_rent'
+  | 'free'
   | 'paid';
 
 export type VisibilityMode = 'public' | 'groups_only';
@@ -47,52 +47,52 @@ export interface CanonicalListing {
   // Core Identity
   id: string;
   owner_user_id: string;
-  
+
   // Classification
   listing_type: ListingType;
   offer_mode: OfferMode;
-  
+
   // Basic Info
   title: string;
   description: string;
   category: string;
   subcategory?: string;
   tags: string[];
-  
+
   // Media
   primary_image_url: string;
-  
+
   // Pricing
   price_amount?: number;
   price_currency?: string;
   condition?: ProductCondition;
   pricing_model?: PricingModel;
-  
+
   // Location
   listing_location_id: string; // Reference to locations table
-  
+  location_name?: string;
   // Visibility
   visibility_mode: VisibilityMode;
-  
+
   // Contact
   contact_methods: ContactMethod[];
   contact_whatsapp_phone?: string;
   contact_website_url?: string;
   contact_social_url?: string;
-  
+
   // Access
   access_mode: AccessMode[];
-  
+
   // Event-Specific
   start_date?: string;
   end_date?: string;
   event_time_text?: string;
   event_duration_type?: EventDurationType;
   ticket_type?: TicketType;
-  
+
   // Service-Specific
   business_hours?: string;
-  
+
   // Lifecycle
   status: ListingStatus;
   created_at: string;
@@ -115,7 +115,7 @@ export interface CanonicalUser {
   bio?: string;
   phone?: string;
   profile_location_id: string;
-  
+
   // Publishing Defaults
   default_contact_method: ContactMethod;
   default_whatsapp_phone?: string;
@@ -124,7 +124,7 @@ export interface CanonicalUser {
   default_access_mode: AccessMode[];
   default_visibility: VisibilityMode;
   default_location_id: string;
-  
+
   // Localization
   language: string;
   region: string;
@@ -238,7 +238,7 @@ export function mapLegacyTypeToCanonical(legacyType: string): {
     'service': { listing_type: 'service', offer_mode: 'for_sale' },
     'event': { listing_type: 'event', offer_mode: 'free' }, // Default to free, adjust if paid
   };
-  
+
   return mapping[legacyType] || { listing_type: 'product', offer_mode: 'sell' };
 }
 
@@ -249,7 +249,7 @@ export function mapLegacyTypeToCanonical(legacyType: string): {
 export function mapCanonicalToLegacyType(listing_type: ListingType, offer_mode: OfferMode): string {
   if (listing_type === 'service') return 'service';
   if (listing_type === 'event') return 'event';
-  
+
   // Product types
   const modeMap: Record<string, string> = {
     'sell': 'sale',
@@ -258,7 +258,7 @@ export function mapCanonicalToLegacyType(listing_type: ListingType, offer_mode: 
     'sell_or_trade': 'sale_or_trade',
     'for_rent': 'rent',
   };
-  
+
   return modeMap[offer_mode] || 'sale';
 }
 
@@ -267,7 +267,7 @@ export function mapCanonicalToLegacyType(listing_type: ListingType, offer_mode: 
  */
 export function mapLegacyContactModes(legacyModes?: string[]): ContactMethod[] {
   if (!legacyModes) return ['in_app_chat'];
-  
+
   return legacyModes
     .map(mode => {
       if (mode === 'chat') return 'in_app_chat';
@@ -308,7 +308,7 @@ export function mapCanonicalVisibilityToLegacy(canonical: VisibilityMode): strin
  */
 export function mapLegacyDeliveryToAccess(legacyDelivery?: string[]): AccessMode[] {
   if (!legacyDelivery) return ['pickup'];
-  
+
   return legacyDelivery
     .map(mode => {
       if (mode === 'shipping') return 'delivery'; // shipping → delivery
