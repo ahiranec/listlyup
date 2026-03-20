@@ -72,11 +72,10 @@ export function ProductMetadataCompact({
           <>
             <span className="flex items-center gap-1">
               <span
-                className={`w-2 h-2 rounded-full ${
-                  listingStatus.color === "blue"
+                className={`w-2 h-2 rounded-full ${listingStatus.color === "blue"
                     ? "bg-blue-500"
                     : "bg-green-500"
-                }`}
+                  }`}
               />
               {listingStatus.label}
             </span>
@@ -94,7 +93,7 @@ export function ProductMetadataCompact({
       >
         <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-foreground" />
         <span className="text-primary hover:underline">
-          Location not available
+          {product.location_name || "Sin ubicación"}
         </span>
       </button>
 

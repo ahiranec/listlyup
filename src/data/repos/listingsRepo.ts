@@ -44,6 +44,7 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
     pricing_model: (row.pricing_model as PricingModel | undefined) ?? undefined,
 
     listing_location_id: row.location_id as string,
+    location_name: (row.locations as any)?.location_text ?? undefined,
 
     visibility_mode: row.visibility_mode as VisibilityMode,
 
@@ -99,7 +100,12 @@ export const listingsRepo = {
 
     const { data, error } = await supabase
       .from("listings")
-      .select("*")
+      .select(`
+    *,
+    locations (
+      location_text
+    )
+  `)
       .eq("status", "active")
       .order("created_at", { ascending: false });
 

@@ -446,7 +446,7 @@ export function ProductDetailPage({
           price: pPrice,
           image: p.primary_image_url || '',
           condition: p.condition,
-          location: '', // TODO: Resolve from listing_location_id
+          location: p.location_name || 'Sin ubicación',
           type: pType,
         };
       });
@@ -480,7 +480,7 @@ export function ProductDetailPage({
           price: pPrice,
           image: p.primary_image_url || '',
           condition: p.condition,
-          location: '', // TODO: Resolve from listing_location_id
+          location: p.location_name || 'Sin ubicación',
           type: pType,
         };
       });
@@ -567,7 +567,7 @@ export function ProductDetailPage({
                     listingTitle: product.title,
                     listingImage: productImage,
                     productPrice: priceDisplay,
-                    productLocation: '', // TODO: Resolve from listing_location_id
+                    productLocation: product.location_name || 'Sin ubicación',
                     productType: legacyType,
                     sellerName: extendedProduct.seller.name,
                   },
@@ -752,7 +752,7 @@ export function ProductDetailPage({
       <LocationModal
         open={isLocationModalOpen}
         onOpenChange={setIsLocationModalOpen}
-        location={''} // TODO: Resolve from listing_location_id
+        location={product.location_name || 'Sin ubicación'}
         privacyPin={extendedProduct.privacyPin}
       />
 
@@ -761,7 +761,7 @@ export function ProductDetailPage({
         open={isSellerModalOpen}
         onOpenChange={setIsSellerModalOpen}
         seller={extendedProduct.seller}
-        location={''} // TODO: Resolve from listing_location_id
+        location={product.location_name || 'Sin ubicación'}
       />
 
       {/* Report Sheet */}
@@ -780,7 +780,7 @@ export function ProductDetailPage({
           id: product.id,
           title: product.title,
           price: priceDisplay,
-          location: '', // TODO: Resolve from listing_location_id
+          location: product.location_name || 'Sin ubicación',
           image: productImage,
           rating: undefined,
           type: legacyType,
