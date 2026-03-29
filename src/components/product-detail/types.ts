@@ -4,7 +4,7 @@ import type { CanonicalListing } from "../../types/canonical";
  * Extended Listing interface with complete detail page data
  * CANONICAL NATIVE
  */
-export interface ExtendedListing extends CanonicalListing {
+export interface ExtendedListing extends Omit<CanonicalListing, 'category' | 'tags'> {
   // Price extensions
   originalPrice?: string;
   discount?: number;
@@ -63,6 +63,15 @@ export interface ExtendedListing extends CanonicalListing {
   // Media items (runtime expanded from images array)
   mediaItems?: { type: 'image' | 'video'; url: string; thumbnail?: string }[];
   
+  // Category extensions
+  category?: {
+    main: string;
+    sub: string;
+  };
+  
+  // Tag extensions
+  tags?: string[];
+
   // Trade extensions
   lookingFor?: string[];
 }

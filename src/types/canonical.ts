@@ -47,6 +47,7 @@ export interface CanonicalListing {
   // Core Identity
   id: string;
   owner_user_id: string;
+  owner_user?: any; // To be refined or kept as any for flexibility if CurrentUser is in index.ts
 
   // Classification
   listing_type: ListingType;

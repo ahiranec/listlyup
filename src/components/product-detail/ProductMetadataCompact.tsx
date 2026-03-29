@@ -6,12 +6,14 @@
 
 import { MapPin, User, Star, ShoppingBag, Repeat, Gift, Folder, Tag } from "lucide-react";
 import type { CanonicalListing } from "../../types/canonical";
-import type { ExtendedProduct } from "./types";
+import type { ExtendedListing } from "./types";
 import { ProductGroupsInfo } from "./ProductGroupsInfo";
+
+import { FALLBACK_SELLER_NAME } from "../../utils/sellerHelpers";
 
 interface ProductMetadataCompactProps {
   product: CanonicalListing;
-  extendedProduct: ExtendedProduct;
+  extendedProduct: ExtendedListing;
   isOwner?: boolean;
   listingStatus: {
     status: string;
@@ -104,7 +106,7 @@ export function ProductMetadataCompact({
           onClick={onSellerClick}
           className="touch-target text-primary hover:underline"
         >
-          {extendedProduct.seller?.name || "Unknown"}
+          {extendedProduct.seller?.name || FALLBACK_SELLER_NAME}
         </button>
         {/* ❌ MVP: Seller rating removed - no rating system in MVP */}
       </div>

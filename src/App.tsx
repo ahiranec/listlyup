@@ -88,6 +88,7 @@ import { useSuperAdminSession } from "./hooks/useSuperAdminSession";
 
 // Utils & Data
 import { shareContent } from "./utils/helpers";
+import { getSellerName } from "./utils/sellerHelpers";
 import canonicalListings from "./data/products"; // ✅ CANONICAL SOURCE - All data starts as CanonicalListing[]
 import { mockCurrentUser } from "./data/currentUser";
 import { mockListingForEdit } from "./data/mockListingForEdit";
@@ -1107,11 +1108,11 @@ export default function App() {
                                     condition={listing.condition}
                                     visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
                                     location={listing.location_name} // TODO: Resolve via listing_location_id
-                                    ownerName={listing.owner_user?.name}
+                                    ownerName={getSellerName(listing.owner_user_id, listing.owner_user)}
                                     type={listing.listing_type === 'product' ? listing.offer_mode : listing.listing_type}
                                     eventDate={listing.start_date}
                                     eventEndDate={listing.end_date}
-                                    eventTime={listing.event_time_text} S
+                                    eventTime={listing.event_time_text}
                                     eventTimeEnd={undefined} // Not in canonical contract
                                     pricingModel={listing.pricing_model}
                                     ticketType={listing.ticket_type}
@@ -1304,8 +1305,8 @@ export default function App() {
                     }}
                     isOwner={state.selectedProduct.owner_user_id === mockCurrentUser.id}
                     username={mockCurrentUser.username || 'user123'}
-                    sellerName={undefined} // TODO: Resolve from owner_user_id
-                    sellerAvatar={undefined} // TODO: Resolve from owner_user_id
+                    sellerName={getSellerName(state.selectedProduct.owner_user_id, state.selectedProduct.owner_user)}
+                    sellerAvatar={state.selectedProduct.owner_user?.avatarUrl || state.selectedProduct.owner_user?.avatar_url}
                   />
                 )}
 

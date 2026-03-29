@@ -32,15 +32,17 @@ export default function ShareSheet({
   onOpenChange, 
   product,
   isOwner,
-  username
+  username,
+  sellerName,
+  sellerAvatar
 }: ShareSheetProps) {
   const [showGroups, setShowGroups] = useState(false);
   const [showQR, setShowQR] = useState(false);
   
-  const productUrl = generateShareUrl(product.id, { source: 'copy' });
+  const productUrl = generateShareUrl(product.id, { source: 'link' });
   const referralUrl = generateShareUrl(product.id, { 
     referralCode: username,
-    source: 'copy'
+    source: 'link'
   });
   
   const handleWhatsApp = () => {
@@ -140,7 +142,11 @@ export default function ShareSheet({
           <div className="py-4">
             <h2 className="text-lg font-semibold mb-4">Share Listing</h2>
             
-            <SharePreviewCard product={product} />
+            <SharePreviewCard 
+              product={product} 
+              sellerName={sellerName}
+              sellerAvatar={sellerAvatar}
+            />
             
             <div className="space-y-2">
               {shareOptions.map((option) => (

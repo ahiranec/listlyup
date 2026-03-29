@@ -213,11 +213,8 @@ export function ProductDetailPage({
   const hasProductReviews = false; // Disabled for MVP
   const hasSellerRating = false; // Disabled for MVP
 
-  // 🆕 GET SELLER INFO DYNAMICALLY from owner_user_id
-  const sellerInfo = {
-    ...getSellerInfo(product.owner_user_id),
-    name: product.owner_user?.name || "Usuario Desconocido",
-  };
+  // 🆕 GET SELLER INFO DYNAMICALLY using centralized helper (Audit Fix)
+  const sellerInfo = getSellerInfo(product.owner_user_id, product.owner_user);
 
   const extendedProduct: ExtendedListing = {
     ...product,
@@ -789,7 +786,9 @@ export function ProductDetailPage({
           description: product.description,
         }}
         isOwner={isOwner}
-        username="current-user" // TODO: Get from auth context
+        username={"user"} // TODO: Get current user username
+        sellerName={sellerInfo.name}
+        sellerAvatar={sellerInfo.avatar}
       />
 
       {/* Make Offer Sheet */}
