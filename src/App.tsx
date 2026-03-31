@@ -88,15 +88,14 @@ import { useSuperAdminSession } from "./hooks/useSuperAdminSession";
 
 // Utils & Data
 import { shareContent } from "./utils/helpers";
+import { formatPrice } from "./utils/formatPrice";
 import { getSellerName } from "./utils/sellerHelpers";
-import canonicalListings from "./data/products"; // ✅ CANONICAL SOURCE - All data starts as CanonicalListing[]
 import { mockCurrentUser } from "./data/currentUser";
-import { mockListingForEdit } from "./data/mockListingForEdit";
 import type { SavedSearch } from "./components/settings/types";
 import type { FilterOptions } from "./components/filters/types";
 import { getSuperAdminSession, clearSuperAdminSession } from "./dev/mockAuth";
 import { trailListingToPublishFormData } from "./utils/trailHelpers";
-import { getTrailListings } from "./data/trailListings";
+import { supabase } from "./lib/supabaseClient";
 
 // Assets
 import imgLogo from "figma:asset/9d920bf2177dcd7ccef7e97e9cc7d4a98384cf54.png";
@@ -135,6 +134,11 @@ export default function App() {
   const { currentUser, userId, setLoginMethod, clearUser } = useCurrentUser({
     isAuthenticated: state.isAuthenticated
   });
+
+  // ✅ AUTH BRIDGE: Sincronizar estado visual legacy con la sesión real de Supabase
+  useEffect(() => {
+    state.setIsAuthenticated(!!currentUser);
+  }, [currentUser]);
 
   // Global Report Sheet state
   const reportSheet = useReportSheet();
@@ -334,7 +338,7 @@ export default function App() {
             ) : state.currentView === "publish" ? (
               <Suspense fallback={<LoadingFallback />}>
                 <PublishFlow
-                  currentUser={mockCurrentUser}
+                  currentUser={currentUser || undefined}
                   initialData={
                     state.republishData
                       ? state.republishData // Re-publish with pre-filled data
@@ -361,8 +365,8 @@ export default function App() {
               <Suspense fallback={<LoadingFallback />}>
                 <PublishFlow
                   mode="edit"
-                  initialData={mockListingForEdit}
-                  currentUser={mockCurrentUser}
+                  initialData={undefined /* TODO: Pass real listing for edit once ID strategy is unified */}
+                  currentUser={currentUser || undefined}
                   onClose={() => {
                     navigation.navigateToHome();
                   }}
@@ -426,11 +430,14 @@ export default function App() {
                     navigation.navigateToHome();
                   }}
                   onSignUp={() => navigation.navigateToSignUp()}
-                  onGoogleSignIn={() => {
-                    setLoginMethod('google'); // Ana García - Free, Individual
-                    state.setIsAuthenticated(true);
-                    navigation.navigateToHome();
-                    toast.success("Signed in with Google as Ana García!");
+                  onGoogleSignIn={async () => {
+                    setLoginMethod('google');
+                    if (supabase) {
+                      await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo: window.location.origin }
+                      });
+                    }
                   }}
                   onAppleSignIn={() => {
                     setLoginMethod('apple'); // Carlos Mendoza - Plus, Store
@@ -622,7 +629,7 @@ export default function App() {
                   onContinueDraft={(draftId) => navigation.navigateToPublish(draftId)}
                   onViewListing={(listingId) => {
                     startTransition(() => {
-                      const canonical = canonicalListings.find(l => l.id === listingId);
+                      const canonical = listings.find(l => l.id === listingId);
                       if (canonical) {
                         state.setSelectedProduct(canonical);
                         state.setCurrentView("product-detail");
@@ -654,7 +661,7 @@ export default function App() {
                   }}
                   onReviewFlaggedListing={(listingId) => {
                     startTransition(() => {
-                      const canonical = canonicalListings.find(l => l.id === listingId);
+                      const canonical = listings.find(l => l.id === listingId);
                       if (canonical) {
                         state.setPreviousView(state.currentView);
                         state.setSelectedProduct(canonical);
@@ -672,7 +679,7 @@ export default function App() {
                   onBack={() => navigation.navigateToHome()}
                   onChatClick={(chatId) => navigation.navigateToChat(chatId)}
                   onViewProduct={(productId) => {
-                    const canonical = canonicalListings.find(l => l.id === productId);
+                    const canonical = listings.find(l => l.id === productId);
                     if (canonical) {
                       state.setPreviousView(state.currentView);
                       state.setSelectedProduct(canonical);
@@ -695,7 +702,7 @@ export default function App() {
                   onBack={() => navigation.navigateBackFromChat(state.previousView)}
                   onViewProduct={(productId) => {
                     startTransition(() => {
-                      const canonical = canonicalListings.find(l => l.id === productId);
+                      const canonical = listings.find(l => l.id === productId);
                       if (canonical) {
                         state.setPreviousView(state.currentView);
                         state.setSelectedProduct(canonical);
@@ -755,7 +762,7 @@ export default function App() {
                       allProducts={filters.filteredAndSortedListings || []}
                       onNavigateToProduct={(productId) => {
                         // Navigate to another listing from RelatedProducts
-                        const canonical = canonicalListings.find((l) => l.id === productId);
+                        const canonical = listings.find((l) => l.id === productId);
                         if (canonical) {
                           startTransition(() => {
                             state.setSelectedProduct(canonical);
@@ -771,7 +778,7 @@ export default function App() {
                     <GroupDetailPage
                       groupId={state.selectedGroupId}
                       initialUserRole={state.selectedGroupRole}
-                      allProducts={canonicalListings}
+                      allProducts={listings}
                       onBack={() => {
                         startTransition(() => {
                           state.setCurrentView("groups");
@@ -786,7 +793,7 @@ export default function App() {
                         toast.success(`Viewing products from this group`);
                       }}
                       onProductClick={(productId) => {
-                        const canonical = canonicalListings.find((l) => l.id === productId);
+                        const canonical = listings.find((l) => l.id === productId);
                         if (canonical) {
                           startTransition(() => {
                             state.setPreviousView(state.currentView);
@@ -847,7 +854,7 @@ export default function App() {
                       onTabChange={navigation.handleTabChange}
                       onNavigateToDetail={handleProductClick}
                       onEditListing={navigation.navigateToEditListing}
-                      listings={canonicalListings
+                      listings={listings
                         .filter(l => l.owner_user_id === currentUser?.id)
                         .map(l => ({
                           id: l.id,
@@ -918,7 +925,7 @@ export default function App() {
                     <MyTrailPage
                       onBack={() => navigation.navigateToHome()}
                       onNavigateToDetail={(listingId) => {
-                        const canonical = canonicalListings.find(l => l.id === listingId);
+                        const canonical = listings.find(l => l.id === listingId);
                         if (canonical) {
                           state.setPreviousView(state.currentView);
                           state.setSelectedProduct(canonical);
@@ -928,15 +935,10 @@ export default function App() {
                         }
                       }}
                       onRepublish={(listingId) => {
-                        // Get trail listing data
-                        const trailListings = getTrailListings();
-                        const listing = trailListings.find(l => l.id === listingId);
-                        if (listing) {
-                          // Convert to PublishFormData
-                          const publishData = trailListingToPublishFormData(listing);
-                          // Navigate to PublishFlow with pre-filled data
-                          navigation.navigateToPublishWithData(publishData);
-                        }
+                        // TODO: Trail listing re-publish with real data pending backend
+                        // Replace mock trail data logic with empty
+                        console.log('Republish requested for listing:', listingId);
+                        toast.info('Trail re-publish integration coming soon.');
                       }}
                     />
                   </Suspense>
@@ -960,7 +962,7 @@ export default function App() {
                       onViewListing={(listingId) => {
                         // Navigate to listing detail
                         startTransition(() => {
-                          const canonical = canonicalListings.find(l => l.id === listingId);
+                          const canonical = listings.find(l => l.id === listingId);
                           if (canonical) {
                             state.setSelectedProduct(canonical);
                             state.setCurrentView("product-detail");
@@ -991,7 +993,7 @@ export default function App() {
                       onViewFlyer={(flyerId) => {
                         // Navigate to event listing detail
                         startTransition(() => {
-                          const canonical = canonicalListings.find(l => l.id === flyerId);
+                          const canonical = listings.find(l => l.id === flyerId);
                           if (canonical) {
                             state.setSelectedProduct(canonical);
                             state.setCurrentView("product-detail");
@@ -1003,7 +1005,7 @@ export default function App() {
                       onViewListing={(listingId) => {
                         // Navigate to listing detail
                         startTransition(() => {
-                          const canonical = canonicalListings.find(l => l.id === listingId);
+                          const canonical = listings.find(l => l.id === listingId);
                           if (canonical) {
                             state.setSelectedProduct(canonical);
                             state.setCurrentView("product-detail");
@@ -1104,7 +1106,7 @@ export default function App() {
                                     id={listing.id}
                                     image={listing.primary_image_url || ''}
                                     title={listing.title}
-                                    price={listing.price_amount ? `${listing.price_amount} ${listing.price_currency || 'USD'}` : undefined}
+                                    price={listing.price_amount ? formatPrice(listing.price_amount, listing.price_currency || 'USD') : undefined}
                                     condition={listing.condition}
                                     visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
                                     location={listing.location_name} // TODO: Resolve via listing_location_id
@@ -1340,7 +1342,7 @@ export default function App() {
                         // ✅ PHASE 3.5: Navigate to ProductDetailPage using canonical pattern
                         // Map trail-1 to existing product (Laptop Stand = uer-1)
                         const productId = 'uer-1'; // Mock: Map trail transaction to actual product
-                        const canonical = canonicalListings.find((l) => l.id === productId);
+                        const canonical = listings.find((l) => l.id === productId);
 
                         if (!canonical) {
                           toast.error('Listing not found');

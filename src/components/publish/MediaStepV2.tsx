@@ -11,6 +11,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { useFeatures } from '../../contexts/FeaturesContext';
 import type { ListingType, AISuggestions, ListingIntent, OfferType, ProductCondition, ServiceMode } from './types';
+import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient";
 
 interface MediaStepV2Props {
   mode?: 'create' | 'edit';
@@ -44,7 +45,7 @@ export function MediaStepV2({
 
   // Check if AI Publishing Assistance is active
   const isAIActive = isFeatureActive('aiPublishingAssistance');
-  
+
   // Type is locked in edit mode
   const isTypeLocked = mode === 'edit';
 
@@ -84,33 +85,57 @@ export function MediaStepV2({
 
   const analyzeImages = async () => {
     setIsAnalyzing(true);
-    
+
     // Simulate AI analysis
     setTimeout(() => {
       // Mock detection: Product, Service, or Event
       const mockDetectedType: ListingType = 'product';
       setAiDetectedType(mockDetectedType);
-      
+
       // If no type selected yet, auto-select detected type
       if (!selectedType) {
         onTypeChange(mockDetectedType);
       }
-      
+
       setIsAnalyzing(false);
     }, 1500);
   };
 
-  const handleFileSelect = (files: FileList | null) => {
+
+  const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    const newImages: string[] = [];
-    for (let i = 0; i < Math.min(files.length, 10 - images.length); i++) {
-      const file = files[i];
-      const url = URL.createObjectURL(file);
-      newImages.push(url);
+    if (!isSupabaseConfigured || !supabase) {
+      console.error('[MediaStepV2] Supabase is not configured — cannot upload images');
+      return;
     }
 
-    onImagesChange([...images, ...newImages]);
+    const uploadedUrls: string[] = [];
+
+    for (let i = 0; i < Math.min(files.length, 10 - images.length); i++) {
+      const file = files[i];
+
+      const fileName = `${Date.now()}-${file.name}`;
+
+      const { error } = await supabase.storage
+        .from("listing-images")
+        .upload(fileName, file);
+
+      if (error) {
+        console.error("Upload error:", error.message);
+        continue;
+      }
+
+      const { data } = supabase.storage
+        .from("listing-images")
+        .getPublicUrl(fileName);
+
+      if (data?.publicUrl) {
+        uploadedUrls.push(data.publicUrl);
+      }
+    }
+
+    onImagesChange([...images, ...uploadedUrls]);
   };
 
   const removeImage = (index: number) => {
@@ -188,7 +213,7 @@ export function MediaStepV2({
   // NEW v1.2.1: Check if intent is complete
   const isIntentComplete = useMemo(() => {
     if (!selectedType || !intent) return false;
-    
+
     if (selectedType === 'product') {
       return !!(intent.offerMode && intent.condition);
     }
@@ -204,10 +229,10 @@ export function MediaStepV2({
   // NEW v1.2.1: Can continue only if intent is complete (in create mode) or has images+type (edit mode)
   const canContinue = useMemo(() => {
     if (images.length === 0 || !selectedType) return false;
-    
+
     // Edit mode: just need images + type (intent might be missing from old listings)
     if (mode === 'edit') return true;
-    
+
     // Create mode: need complete intent
     return isIntentComplete;
   }, [images.length, selectedType, mode, isIntentComplete]);
@@ -255,7 +280,7 @@ export function MediaStepV2({
           {images.length === 0 ? 'Photos' : 'Media & Type'}
         </h2>
         <p className="text-[10px] text-muted-foreground">
-          {images.length === 0 
+          {images.length === 0
             ? 'At least 1 photo required'
             : `${images.length} photo${images.length > 1 ? 's' : ''} • ${selectedType ? typeOptions.find(t => t.value === selectedType)?.label : 'Select type'}`
           }
@@ -264,7 +289,7 @@ export function MediaStepV2({
 
       {/* Scrollable Content - MÁS PADDING */}
       <div className="flex-1 overflow-auto p-4">
-        
+
         {/* ========== FASE 1: Solo Upload (cuando no hay fotos) ========== */}
         {images.length === 0 && (
           <div className="space-y-6">
@@ -288,7 +313,7 @@ export function MediaStepV2({
                   onChange={(e) => handleFileSelect(e.target.files)}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                 />
-                
+
                 <div className="text-center space-y-2">
                   <div className="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
                     <Upload className="w-6 h-6 text-gray-400" />
@@ -309,7 +334,7 @@ export function MediaStepV2({
                   onChange={(e) => handleFileSelect(e.target.files)}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                 />
-                
+
                 <div className="text-center space-y-2">
                   <div className="w-12 h-12 mx-auto bg-blue-50 rounded-full flex items-center justify-center">
                     <Camera className="w-6 h-6 text-blue-500" />
@@ -375,7 +400,7 @@ export function MediaStepV2({
                       alt={`Photo ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
-                    
+
                     {index === 0 && (
                       <div className="absolute top-0.5 left-0.5">
                         <Badge className="bg-primary/90 text-white text-[8px] px-1 py-0 leading-tight">
@@ -383,7 +408,7 @@ export function MediaStepV2({
                         </Badge>
                       </div>
                     )}
-                    
+
                     <button
                       onClick={() => removeImage(index)}
                       className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -392,7 +417,7 @@ export function MediaStepV2({
                     </button>
                   </motion.div>
                 ))}
-                
+
                 {/* Mostrar +N si hay más de 3 fotos */}
                 {images.length > 3 && (
                   <div className="relative aspect-square rounded-md bg-gray-100 flex items-center justify-center">
@@ -404,7 +429,7 @@ export function MediaStepV2({
 
             {/* Divider */}
             <div className="h-px bg-gray-200" />
-            
+
             {/* Type Selection Section - COMPACTO */}
             <div className="space-y-1.5">
               <h3 className="text-sm font-medium text-gray-900 flex items-center gap-1">
@@ -433,7 +458,7 @@ export function MediaStepV2({
                       <div className="text-lg">{option.emoji}</div>
                       <div className="text-xs font-medium leading-tight">{option.label}</div>
                     </div>
-                    
+
                     {selectedType === option.value && (
                       <div className="absolute top-0.5 right-0.5 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
                         <Check className="w-2 h-2 text-white" />

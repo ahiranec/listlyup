@@ -14,6 +14,7 @@ import { DurationBadge } from "../product-card/DurationBadge";
 import type { CanonicalListing } from "../../types/canonical";
 import type { ExtendedProduct } from "./types";
 import { formatEventDateRange } from "../../utils/helpers";
+import { formatPrice } from "../../utils/formatPrice";
 
 interface ProductHeaderCompactProps {
   product: CanonicalListing;
@@ -38,7 +39,7 @@ export function ProductHeaderCompact({
 
   // Canonical price display
   const priceDisplay = product.price_amount && product.price_currency 
-    ? `${product.price_amount} ${product.price_currency}` 
+    ? formatPrice(product.price_amount, product.price_currency)
     : undefined;
 
   return (
@@ -72,7 +73,7 @@ export function ProductHeaderCompact({
               ) : (
                 <>
                   <span className="text-xl text-primary text-[16px]">
-                    {priceDisplay || "0 USD"}
+                    {priceDisplay || "0"}
                   </span>
                   {extendedProduct.discount && (
                     <Badge variant="destructive" className="text-xs h-5">
