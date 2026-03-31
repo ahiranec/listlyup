@@ -11,16 +11,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { PublishFormData, PublishStep } from '../types';
 import type { AISuggestions } from '../../../lib/services/types';
-import { INITIAL_FORM_DATA, PUBLISH_SIMULATION_DELAY } from '../constants';
+import { INITIAL_FORM_DATA } from '../constants';
 import { useProfile } from '../../../contexts/ProfileContext';
 import { toast } from 'sonner@2.0.3';
 import { canPost, shouldAutoApproveListings, type Group, type UserRole } from '../../../lib/groupPermissions';
+import { locationsRepo } from '../../../data/repos/locationsRepo';
+import { listingsRepo } from '../../../data/repos/listingsRepo';
+import type { CurrentUser } from '../../../types';
 
 interface UsePublishFlowProps {
   mode?: 'create' | 'edit';
   initialData?: Partial<PublishFormData>;
   onClose: () => void;
   onPublish?: (data: PublishFormData & { status?: 'active' | 'pending' }) => void;
+  currentUser?: CurrentUser | null; // User performing the publish
   currentUserRole?: UserRole; // NEW: Para validar permisos
   availableGroups?: Group[]; // NEW: Lista de grupos donde el usuario puede publicar
 }
@@ -30,6 +34,7 @@ export function usePublishFlow({
   initialData,
   onClose, 
   onPublish,
+  currentUser,
   currentUserRole = 'member', // Default: member
   availableGroups = [], // Default: sin grupos
 }: UsePublishFlowProps) {
@@ -179,6 +184,9 @@ export function usePublishFlow({
 
   // Publish handler
   const handlePublish = async () => {
+    // ✅ GUARD: Prevent double-submit
+    if (isPublishing) return;
+
     // ✅ VALIDACIÓN 1: Verificar permisos para grupos seleccionados
     if (formData.selectedGroups && formData.selectedGroups.length > 0) {
       const invalidGroups: string[] = [];
@@ -204,27 +212,75 @@ export function usePublishFlow({
     }
     
     setIsPublishing(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, PUBLISH_SIMULATION_DELAY));
-    
-    // ✅ DETERMINAR STATUS DEL LISTING
+
+    // Declare outside try so it's accessible in the success block
     let listingStatus: 'active' | 'pending' = 'active';
-    
-    // Si está publicando en grupos, verificar auto-approve
-    if (formData.selectedGroups && formData.selectedGroups.length > 0) {
-      // Estrategia: Si ANY grupo requiere aprobación, el listing va a pending
-      const requiresApproval = formData.selectedGroups.some(groupId => {
-        const group = availableGroups.find(g => g.id === groupId);
-        if (!group) return false;
-        return !shouldAutoApproveListings(group);
-      });
-      
-      if (requiresApproval) {
-        listingStatus = 'pending';
+
+    try {
+      // ──────────────────────────────────────────────
+      // STEP 1: Create location row in Supabase
+      // ──────────────────────────────────────────────
+      let locationId: string | null = null;
+
+      if (formData.location) {
+        locationId = await locationsRepo.createLocation({
+          latitude: formData.location.latitude,
+          longitude: formData.location.longitude,
+          address: formData.location.address,
+          city: formData.location.city,
+          region: formData.location.region,
+        });
+        console.log('[usePublishFlow] ✅ Location created:', locationId);
       }
+
+      // ──────────────────────────────────────────────
+      // STEP 2: Determine listing status
+      // ──────────────────────────────────────────────
+      if (formData.selectedGroups && formData.selectedGroups.length > 0) {
+        const requiresApproval = formData.selectedGroups.some(groupId => {
+          const group = availableGroups.find(g => g.id === groupId);
+          if (!group) return false;
+          return !shouldAutoApproveListings(group);
+        });
+
+        if (requiresApproval) {
+          listingStatus = 'pending';
+        }
+      }
+
+      // ──────────────────────────────────────────────
+      // STEP 3: Create listing row in Supabase
+      // ──────────────────────────────────────────────
+
+      let userId = currentUser?.id;
+      if (!userId) {
+        throw new Error('Cannot publish without a logged-in user');
+      }
+
+      const result = await listingsRepo.createListing({
+        user_id:            userId,
+        location_id:        locationId,
+        title:              formData.title,
+        description:        formData.description || '',
+        listing_type:       formData.type,
+        offer_mode:         formData.intent?.offerMode ?? null,
+        primary_image_url:  formData.images[0] ?? null,
+        price_amount:       formData.price ? parseFloat(formData.price) : null,
+        price_currency:     formData.currency,
+        visibility_mode:    formData.visibility_mode || 'public',
+        status:             listingStatus,
+        ai_prefill_used:    false,
+        ai_flagged:         false,
+      });
+      console.log('[usePublishFlow] ✅ Listing created:', result.id);
+
+    } catch (err: any) {
+      console.error('[usePublishFlow] ❌ Publish failed:', err?.message || err);
+      toast.error('Failed to publish listing. Please try again.');
+      setIsPublishing(false);
+      return; // Abort — don't close the flow
     }
-    
+
     setIsPublishing(false);
     
     // Different success message for edit vs create

@@ -221,9 +221,20 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
     return (listing as any).isReported === true;
   };
 
-  // Helper: Check if listing is expiring (within 7 days)
+  // Helper: Check if listing is expiring (unified with lifecycle logic)
   const isListingExpiring = (listing: MyListing) => {
-    // Check if listing has daysUntilExpiration field and it's <= 7
+    const stage = (listing as any).lifecycle_stage;
+    if (stage === 'expiring_soon') return true;
+    if (stage === 'expired') return false;
+
+    const now = new Date();
+    const expiringSoonAt = (listing as any).expiring_soon_at ? new Date((listing as any).expiring_soon_at) : null;
+    const expiresAt = (listing as any).expires_at ? new Date((listing as any).expires_at) : null;
+
+    // ⏰ Expiring Soon: now >= expiringSoonAt AND now < expiresAt
+    if (expiringSoonAt && (now >= expiringSoonAt) && (!expiresAt || now < expiresAt)) return true;
+    
+    // Legacy fallback
     const days = (listing as any).daysUntilExpiration;
     return typeof days === 'number' && days <= 7;
   };

@@ -1,4 +1,3 @@
-import { canonicalListings } from "../products";
 import { usersRepo } from "./usersRepo";
 import type { CanonicalListing } from "../../types/canonical";
 import type {
@@ -46,6 +45,10 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
 
     primary_image_url: row.primary_image_url as string,
 
+    images: row.primary_image_url
+      ? [row.primary_image_url as string]
+      : [],
+
     price_amount:
       row.price_amount != null ? Number(row.price_amount) : undefined,
 
@@ -55,7 +58,7 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
     pricing_model: (row.pricing_model as PricingModel | undefined) ?? undefined,
 
     listing_location_id: row.location_id as string,
-    location_name: (row.locations as any)?.location_text ?? undefined,
+    location_name: (row.locations as any)?.formatted_text ?? undefined,
 
     visibility_mode: row.visibility_mode as VisibilityMode,
 
@@ -83,19 +86,31 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
     updated_at: row.updated_at as string,
 
     ticket_type: (row.ticket_type as string | undefined) ?? undefined,
+
+    // Lifecycle Extensions
+    refreshed_at: (row.refreshed_at as string | null) ?? null,
+    expiring_soon_at: (row.expiring_soon_at as string | null) ?? null,
+    expires_at: (row.expires_at as string | null) ?? null,
+    refresh_count: (row.refresh_count as number | null) ?? 0,
+    lifecycle_stage: (row.lifecycle_stage as any) ?? 'active',
   };
 }
 
+// ---------------------------------------------------------------------------
+// INTERNAL CACHE: Stores fetched real listings
+// ---------------------------------------------------------------------------
+let cachedListings: CanonicalListing[] = [];
+
 export const listingsRepo = {
   // -------------------------------------------------------------------------
-  // SYNC (mock actual)
+  // SYNC (using cache)
   // -------------------------------------------------------------------------
   getAllListings(): CanonicalListing[] {
-    return canonicalListings;
+    return cachedListings;
   },
 
   getListingById(id: string): CanonicalListing | undefined {
-    return canonicalListings.find((l) => l.id === id);
+    return cachedListings.find((l) => l.id === id);
   },
 
   // -------------------------------------------------------------------------
@@ -114,7 +129,7 @@ export const listingsRepo = {
       .select(`
     *,
     locations (
-      location_text
+      formatted_text
     )
   `)
       .eq("status", "active")
@@ -125,18 +140,22 @@ export const listingsRepo = {
       return [];
     }
 
-    const canonicalListings = (data ?? []).map((row) =>
+    const fetchedListings = (data ?? []).map((row) =>
       rowToCanonical(row as Record<string, unknown>)
     );
 
-    return await Promise.all(
-      canonicalListings.map(async (listing) => ({
+    const listingsWithOwners = await Promise.all(
+      fetchedListings.map(async (listing) => ({
         ...listing,
         owner_user: listing.owner_user_id
           ? await usersRepo.getUserById(listing.owner_user_id)
           : null,
       }))
     );
+
+    // Update internal cache
+    cachedListings = listingsWithOwners;
+    return listingsWithOwners;
   },
 
   async fetchListingById(id: string): Promise<CanonicalListing | undefined> {
@@ -152,7 +171,7 @@ export const listingsRepo = {
       .select(`
     *,
     locations (
-      location_text
+      formatted_text
     )
   `)
       .eq("id", id)
@@ -174,4 +193,92 @@ export const listingsRepo = {
         : null,
     };
   },
+
+  async refreshListing(listingId: string): Promise<void> {
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error("Supabase is not configured");
+    }
+
+    const { error } = await supabase.rpc("rpc_refresh_listing", {
+      p_listing_id: listingId,
+    });
+
+    if (error) {
+      console.error("[listingsRepo] refreshListing error:", error.message);
+      throw error;
+    }
+  },
+
+  // -------------------------------------------------------------------------
+  // WRITE — Create a new listing (minimal insert)
+  // -------------------------------------------------------------------------
+  async createListing(input: CreateListingInput): Promise<{ id: string }> {
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error("[listingsRepo] Supabase is not configured — cannot create listing");
+    }
+
+    const row = {
+      user_id: input.user_id,
+      location_id: input.location_id,
+      title: input.title,
+      description: input.description ?? "",
+      listing_type: input.listing_type,
+      offer_mode: input.offer_mode ?? null,
+      primary_image_url: input.primary_image_url ?? null,
+      price_amount: input.price_amount ?? null,
+      price_currency: input.price_currency ?? null,
+      visibility_mode: input.visibility_mode ?? "public",
+      status: input.status ?? "active",
+      ai_prefill_used: input.ai_prefill_used ?? false,
+      ai_flagged: input.ai_flagged ?? false,
+    };
+
+    console.log("[listingsRepo] Creating listing with payload:", row);
+
+    const { data, error } = await supabase
+      .from("listings")
+      .insert(row)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("[listingsRepo] createListing error:", error.message);
+      throw new Error(`Failed to create listing: ${error.message}`);
+    }
+
+    if (!data?.id) {
+      throw new Error("[listingsRepo] createListing returned no id");
+    }
+
+    console.log("[listingsRepo] ✅ Listing created:", data.id);
+
+    // Invalidate cache so next fetch picks up the new listing
+    cachedListings = [];
+
+    // Notify listeners (like useListings hook) that the data is stale
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('listings_updated'));
+    }
+
+    return { id: data.id as string };
+  },
 };
+
+// ---------------------------------------------------------------------------
+// Input type for createListing (minimal MVP)
+// ---------------------------------------------------------------------------
+export interface CreateListingInput {
+  user_id: string;
+  location_id: string | null;
+  title: string;
+  description?: string;
+  listing_type: string;
+  offer_mode?: string | null;
+  primary_image_url?: string | null;
+  price_amount?: number | null;
+  price_currency?: string | null;
+  visibility_mode?: string;
+  status?: string;
+  ai_prefill_used?: boolean;
+  ai_flagged?: boolean;
+}

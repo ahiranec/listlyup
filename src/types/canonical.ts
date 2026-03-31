@@ -98,6 +98,13 @@ export interface CanonicalListing {
   status: ListingStatus;
   created_at: string;
   updated_at: string;
+
+  // Extended Lifecycle
+  refreshed_at?: string | null;
+  expiring_soon_at?: string | null;
+  expires_at?: string | null;
+  refresh_count?: number | null;
+  lifecycle_stage?: 'active' | 'expiring_soon' | 'expired';
 }
 
 // ============================================================================

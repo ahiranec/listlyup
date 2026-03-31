@@ -87,6 +87,7 @@ export function PublishFlow({
     initialData, 
     onClose, 
     onPublish,
+    currentUser, // ✅ Pass user for createListing
     currentUserRole, // ✅ Pasar userRole
     availableGroups, // ✅ Pasar grupos disponibles
   });
