@@ -12,7 +12,7 @@ export class RealMapsService implements IMapsService {
   
   constructor() {
     try {
-      const env = import.meta?.env ?? {};
+      const env = (import.meta as any).env || {};
       this.apiKey = env.VITE_GOOGLE_MAPS_API_KEY || '';
     } catch {
       this.apiKey = '';
@@ -42,10 +42,14 @@ export class RealMapsService implements IMapsService {
               data: geocodeResult.data.location,
             });
           } else {
-            // Return just coordinates if geocoding fails
+            // Return coordinates with a clear fallback address
             resolve({
               success: true,
-              data: { latitude, longitude },
+              data: { 
+                latitude, 
+                longitude,
+                address: `Ubicación detectada (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`,
+              },
             });
           }
         },
@@ -83,53 +87,49 @@ export class RealMapsService implements IMapsService {
   ): Promise<ServiceResult<GeocodingResult[]>> {
     
     try {
-      const params = new URLSearchParams({
+      const isReady = await this.waitForGoogleMaps();
+      if (!isReady) {
+        throw new Error('Google Maps SDK not ready');
+      }
+
+      const autocompleteService = new google.maps.places.AutocompleteService();
+      
+      const request: google.maps.places.AutocompletionRequest = {
         input: options.query,
-        key: this.apiKey,
         language: options.language || 'es',
-      });
-      
-      // Add bounds if provided
+      };
+
+      // Add location bias if bounds are provided
       if (options.bounds) {
-        const center = {
-          lat: (options.bounds.north + options.bounds.south) / 2,
-          lng: (options.bounds.east + options.bounds.west) / 2,
-        };
-        params.append('location', `${center.lat},${center.lng}`);
-        params.append('radius', '50000'); // 50km radius
-      }
-      
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-        throw new Error(data.error_message || `API error: ${data.status}`);
-      }
-      
-      if (data.status === 'ZERO_RESULTS') {
-        return {
-          success: true,
-          data: [],
+        request.locationBias = {
+          north: options.bounds.north,
+          south: options.bounds.south,
+          east: options.bounds.east,
+          west: options.bounds.west,
         };
       }
-      
-      // Get details for each prediction
-      const results = await Promise.all(
-        data.predictions
-          .slice(0, options.limit || 5)
-          .map((prediction: any) => this.getPlaceDetails(prediction.place_id))
-      );
-      
+
+      const response = await autocompleteService.getPlacePredictions(request);
+
+      if (!response || !response.predictions) {
+        return { success: true, data: [] };
+      }
+
+      // Return light results as requested (no coordinates yet)
+      const results: GeocodingResult[] = response.predictions.map(prediction => ({
+        location: {
+          latitude: null,
+          longitude: null,
+          address: prediction.description,
+          placeId: prediction.place_id,
+        },
+        formattedAddress: prediction.description,
+        placeId: prediction.place_id,
+      }));
+
       return {
         success: true,
-        data: results.filter((r): r is GeocodingResult => r !== null),
+        data: results,
       };
       
     } catch (error) {
@@ -141,35 +141,40 @@ export class RealMapsService implements IMapsService {
     }
   }
   
+  private async waitForGoogleMaps(retries = 3, delay = 500): Promise<boolean> {
+    for (let i = 0; i < retries; i++) {
+      if (typeof google !== 'undefined' && google.maps && google.maps.Geocoder && google.maps.places) {
+        return true;
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return false;
+  }
+
   async reverseGeocode(
     latitude: number,
     longitude: number
   ): Promise<ServiceResult<GeocodingResult>> {
     
     try {
-      const params = new URLSearchParams({
-        latlng: `${latitude},${longitude}`,
-        key: this.apiKey,
-        language: 'es',
+      // Wait for Google Maps API to be available
+      const isReady = await this.waitForGoogleMaps();
+      if (!isReady) {
+        throw new Error('Google Maps API not loaded after waiting');
+      }
+
+      const geocoder = new google.maps.Geocoder();
+      const response = await geocoder.geocode({
+        location: { lat: latitude, lng: longitude }
       });
-      
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?${params}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+
+      if (!response.results || response.results.length === 0) {
+        throw new Error('No results found');
       }
-      
-      const data = await response.json();
-      
-      if (data.status !== 'OK' || !data.results || data.results.length === 0) {
-        throw new Error(data.error_message || 'No results found');
-      }
-      
+
       return {
         success: true,
-        data: this.parseGeocodingResult(data.results[0]),
+        data: this.parseGeocodingResult(response.results[0]),
       };
       
     } catch (error) {
@@ -177,35 +182,39 @@ export class RealMapsService implements IMapsService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Geocoding failed',
+        data: {
+          location: {
+            latitude,
+            longitude,
+            address: `Coordenadas detectadas (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`,
+            city: '',
+            region: '',
+            country: '',
+          },
+          formattedAddress: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+        }
       };
     }
   }
   
   async geocode(address: string): Promise<ServiceResult<GeocodingResult>> {
     try {
-      const params = new URLSearchParams({
-        address,
-        key: this.apiKey,
-        language: 'es',
-      });
-      
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?${params}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+      // Wait for Google Maps API to be available
+      const isReady = await this.waitForGoogleMaps();
+      if (!isReady) {
+        throw new Error('Google Maps API not loaded after waiting');
       }
-      
-      const data = await response.json();
-      
-      if (data.status !== 'OK' || !data.results || data.results.length === 0) {
-        throw new Error(data.error_message || 'Address not found');
+
+      const geocoder = new google.maps.Geocoder();
+      const response = await geocoder.geocode({ address });
+
+      if (!response.results || response.results.length === 0) {
+        throw new Error('Address not found');
       }
-      
+
       return {
         success: true,
-        data: this.parseGeocodingResult(data.results[0]),
+        data: this.parseGeocodingResult(response.results[0]),
       };
       
     } catch (error) {
@@ -213,6 +222,47 @@ export class RealMapsService implements IMapsService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Geocoding failed',
+      };
+    }
+  }
+
+  async getPlaceDetails(placeId: string): Promise<ServiceResult<GeocodingResult>> {
+    try {
+      const isReady = await this.waitForGoogleMaps();
+      if (!isReady) {
+        throw new Error('Google Maps SDK not ready');
+      }
+
+      // PlacesService requires an HTML element (even if not visible)
+      const dummyElement = document.createElement('div');
+      const service = new google.maps.places.PlacesService(dummyElement);
+
+      return new Promise((resolve) => {
+        service.getDetails(
+          {
+            placeId,
+            fields: ['geometry', 'formatted_address', 'address_components', 'place_id'],
+          },
+          (result, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+              resolve({
+                success: true,
+                data: this.parseGeocodingResult(result),
+              });
+            } else {
+              resolve({
+                success: false,
+                error: `Places details failed with status: ${status}`,
+              });
+            }
+          }
+        );
+      });
+    } catch (error) {
+      console.error('Error getting place details:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get details',
       };
     }
   }
@@ -229,43 +279,21 @@ export class RealMapsService implements IMapsService {
   // PRIVATE HELPERS
   // ============================================
   
-  private async getPlaceDetails(placeId: string): Promise<GeocodingResult | null> {
-    try {
-      const params = new URLSearchParams({
-        place_id: placeId,
-        key: this.apiKey,
-        fields: 'geometry,formatted_address,address_components',
-        language: 'es',
-      });
-      
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?${params}`
-      );
-      
-      if (!response.ok) {
-        return null;
-      }
-      
-      const data = await response.json();
-      
-      if (data.status !== 'OK' || !data.result) {
-        return null;
-      }
-      
-      return this.parseGeocodingResult(data.result);
-      
-    } catch (error) {
-      console.error('Error getting place details:', error);
-      return null;
-    }
-  }
-  
   private parseGeocodingResult(result: any): GeocodingResult {
-    const { lat, lng } = result.geometry.location;
+    // Handle both JS API (lat/lng as functions) and REST API (lat/lng as numbers)
+    const lat = typeof result.geometry.location.lat === 'function' 
+      ? result.geometry.location.lat() 
+      : result.geometry.location.lat;
+      
+    const lng = typeof result.geometry.location.lng === 'function' 
+      ? result.geometry.location.lng() 
+      : result.geometry.location.lng;
     
     // Extract address components
     const addressComponents = result.address_components || [];
-    const city = this.findAddressComponent(addressComponents, 'locality');
+    const city = this.findAddressComponent(addressComponents, 'locality') || 
+                 this.findAddressComponent(addressComponents, 'sublocality_level_1') ||
+                 this.findAddressComponent(addressComponents, 'administrative_area_level_2');
     const region = this.findAddressComponent(addressComponents, 'administrative_area_level_1');
     const country = this.findAddressComponent(addressComponents, 'country');
     const postalCode = this.findAddressComponent(addressComponents, 'postal_code');
@@ -275,13 +303,14 @@ export class RealMapsService implements IMapsService {
         latitude: lat,
         longitude: lng,
         address: result.formatted_address,
-        city,
-        region,
-        country,
-        postalCode,
+        city: city || '',
+        region: region || '',
+        country: country || '',
+        postalCode: postalCode || '',
+        placeId: result.place_id || '',
       },
-      formattedAddress: result.formatted_address,
-      placeId: result.place_id,
+      formattedAddress: result.formatted_address || '',
+      placeId: result.place_id || '',
     };
   }
   

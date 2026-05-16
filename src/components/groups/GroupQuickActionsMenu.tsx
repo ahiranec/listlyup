@@ -10,7 +10,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { actionRegistry } from "../../actions/registry";
 import type { ActionId } from "../../actions/types";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { useState } from "react";
 import ShareGroupSheet from "../share/ShareGroupSheet";
 import { ReportGroupSheet } from "./ReportGroupSheet";

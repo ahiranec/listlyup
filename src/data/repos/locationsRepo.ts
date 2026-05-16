@@ -15,12 +15,13 @@ import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient";
 
 /** Minimal input required to create a location from the Publish Flow */
 export interface CreateLocationInput {
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   address?: string;
   city?: string;
   region?: string;
   country?: string;
+  place_id?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -73,14 +74,18 @@ export const locationsRepo = {
       throw new Error("[locationsRepo] Supabase is not configured — cannot create location");
     }
 
+    const cityRegion = [input.city, input.region].filter(Boolean).join(", ");
+    
     const row = {
-      formatted_text: input.address || `${input.city ?? ""}, ${input.region ?? ""}`.trim(),
+      formatted_text: input.address || 
+                     cityRegion || 
+                     (input.latitude && input.longitude ? `Coordenadas (${Number(input.latitude).toFixed(4)}, ${Number(input.longitude).toFixed(4)})` : "Ubicación desconocida"),
       city: input.city ?? null,
       region: input.region ?? null,
       country: input.country ?? null,
-      lat: input.latitude,
-      lng: input.longitude,
-      place_id: null,
+      lat: input.latitude ?? null,
+      lng: input.longitude ?? null,
+      place_id: input.place_id ?? null,
       privacy_mode: null,
       privacy_radius_m: null,
     };
@@ -103,4 +108,23 @@ export const locationsRepo = {
     console.log("[locationsRepo] ✅ Location created:", data.id);
     return data.id as string;
   },
+  // -------------------------------------------------------------------------
+  // DELETE — Remove a location row (used for rollbacks)
+  // -------------------------------------------------------------------------
+  async deleteLocation(id: string): Promise<void> {
+    if (!isSupabaseConfigured || !supabase) return;
+
+    const { error } = await supabase
+      .from("locations")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("[locationsRepo] deleteLocation error:", error.message);
+      throw error;
+    }
+
+    console.log("[locationsRepo] 🗑️ Location deleted:", id);
+  },
 };
+

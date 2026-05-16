@@ -48,7 +48,7 @@ import type {
 import {
   mapLegacyTypeToCanonical,
   mapCanonicalToLegacyType,
-  mapLegacyContactModes,
+  mapLegacycontact_methods,
   mapCanonicalContactToLegacy,
   mapLegacyVisibility,
   mapCanonicalVisibilityToLegacy,
@@ -96,9 +96,9 @@ export function productToCanonical(product: Product): CanonicalListing {
     pricing_model: product.pricingModel,
     listing_location_id: 'temp-location-id', // TODO: Create location records
     visibility_mode: mapLegacyVisibility(product.visibility),
-    contact_methods: mapLegacyContactModes(product.contactModes),
+    contact_methods: mapLegacycontact_methods(product.contact_methods),
     contact_whatsapp_phone: product.phoneNumber,
-    access_mode: mapLegacyDeliveryToAccess(product.deliveryModes),
+    access_mode: mapLegacyDeliveryToAccess(product.access_mode),
     start_date: product.eventDate,
     event_time_text: product.eventTime,
     event_duration_type: product.duration === 'multi' ? 'multi_day' : 'single_day',
@@ -134,9 +134,9 @@ export function canonicalToProduct(canonical: CanonicalListing): Product {
     createdAt: canonical.created_at,
     groupIds: [], // TODO: Fetch from listing_groups table
     ownerId: canonical.owner_user_id,
-    contactModes: mapCanonicalContactToLegacy(canonical.contact_methods) as any,
+    contact_methods: mapCanonicalContactToLegacy(canonical.contact_methods) as any,
     phoneNumber: canonical.contact_whatsapp_phone,
-    deliveryModes: mapCanonicalAccessToLegacy(canonical.access_mode) as any,
+    access_mode: mapCanonicalAccessToLegacy(canonical.access_mode) as any,
     description: canonical.description,
     eventDate: canonical.start_date,
     eventTime: canonical.event_time_text,
@@ -167,7 +167,7 @@ export function applyCanonicalFields(product: Product, updates: Partial<Canonica
   }
   
   if (updates.contact_methods) {
-    updated.contactModes = mapCanonicalContactToLegacy(updates.contact_methods) as any;
+    updated.contact_methods = mapCanonicalContactToLegacy(updates.contact_methods) as any;
   }
   
   if (updates.contact_whatsapp_phone !== undefined) {
@@ -175,7 +175,7 @@ export function applyCanonicalFields(product: Product, updates: Partial<Canonica
   }
   
   if (updates.access_mode) {
-    updated.deliveryModes = mapCanonicalAccessToLegacy(updates.access_mode) as any;
+    updated.access_mode = mapCanonicalAccessToLegacy(updates.access_mode) as any;
   }
   
   if (updates.primary_image_url) {
@@ -201,11 +201,11 @@ export function validateCanonicalCompliance(product: Product): string[] {
   const errors: string[] = [];
   
   // Check contact_methods don't include 'phone' or 'email'
-  if (product.contactModes?.includes('phone' as any)) {
-    errors.push('contactModes includes "phone" (should use whatsapp only)');
+  if (product.contact_methods?.includes('phone' as any)) {
+    errors.push('contact_methods includes "phone" (should use whatsapp only)');
   }
-  if (product.contactModes?.includes('email' as any)) {
-    errors.push('contactModes includes "email" (not in canonical)');
+  if (product.contact_methods?.includes('email' as any)) {
+    errors.push('contact_methods includes "email" (not in canonical)');
   }
   
   // Check visibility doesn't use 'private'
@@ -213,9 +213,9 @@ export function validateCanonicalCompliance(product: Product): string[] {
     errors.push('visibility is "private" (not in MVP canonical)');
   }
   
-  // Check deliveryModes doesn't use 'shipping'
-  if (product.deliveryModes?.includes('shipping' as any)) {
-    errors.push('deliveryModes includes "shipping" (should use "delivery")');
+  // Check access_mode doesn't use 'shipping'
+  if (product.access_mode?.includes('shipping' as any)) {
+    errors.push('access_mode includes "shipping" (should use "delivery")');
   }
   
   // Check has owner_user_id (not optional in canonical)

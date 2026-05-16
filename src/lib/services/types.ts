@@ -46,19 +46,20 @@ export interface AIAnalyzeOptions {
 // ============================================
 
 export interface Location {
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   address?: string;
   city?: string;
   region?: string;
   country?: string;
   postalCode?: string;
+  placeId?: string;
 }
 
 export interface GeocodingResult {
   location: Location;
   formattedAddress: string;
-  placeId?: string;
+  placeId?: string; // Keep at root for service compatibility, but also in location
 }
 
 export interface SearchLocationOptions {

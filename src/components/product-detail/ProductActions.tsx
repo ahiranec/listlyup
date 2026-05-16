@@ -2,7 +2,7 @@ import type { Product } from "../../data/products";
 import type { ActionId } from "../../actions/types";
 import type { ContactMethod } from "../../types/canonical";
 import { findOrCreateChatForProduct } from "../../data/chatMessages";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { ActionButtons } from "../actions/ActionButtons";
 import { DollarSign, HelpCircle } from "lucide-react";

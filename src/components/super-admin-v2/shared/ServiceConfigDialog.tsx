@@ -25,7 +25,7 @@ interface Technology {
   name: string;
   type: 'service';
   provider: string | null;
-  status: 'active' | 'missing';
+  status: 'active' | 'disabled' | 'missing';
 }
 
 interface ServiceConfigDialogProps {

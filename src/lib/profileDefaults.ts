@@ -47,23 +47,10 @@ function buildProfileWithRegion(
     email,
     loginMethod,
     
-    // ✅ Fixed defaults según usuario
-    defaultContact: {
-      inAppChat: true,   // ✅ InAppChat por defecto
-      whatsapp: false,
-      phoneCall: false,
-      email: false,
-    },
-    
-    defaultDelivery: {
-      pickup: false,
-      meetup: true,      // ✅ Meetup por defecto
-      delivery: false,
-      shipping: false,
-      virtual: false,
-    },
-    
-    defaultVisibility: 'public',  // ✅ Public por defecto
+    // ✅ Canonical defaults
+    default_contact_method: 'in_app_chat',
+    default_access_mode: ['meetup'],
+    default_visibility: 'public',
     
     // ✨ Dynamic defaults basados en región detectada
     defaultCurrency: regionDefaults.currency,
@@ -121,11 +108,10 @@ export function migrateProfileDefaults(profile: ProfileData): ProfileData {
   return {
     ...profile,
     
-    // Ensure meetup field exists
-    defaultDelivery: {
-      ...profile.defaultDelivery,
-      meetup: profile.defaultDelivery.meetup ?? false, // Conservative default for existing profiles
-    },
+    // Ensure canonical fields exist
+    default_contact_method: profile.default_contact_method || 'in_app_chat',
+    default_access_mode: profile.default_access_mode || ['meetup'],
+    default_visibility: profile.default_visibility || 'public',
     
     // Fill missing regional defaults if needed
     defaultCurrency: profile.defaultCurrency || regionDefaults.currency,

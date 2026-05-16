@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
 import { MessageCircle, Users, Link2, QrCode, Gift } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import SharePreviewCard from './SharePreviewCard';
 import GroupSelectorSheet from './GroupSelectorSheet';
 import QRCodeSheet from './QRCodeSheet';

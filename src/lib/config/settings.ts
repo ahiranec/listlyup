@@ -79,12 +79,25 @@ const DEFAULTS: UserSettings = {
  */
 export function getSettings(): UserSettings {
   try {
+    const apiAvailable = checkAPIAvailability();
     const stored = localStorage.getItem(STORAGE_KEY);
+    
+    // Dynamic defaults: Auto-enable maps if API key is present
+    const dynamicDefaults = {
+      ...DEFAULTS,
+      mapsEnabled: apiAvailable.maps || DEFAULTS.mapsEnabled,
+    };
+
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Force mapsEnabled to true if API is available, overriding stored false
+      if (apiAvailable.maps) {
+        parsed.mapsEnabled = true;
+      }
       // Merge with defaults to handle new settings
-      return { ...DEFAULTS, ...parsed };
+      return { ...dynamicDefaults, ...parsed };
     }
+    return dynamicDefaults;
   } catch (error) {
     console.error('Failed to load settings:', error);
   }
@@ -149,7 +162,7 @@ export function resetSettings(): void {
 export function checkAPIAvailability() {
   // Safe access to import.meta.env (might be undefined in some contexts)
   try {
-    const env = import.meta?.env ?? {};
+    const env = (import.meta as any).env || {};
     
     return {
       ai: !!(

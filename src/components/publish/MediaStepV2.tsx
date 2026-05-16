@@ -4,7 +4,7 @@
  * Supports CREATE and EDIT modes (type locked in edit)
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Upload, X, Camera, Check, Sparkles, Lock, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../ui/button';
@@ -246,7 +246,7 @@ export function MediaStepV2({
   const offerModes: Array<{ value: OfferType; label: string; emoji: string }> = [
     { value: 'sell', label: 'Sell', emoji: '💵' },
     { value: 'trade', label: 'Trade', emoji: '🔄' },
-    { value: 'free', label: 'Give away', emoji: '🎁' },
+    { value: 'giveaway', label: 'Give away', emoji: '🎁' },
     { value: 'sell_or_trade', label: 'Sell/Trade', emoji: '💵🔄' },
   ];
 
@@ -298,7 +298,7 @@ export function MediaStepV2({
               {/* Upload Button */}
               <div
                 onDrop={handleDrop}
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragOver={(e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true); }}
                 onDragLeave={() => setIsDragging(false)}
                 className={`
                   relative border-2 border-dashed rounded-xl p-6
@@ -310,7 +310,7 @@ export function MediaStepV2({
                   type="file"
                   multiple
                   accept="image/*"
-                  onChange={(e) => handleFileSelect(e.target.files)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileSelect(e.target.files)}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                 />
 
@@ -331,7 +331,7 @@ export function MediaStepV2({
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  onChange={(e) => handleFileSelect(e.target.files)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileSelect(e.target.files)}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                 />
 
@@ -378,7 +378,7 @@ export function MediaStepV2({
                       type="file"
                       multiple
                       accept="image/*"
-                      onChange={(e) => handleFileSelect(e.target.files)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileSelect(e.target.files)}
                       className="hidden"
                     />
                   </label>

@@ -10,6 +10,7 @@ import type {
   EventDurationType,
   PricingModel,
   ProductCondition,
+  TicketType,
 } from "../../types/canonical";
 import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient";
 
@@ -45,10 +46,6 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
 
     primary_image_url: row.primary_image_url as string,
 
-    images: row.primary_image_url
-      ? [row.primary_image_url as string]
-      : [],
-
     price_amount:
       row.price_amount != null ? Number(row.price_amount) : undefined,
 
@@ -59,6 +56,8 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
 
     listing_location_id: row.location_id as string,
     location_name: (row.locations as any)?.formatted_text ?? undefined,
+    latitude: (row.locations as any)?.lat != null ? Number((row.locations as any).lat) : undefined,
+    longitude: (row.locations as any)?.lng != null ? Number((row.locations as any).lng) : undefined,
 
     visibility_mode: row.visibility_mode as VisibilityMode,
 
@@ -85,14 +84,18 @@ function rowToCanonical(row: Record<string, unknown>): CanonicalListing {
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
 
-    ticket_type: (row.ticket_type as string | undefined) ?? undefined,
+    ticket_type: (row.ticket_type as TicketType | undefined) ?? undefined,
 
     // Lifecycle Extensions
     refreshed_at: (row.refreshed_at as string | null) ?? null,
     expiring_soon_at: (row.expiring_soon_at as string | null) ?? null,
     expires_at: (row.expires_at as string | null) ?? null,
     refresh_count: (row.refresh_count as number | null) ?? 0,
-    lifecycle_stage: (row.lifecycle_stage as any) ?? 'active',
+    media: (row.listing_media as any[])?.map(m => ({
+      url: m.url,
+      sort_order: m.sort_order,
+      media_type: m.media_type
+    })) ?? [],
   };
 }
 
@@ -129,7 +132,9 @@ export const listingsRepo = {
       .select(`
     *,
     locations (
-      formatted_text
+      formatted_text,
+      lat,
+      lng
     )
   `)
       .eq("status", "active")
@@ -171,7 +176,14 @@ export const listingsRepo = {
       .select(`
     *,
     locations (
-      formatted_text
+      formatted_text,
+      lat,
+      lng
+    ),
+    listing_media (
+      url,
+      sort_order,
+      media_type
     )
   `)
       .eq("id", id)
@@ -231,6 +243,22 @@ export const listingsRepo = {
       status: input.status ?? "active",
       ai_prefill_used: input.ai_prefill_used ?? false,
       ai_flagged: input.ai_flagged ?? false,
+      
+      category: input.category ?? null,
+      subcategory: input.subcategory ?? null,
+      tags: input.tags ?? [],
+      condition: input.condition ?? null,
+      pricing_model: input.pricing_model ?? null,
+      contact_methods: input.contact_methods ?? [],
+      contact_whatsapp_phone: input.contact_whatsapp_phone ?? null,
+      contact_website_url: input.contact_website_url ?? null,
+      contact_social_url: input.contact_social_url ?? null,
+      access_mode: input.access_mode ?? [],
+      start_date: input.start_date ?? null,
+      end_date: input.end_date ?? null,
+      event_time_text: input.event_time_text ?? null,
+      event_duration_type: input.event_duration_type ?? null,
+      ticket_type: input.ticket_type ?? null,
     };
 
     console.log("[listingsRepo] Creating listing with payload:", row);
@@ -252,6 +280,37 @@ export const listingsRepo = {
 
     console.log("[listingsRepo] ✅ Listing created:", data.id);
 
+    // ──────────────────────────────────────────────
+    // STEP 2: Batch insert into listing_media
+    // ──────────────────────────────────────────────
+    if (input.image_urls && input.image_urls.length > 0) {
+      const mediaRows = input.image_urls.map((url, index) => ({
+        listing_id: data.id,
+        url: url,
+        sort_order: index,
+        media_type: 'image'
+      }));
+
+      const { error: mediaError } = await supabase
+        .from("listing_media")
+        .insert(mediaRows);
+
+      if (mediaError) {
+        console.error("❌ [listingsRepo] listing_media BATCH INSERT FAILED");
+        console.error("   - Listing ID:", data.id);
+        console.error("   - Payload:", JSON.stringify(mediaRows, null, 2));
+        console.error("   - Error Message:", mediaError.message);
+        console.error("   - Details:", mediaError.details);
+        console.error("   - Hint:", mediaError.hint);
+        console.error("   - Code:", mediaError.code);
+        
+        // BLOCKING FIX: If media fails, we MUST throw so the caller knows the publish is incomplete.
+        throw new Error(`Failed to save listing gallery: ${mediaError.message}`);
+      } else {
+        console.log(`✅ [listingsRepo] ${mediaRows.length} media rows inserted successfully`);
+      }
+    }
+
     // Invalidate cache so next fetch picks up the new listing
     cachedListings = [];
 
@@ -272,13 +331,30 @@ export interface CreateListingInput {
   location_id: string | null;
   title: string;
   description?: string;
-  listing_type: string;
-  offer_mode?: string | null;
+  listing_type: ListingType;
+  offer_mode?: OfferMode | null;
   primary_image_url?: string | null;
   price_amount?: number | null;
   price_currency?: string | null;
-  visibility_mode?: string;
-  status?: string;
+  visibility_mode?: VisibilityMode;
+  status?: ListingStatus;
   ai_prefill_used?: boolean;
   ai_flagged?: boolean;
+
+  category?: string | null;
+  subcategory?: string | null;
+  tags?: string[];
+  condition?: ProductCondition | null;
+  pricing_model?: PricingModel | null;
+  contact_methods?: ContactMethod[];
+  contact_whatsapp_phone?: string | null;
+  contact_website_url?: string | null;
+  contact_social_url?: string | null;
+  access_mode?: AccessMode[];
+  start_date?: string | null;
+  end_date?: string | null;
+  event_time_text?: string | null;
+  event_duration_type?: EventDurationType | null;
+  ticket_type?: TicketType | null;
+  image_urls?: string[];
 }

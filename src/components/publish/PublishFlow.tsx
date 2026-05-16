@@ -40,6 +40,7 @@ import { LocationStepV2 } from './LocationStepV2';
 import { PricingStep } from './PricingStep';
 import { PreviewStepV2 } from './PreviewStepV2';
 import { usePublishFlow } from './hooks/usePublishFlow';
+import { MOCK_AVAILABLE_GROUPS } from './constants';
 import type { CurrentUser } from '../../types';
 import type { PublishFormData } from './types';
 import type { Group, UserRole } from '../../lib/groupPermissions';
@@ -59,7 +60,7 @@ export function PublishFlow({
   initialData,
   currentUser,
   currentUserRole = 'member', // Default: member
-  availableGroups = [], // Default: sin grupos
+  availableGroups = MOCK_AVAILABLE_GROUPS, // Default: central mock groups
   onClose, 
   onPublish 
 }: PublishFlowProps) {
@@ -196,7 +197,7 @@ export function PublishFlow({
                   visibility_mode={formData.visibility_mode}
                   selectedGroups={formData.selectedGroups}
                   lockedGroups={formData.lockedGroups}
-                  onDataChange={(data) => setFormData({ ...formData, ...data })}
+                  onDataChange={(data: any) => setFormData({ ...formData, ...data })}
                   onNext={handlePricingNext}
                   onBack={handlePricingBack}
                 />

@@ -93,7 +93,8 @@ export type ActionId =
   | 'bulk-archive'
   | 'bulk-delete'
   | 'bulk-boost'
-  | 'bulk-reactivate';
+  | 'bulk-reactivate'
+  | 'refresh-listing';
 
 export type ActionContext =
   | 'product-detail'

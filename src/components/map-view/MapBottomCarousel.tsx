@@ -8,11 +8,11 @@
  * - Syncs with map pins (pin ↔ card interaction)
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { MiniProductCard } from '../MiniProductCard';
+import { formatPrice } from '../../utils/formatPrice';
 import type { CanonicalListing } from '../../types/canonical';
-import { PIN_POSITIONS } from './pinPositions';
 
 interface MapBottomCarouselProps {
   products: CanonicalListing[];
@@ -27,110 +27,48 @@ export function MapBottomCarousel({
   onProductChange,
   onProductClick 
 }: MapBottomCarouselProps) {
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Ordenar productos por posición geográfica (izquierda → derecha en el mapa)
+  // ORDEN DEL CARRUSEL SEGÚN MVP:
+  // - Si no hay nada seleccionado: orden original (basado en creación o fetch).
+  // - Si hay pin agrupado (>1) activo: mostrar SÓLO los listings de ese grupo.
+  // - Si hay pin normal (1) activo: mostrar todo el viewport pero ordenado por proximidad.
   const sortedProducts = useMemo(() => {
-    return [...products].sort((a, b) => {
-      const pinA = PIN_POSITIONS.find(p => p.id === a.id);
-      const pinB = PIN_POSITIONS.find(p => p.id === b.id);
+    const list = [...products];
+    if (!activeProductId) return list;
+    
+    const activeP = list.find(p => p.id === activeProductId);
+    if (!activeP || activeP.latitude == null || activeP.longitude == null) return list;
+    
+    // Identificar grupo con coordenadas idénticas al pin activo
+    const exactGroup = list.filter(p => p.latitude === activeP.latitude && p.longitude === activeP.longitude);
+    
+    // Si hago clic en un grupo (más de 1 coincidencia idéntica), aíslo el carrusel
+    const currentListToUse = exactGroup.length > 1 ? exactGroup : list;
+    
+    return currentListToUse.sort((a, b) => {
+      // 1. Forzar el activo siempre al principio (índice 0)
+      if (a.id === activeProductId) return -1;
+      if (b.id === activeProductId) return 1;
       
-      if (!pinA || !pinB) return 0;
-      
-      // Extraer valores numéricos de porcentajes
-      const leftA = parseFloat(pinA.left);
-      const leftB = parseFloat(pinB.left);
-      const topA = parseFloat(pinA.top);
-      const topB = parseFloat(pinB.top);
-      
-      // Ordenar primero de ABAJO hacia ARRIBA (top mayor primero)
-      // Luego dentro de cada fila, de OESTE a ESTE (left menor primero)
-      const TOP_THRESHOLD = 5; // Considerar misma fila si diff < 5%
-      
-      if (Math.abs(topA - topB) > TOP_THRESHOLD) {
-        // Diferentes filas: abajo primero (top mayor primero)
-        return topB - topA;
-      } else {
-        // Misma fila: izquierda primero
-        return leftA - leftB;
-      }
+      // 2. Proximidad al activo (si el grupo es aislado, esto dará 0 y se respetará orden nativo)
+      const distA = Math.pow(a.latitude! - activeP.latitude!, 2) + Math.pow(a.longitude! - activeP.longitude!, 2);
+      const distB = Math.pow(b.latitude! - activeP.latitude!, 2) + Math.pow(b.longitude! - activeP.longitude!, 2);
+      return distA - distB;
     });
-  }, [products]);
+  }, [products, activeProductId]);
 
-  const activeIndex = sortedProducts.findIndex(p => p.id === activeProductId);
-  const currentIndex = activeIndex >= 0 ? activeIndex : 0;
+  const currentIndex = 0; // El activo siempre es el primero en este orden dinámico
 
-  // Auto-scroll to active card when activeProductId changes (from pin click)
-  useEffect(() => {
-    if (activeProductId && cardRefs.current[activeProductId]) {
-      const activeCard = cardRefs.current[activeProductId];
-      const carousel = carouselRef.current;
-      
-      if (activeCard && carousel) {
-        const cardLeft = activeCard.offsetLeft;
-        const cardWidth = activeCard.offsetWidth;
-        const carouselWidth = carousel.offsetWidth;
-        const scrollLeft = cardLeft - (carouselWidth / 2) + (cardWidth / 2);
-        
-        carousel.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
-      }
-    }
-  }, [activeProductId]);
-
-  // Detect which card is centered on scroll
-  const handleScroll = () => {
-    // Clear previous timeout
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    // Debounce to detect when scroll stops
-    scrollTimeoutRef.current = setTimeout(() => {
-      const carousel = carouselRef.current;
-      if (!carousel) return;
-
-      const carouselCenter = carousel.scrollLeft + (carousel.offsetWidth / 2);
-      
-      let closestProductId: string | null = null;
-      let closestDistance = Infinity;
-
-      sortedProducts.forEach(product => {
-        const card = cardRefs.current[product.id];
-        if (!card) return;
-
-        const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
-        const distance = Math.abs(cardCenter - carouselCenter);
-
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestProductId = product.id;
-        }
-      });
-
-      if (closestProductId && closestProductId !== activeProductId) {
-        onProductChange(closestProductId);
-      }
-    }, 100); // Wait 100ms after scroll stops
-  };
-
-  // Navigate to next card
+  // Navigate to next card (el más cercano)
   const handleNext = () => {
-    if (currentIndex < sortedProducts.length - 1) {
-      const nextProduct = sortedProducts[currentIndex + 1];
-      onProductChange(nextProduct.id);
+    if (sortedProducts.length > 1) {
+      onProductChange(sortedProducts[1].id);
     }
   };
 
-  // Navigate to previous card
+  // Navigate to prev card (volvemos al centro lógico)
   const handlePrev = () => {
-    if (currentIndex > 0) {
-      const prevProduct = sortedProducts[currentIndex - 1];
-      onProductChange(prevProduct.id);
+    if (sortedProducts.length > 0) {
+      onProductChange(sortedProducts[0].id); 
     }
   };
 
@@ -142,58 +80,41 @@ export function MapBottomCarousel({
     );
   }
 
-  const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < sortedProducts.length - 1;
+  const canGoNext = sortedProducts.length > 1;
 
   return (
     <div className="w-full bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.1)] relative">
-      {/* Counter - movido arriba, integrado en el carousel */}
+      {/* Counter */}
       <div className="absolute top-2 right-3 z-20 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-full">
-        {currentIndex + 1} / {sortedProducts.length}
+        {sortedProducts.length > 0 ? `1 / ${sortedProducts.length}` : '0'}
       </div>
 
-      {/* Left Arrow Button */}
-      {canGoPrev && (
-        <button
-          onClick={handlePrev}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          aria-label="Previous listing"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-700" />
-        </button>
-      )}
-
-      {/* Right Arrow Button */}
+      {/* Right Arrow Button (Next closest item) */}
       {canGoNext && (
         <button
           onClick={handleNext}
           className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          aria-label="Next listing"
+          aria-label="Next closest listing"
         >
           <ChevronRight className="w-5 h-5 text-gray-700" />
         </button>
       )}
 
-      {/* Carousel Container - padding superior normal, inferior mínimo */}
+      {/* Carousel Container - Simple, natural flow sin huecos absurdos */}
       <div 
-        ref={carouselRef}
-        onScroll={handleScroll}
-        className="flex gap-0.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide pt-3 pb-1"
+        className="flex gap-4 overflow-x-auto scrollbar-hide py-4 px-4 items-center"
         style={{ 
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* Left padding to center first card - 200px card width */}
-        <div className="flex-shrink-0" style={{ width: 'calc(50% - 100px)' }} />
-        
-        {sortedProducts.map((product, index) => {
+        {sortedProducts.map((product) => {
           const isActive = product.id === activeProductId;
           
           // Map canonical fields to MiniProductCard props
-          const priceDisplay = product.price_amount && product.price_currency 
-            ? `${product.price_amount} ${product.price_currency}` 
+          const priceDisplay = product.price_amount != null && product.price_currency 
+            ? formatPrice(product.price_amount, product.price_currency)
             : undefined;
           const legacyType = product.listing_type === 'product' ? product.offer_mode : product.listing_type;
           const imageUrl = product.primary_image_url || '';
@@ -201,25 +122,24 @@ export function MapBottomCarousel({
           return (
             <div
               key={product.id}
-              ref={(el) => { cardRefs.current[product.id] = el; }}
-              className="flex-shrink-0 snap-center"
+              className="flex-shrink-0"
+              onClick={() => {
+                onProductChange(product.id);
+              }}
             >
               <div 
-                className={`transition-all duration-300 ease-out ${
+                className={`transition-all duration-300 ease-out cursor-pointer ${
                   isActive 
-                    ? 'scale-100 opacity-100' 
-                    : 'scale-95 opacity-50'
+                    ? 'scale-105 opacity-100 ring-2 ring-primary rounded-xl' 
+                    : 'scale-95 opacity-70 hover:opacity-100'
                 }`}
-                onClick={() => {
-                  onProductChange(product.id);
-                }}
               >
                 <MiniProductCard
                   image={imageUrl}
                   title={product.title}
                   price={priceDisplay}
                   condition={product.condition}
-                  location="Approx. location"
+                  location={product.location_name || 'Ubicación no especificada'}
                   type={legacyType as any}
                   eventDate={product.start_date}
                   eventEndDate={product.end_date}
@@ -233,9 +153,6 @@ export function MapBottomCarousel({
             </div>
           );
         })}
-        
-        {/* Right padding to center last card */}
-        <div className="flex-shrink-0" style={{ width: 'calc(50% - 100px)' }} />
       </div>
     </div>
   );

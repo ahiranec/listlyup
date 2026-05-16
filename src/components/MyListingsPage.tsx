@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { isExpiringSoon, hasLowEngagement, shareContent } from "../utils/helpers";
 import type { Group, EventType } from "../types";
 import {
@@ -62,7 +62,7 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "active",
     visibility: "public",
-    stats: { views: 1234, messages: 45, favorites: 89 },
+    stats: { views: 1234, messages: 45, favorites: 89, likes: 10 },
     createdAt: new Date("2024-11-01"),
     updatedAt: new Date("2024-11-10"),
   },
@@ -75,7 +75,7 @@ const mockListings: MyListing[] = [
     username: "yogainstructor",
     lifecycle: "active",
     visibility: "public",
-    stats: { views: 567, messages: 23, favorites: 34 },
+    stats: { views: 567, messages: 23, favorites: 34, likes: 5 },
     createdAt: new Date("2024-10-28"),
     updatedAt: new Date("2024-11-09"),
   },
@@ -89,7 +89,7 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "draft",
     visibility: "private",
-    stats: { views: 0, messages: 0, favorites: 0 },
+    stats: { views: 0, messages: 0, favorites: 0, likes: 0 },
     createdAt: new Date("2024-11-10"),
     updatedAt: new Date("2024-11-10"),
   },
@@ -101,10 +101,10 @@ const mockListings: MyListing[] = [
     location: "Valparaíso",
     username: "eventplanner",
     lifecycle: "active",
-    visibility: "groups",
+    visibility: "group",
     groupIds: ["g2", "g3"], // Tech Lovers + Deportes Viña
     eventTypeId: "black-friday", // Black Friday event
-    stats: { views: 890, messages: 67, favorites: 123 },
+    stats: { views: 890, messages: 67, favorites: 123, likes: 45 },
     createdAt: new Date("2024-10-25"),
     updatedAt: new Date("2024-11-08"),
   },
@@ -117,7 +117,7 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "paused",
     visibility: "public",
-    stats: { views: 345, messages: 12, favorites: 18 },
+    stats: { views: 345, messages: 12, favorites: 18, likes: 2 },
     createdAt: new Date("2024-10-20"),
     updatedAt: new Date("2024-11-05"),
   },
@@ -131,7 +131,7 @@ const mockListings: MyListing[] = [
     username: "antiqueseller",
     lifecycle: "active",
     visibility: "public",
-    stats: { views: 234, messages: 5, favorites: 12 },
+    stats: { views: 234, messages: 5, favorites: 12, likes: 3 },
     createdAt: new Date("2024-09-15"),
     updatedAt: new Date("2024-10-15"),
   },
@@ -143,9 +143,9 @@ const mockListings: MyListing[] = [
     location: "Valparaíso",
     username: "tourguide",
     lifecycle: "active",
-    visibility: "groups",
+    visibility: "group",
     groupIds: ["g1", "g5"], // Vecinos Valparaíso + Familia & Amigos
-    stats: { views: 678, messages: 34, favorites: 56 },
+    stats: { views: 678, messages: 34, favorites: 56, likes: 12 },
     createdAt: new Date("2024-10-30"),
     updatedAt: new Date("2024-11-11"),
   },
@@ -159,7 +159,7 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "expired",
     visibility: "public",
-    stats: { views: 456, messages: 8, favorites: 15 },
+    stats: { views: 456, messages: 8, favorites: 15, likes: 4 },
     createdAt: new Date("2024-08-15"),
     updatedAt: new Date("2024-09-15"),
   },
@@ -180,7 +180,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
   // ✅ Phase 5.1: Confirm Dialog State removed - now handled by GAM
 
   // Advanced filters state
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<any>({
     status: new Set(),
     type: new Set(),
     visibility: new Set(),
@@ -361,7 +361,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
       visibility: {
         "public": "🌍 Public",
         "private": "🔒 Private",
-        "groups": "👥 Groups",
+        "group": "👥 Groups",
       },
     };
 
@@ -590,7 +590,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
       context: {
         listingId: listing.id,
         listingTitle: listing.title,
-        listingImage: listing.image,
+        listingImage: listing.thumbnail || '',
         productId: listing.id,
       },
       onConfirm: () => {

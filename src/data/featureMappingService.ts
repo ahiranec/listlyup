@@ -15,7 +15,7 @@
 export interface FeatureFlag {
   id: string;
   name: string;
-  category: 'content' | 'social' | 'commerce';
+  category: 'content' | 'social' | 'commerce' | 'infrastructure' | 'moderation';
   description: string;
   globalEnabled: boolean;
   rolloutPercentage: number;

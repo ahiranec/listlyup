@@ -74,10 +74,10 @@ export function MiniProductCard({
         duration: 0.2 
       }}
       onClick={onClick}
-      className="w-[200px] bg-white rounded-lg border border-gray-200 shadow-xl overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow"
+      className="w-[260px] bg-white rounded-lg border border-gray-200 shadow-xl overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow"
     >
       {/* Imagen - agrandada para mejor visibilidad */}
-      <div className="relative h-[120px] bg-muted overflow-hidden">
+      <div className="relative h-[140px] bg-muted overflow-hidden">
         <ImageWithFallback
           src={image}
           alt={title}

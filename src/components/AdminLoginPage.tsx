@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";

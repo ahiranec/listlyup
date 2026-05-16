@@ -23,8 +23,8 @@ export const mockListingsAna: Product[] = [
     createdAt: '2026-01-15T10:00:00Z',
     rating: 4.2,
     ownerId: 'user-ana-google',
-    contactModes: ['chat'],
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat'],
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: 'Lámpara de escritorio LED, regulable. Perfecta para estudiar. Casi sin uso.',
     // 💬 Messages (1 unread) - PUBLIC QUESTION
     hasUnreadMessages: true,
@@ -44,8 +44,8 @@ export const mockListingsAna: Product[] = [
     createdAt: '2026-01-10T14:00:00Z',
     rating: 4.2,
     ownerId: 'user-ana-google',
-    contactModes: ['chat'],
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products (free items - pickup only)
+    contact_methods: ['chat'],
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products (free items - pickup only)
     description: 'Libros de diseño gráfico. Gratis para estudiantes. Pickup en Providencia.',
     // ⏰ Expiring (5 days left)
     daysUntilExpiration: 5,
@@ -64,8 +64,8 @@ export const mockListingsAna: Product[] = [
     createdAt: '2026-01-05T10:00:00Z',
     rating: 4.2,
     ownerId: 'user-ana-google',
-    contactModes: ['chat'],
-    deliveryModes: ['pickup'],
+    contact_methods: ['chat'],
+    access_mode: ['pickup'],
     description: 'Escritorio minimalista de madera. Pausado temporalmente mientras reorganizo mi hogar.',
     // ✅ Lifecycle status
     status: 'paused',
@@ -93,9 +93,9 @@ export const mockListingsCarlos: Product[] = [
     createdAt: '2026-01-12T10:00:00Z',
     rating: 4.8,
     ownerId: 'user-carlos-apple',
-    contactModes: ['whatsapp', 'phone'], // ✅ P2 FIX: WhatsApp + Phone test case (no chat)
+    contact_methods: ['whatsapp', 'phone'], // ✅ P2 FIX: WhatsApp + Phone test case (no chat)
     phoneNumber: '+56987654321',
-    deliveryModes: ['pickup', 'meetup', 'shipping'], // ✅ P2 FIX: Added delivery modes
+    access_mode: ['pickup', 'meetup', 'shipping'], // ✅ P2 FIX: Added delivery modes
     description: '256GB, Deep Purple. Impecable, con caja y todos los accesorios. Garantía TechStore 6 meses.',
     // 💬 Messages (2 unread) - PRIVATE CHAT
     hasUnreadMessages: true,
@@ -117,8 +117,8 @@ export const mockListingsCarlos: Product[] = [
     rating: 4.8,
     groupIds: ['group-tech-traders'],
     ownerId: 'user-carlos-apple',
-    contactModes: ['chat', 'whatsapp'],
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat', 'whatsapp'],
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: 'Nuevo en caja sellada. 8GB RAM, 256GB SSD. Precio especial para el grupo.',
     // ⏰ Expiring (2 days - URGENT)
     daysUntilExpiration: 2,
@@ -136,8 +136,8 @@ export const mockListingsCarlos: Product[] = [
     rating: 4.8,
     groupIds: ['group2'],
     ownerId: 'user-carlos-apple',
-    contactModes: ['chat', 'whatsapp'],
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat', 'whatsapp'],
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: 'Olympus OM-1. Excelente estado. Busco intercambiar por lente vintage o cámara digital.',
     // ⏰ Expiring (6 days)
     daysUntilExpiration: 6,
@@ -154,7 +154,7 @@ export const mockListingsCarlos: Product[] = [
     createdAt: '2026-01-10T10:00:00Z',
     rating: 4.8,
     ownerId: 'user-carlos-apple',
-    contactModes: ['chat', 'whatsapp', 'phone'],
+    contact_methods: ['chat', 'whatsapp', 'phone'],
     phoneNumber: '+56987654321',
     description: 'Reparación de pantallas, baterías y más. TechStore - servicio profesional con garantía.',
     pricingModel: 'fixed',
@@ -173,9 +173,9 @@ export const mockListingsCarlos: Product[] = [
     createdAt: '2026-01-19T10:00:00Z',
     rating: 4.8,
     ownerId: 'user-carlos-apple',
-    contactModes: ['whatsapp'], // ✅ P2 FIX: WhatsApp only to test Contact-CTA contract
+    contact_methods: ['whatsapp'], // ✅ P2 FIX: WhatsApp only to test Contact-CTA contract
     phoneNumber: '+56987654321',
-    deliveryModes: ['pickup', 'shipping'], // ✅ P2 FIX: Added delivery modes
+    access_mode: ['pickup', 'shipping'], // ✅ P2 FIX: Added delivery modes
     description: 'DRAFT - 128GB, Phantom Black. Aún configurando...',
   },
   // PAUSED
@@ -190,7 +190,7 @@ export const mockListingsCarlos: Product[] = [
     createdAt: '2026-01-08T10:00:00Z',
     rating: 4.8,
     ownerId: 'user-carlos-apple',
-    contactModes: ['whatsapp', 'phone'],
+    contact_methods: ['whatsapp', 'phone'],
     phoneNumber: '+56987654321',
     description: 'Servicio premium de reparación Mac. Pausado temporalmente por actualización de equipos.',
     pricingModel: 'fixed',
@@ -220,7 +220,7 @@ export const mockListingsMaria: Product[] = [
     createdAt: '2026-01-05T10:00:00Z',
     rating: 4.9,
     ownerId: 'user-maria-email',
-    contactModes: ['chat', 'whatsapp', 'email'],
+    contact_methods: ['chat', 'whatsapp', 'email'],
     description: 'Clases personalizadas de Hatha y Vinyasa Yoga. Todos los niveles bienvenidos.',
     pricingModel: 'hourly',
     businessHours: 'Tuesday to Saturday 6:00 AM - 8:00 PM',
@@ -238,8 +238,8 @@ export const mockListingsMaria: Product[] = [
     rating: 4.9,
     groupIds: ['group2'],
     ownerId: 'user-maria-email',
-    contactModes: ['chat', 'whatsapp'],
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat', 'whatsapp'],
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: 'Cartera de diseñador italiana. Casi nueva. Acepto intercambios por accesorios de fotografía.',
     // 💬 Messages (3 unread) - PRIVATE CHAT
     hasUnreadMessages: true,
@@ -261,8 +261,8 @@ export const mockListingsMaria: Product[] = [
     rating: 4.9,
     groupIds: ['group-photography'],
     ownerId: 'user-maria-email',
-    contactModes: ['chat', 'whatsapp'],
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat', 'whatsapp'],
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: 'Cámara profesional con menos de 5000 disparos. Incluye 3 baterías y SD card 64GB.',
     // 💬 Messages (1 read)
     hasUnreadMessages: false,
@@ -281,7 +281,7 @@ export const mockListingsMaria: Product[] = [
     createdAt: '2026-01-12T10:00:00Z',
     rating: 4.9,
     ownerId: 'user-maria-email',
-    contactModes: ['chat', 'whatsapp', 'email'],
+    contact_methods: ['chat', 'whatsapp', 'email'],
     description: 'Depto 2D/2B frente al mar. Vista espectacular. Disponible desde enero.',
     pricingModel: 'monthly',
     // ⏰ Expiring (4 days)
@@ -302,7 +302,7 @@ export const mockListingsMaria: Product[] = [
     createdAt: '2026-01-10T10:00:00Z',
     rating: 4.9,
     ownerId: 'user-maria-email',
-    contactModes: ['chat', 'email'],
+    contact_methods: ['chat', 'email'],
     description: 'Workshop de fotografía de paisajes. Incluye salida práctica y edición. 25 de enero 14:00.',
     ticketType: 'paid',
     duration: 'single',
@@ -325,7 +325,7 @@ export const mockListingsMaria: Product[] = [
     createdAt: '2026-01-11T10:00:00Z',
     rating: 4.9,
     ownerId: 'user-maria-email',
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     description: 'Sesiones de fotos profesionales. Temporalmente pausado por vacaciones.',
     pricingModel: 'session',
     businessHours: 'Monday to Friday 9:00 AM - 7:00 PM',
@@ -349,7 +349,7 @@ export const mockListingsMaria: Product[] = [
     rating: 4.9,
     groupIds: ['group3'],
     ownerId: 'user-maria-email',
-    contactModes: ['chat'],
+    contact_methods: ['chat'],
     description: 'PENDING - Tour por restaurantes de Valparaíso. Esperando aprobación del grupo.',
     ticketType: 'paid',
     duration: 'single',

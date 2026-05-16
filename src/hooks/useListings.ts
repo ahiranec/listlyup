@@ -9,21 +9,29 @@ export function useListings() {
   const [listings, setListings] = useState<CanonicalListing[]>(
     listingsRepo.getAllListings()
   );
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!useSupabaseListings) return;
+    if (!useSupabaseListings) {
+      setIsLoading(false);
+      return;
+    }
 
     let isMounted = true;
 
-    const fetchData = async () => {
+    const fetchData = async (isUpdate = false) => {
+      if (!isUpdate) setIsLoading(true);
       try {
         const data = await listingsRepo.fetchAllListings();
         if (!isMounted) return;
-        if (!Array.isArray(data) || data.length === 0) return;
-        setListings(data);
+        
+        // Even if data is empty array, we set it to clear skeletons
+        setListings(data || []);
       } catch (error) {
         if (!isMounted) return;
         console.error("[useListings] fetchAllListings failed:", error);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -32,7 +40,7 @@ export function useListings() {
 
     // Listen for custom event from publish flow
     const handleListingsUpdated = () => {
-      fetchData();
+      fetchData(true); // pass true to avoid showing skeletons on update
     };
 
     if (typeof window !== "undefined") {
@@ -47,5 +55,5 @@ export function useListings() {
     };
   }, []);
 
-  return listings;
+  return { listings, isLoading };
 }

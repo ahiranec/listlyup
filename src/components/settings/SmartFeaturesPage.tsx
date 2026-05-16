@@ -4,7 +4,7 @@ import { useFeatures } from '../../contexts/FeaturesContext';
 import { SMART_FEATURES } from './types';
 import { FeatureToggleCard } from './shared/FeatureToggleCard';
 import { SettingsSection } from './shared/SettingsSection';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface SmartFeaturesPageProps {
   onBack: () => void;

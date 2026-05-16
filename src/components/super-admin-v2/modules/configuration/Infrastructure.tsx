@@ -342,7 +342,7 @@ export function Infrastructure() {
       <ServiceConfigDialog
         open={dialogState.open}
         mode={dialogState.mode}
-        service={dialogState.service}
+        service={dialogState.service as any}
         onClose={() => setDialogState({ open: false, mode: 'create' })}
         onSave={(config) => {
           console.log('[AUDIT LOG] Service configuration saved:', config);

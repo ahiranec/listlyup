@@ -40,22 +40,9 @@ export const mockProfileAna: ProfileData = {
   activeOrganizationId: undefined,
   
   // Publishing Defaults
-  defaultContact: {
-    inAppChat: true,
-    whatsapp: false,
-    phoneCall: false,
-    email: false,
-  },
-  
-  defaultDelivery: {
-    pickup: true,
-    meetup: false,
-    delivery: false,
-    shipping: false,
-    virtual: false,
-  },
-  
-  defaultVisibility: 'public',
+  default_contact_method: 'in_app_chat',
+  default_access_mode: ['pickup'],
+  default_visibility: 'public',
   defaultCurrency: 'CLP',
   
   // Addresses
@@ -128,22 +115,10 @@ export const mockProfileCarlos: ProfileData = {
   activeOrganizationId: 'org-techstore',
   
   // Publishing Defaults
-  defaultContact: {
-    inAppChat: true,
-    whatsapp: true,
-    phoneCall: true,
-    email: false,
-  },
-  
-  defaultDelivery: {
-    pickup: true,
-    meetup: false,
-    delivery: true,
-    shipping: true,
-    virtual: false,
-  },
-  
-  defaultVisibility: 'public',
+  default_contact_method: 'whatsapp',
+  default_whatsapp_phone: '+56987654321',
+  default_access_mode: ['pickup', 'delivery'],
+  default_visibility: 'public',
   defaultCurrency: 'CLP',
   
   // Addresses
@@ -225,22 +200,10 @@ export const mockProfileMaria: ProfileData = {
   activeOrganizationId: undefined,
   
   // Publishing Defaults
-  defaultContact: {
-    inAppChat: true,
-    whatsapp: true,
-    phoneCall: false,
-    email: true,
-  },
-  
-  defaultDelivery: {
-    pickup: true,
-    meetup: false,
-    delivery: true,
-    shipping: false,
-    virtual: true,
-  },
-  
-  defaultVisibility: 'groups',
+  default_contact_method: 'whatsapp',
+  default_whatsapp_phone: '+56922222222',
+  default_access_mode: ['pickup', 'delivery'],
+  default_visibility: 'groups_only',
   defaultCurrency: 'CLP',
   
   // Addresses

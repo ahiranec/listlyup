@@ -25,7 +25,7 @@ export type OfferMode =
 
 export type VisibilityMode = 'public' | 'groups_only';
 
-export type ListingStatus = 'active' | 'paused' | 'sold';
+export type ListingStatus = 'active' | 'paused' | 'sold' | 'pending' | 'draft' | 'expired' | 'archived';
 
 export type ContactMethod = 'in_app_chat' | 'whatsapp' | 'website' | 'social_media';
 
@@ -38,6 +38,12 @@ export type PricingModel = 'hourly' | 'fixed' | 'quote' | 'session' | 'daily' | 
 export type ProductCondition = 'new' | 'like-new' | 'good' | 'fair' | 'for-parts';
 
 export type TicketType = 'free' | 'paid';
+
+export interface ListingMedia {
+  url: string;
+  sort_order: number;
+  media_type: 'image' | 'video';
+}
 
 /**
  * Canonical Listing Interface
@@ -62,6 +68,7 @@ export interface CanonicalListing {
 
   // Media
   primary_image_url: string;
+  media?: ListingMedia[];
 
   // Pricing
   price_amount?: number;
@@ -72,6 +79,8 @@ export interface CanonicalListing {
   // Location
   listing_location_id: string; // Reference to locations table
   location_name?: string;
+  latitude?: number;
+  longitude?: number;
   // Visibility
   visibility_mode: VisibilityMode;
 
@@ -254,12 +263,15 @@ export function mapLegacyTypeToCanonical(legacyType: string): {
  * Maps canonical listing_type + offer_mode back to legacy type
  * (for backward compatibility during transition)
  */
-export function mapCanonicalToLegacyType(listing_type: ListingType, offer_mode: OfferMode): string {
+export function mapCanonicalToLegacyType(
+  listing_type: ListingType, 
+  offer_mode: OfferMode
+): "sale" | "trade" | "free" | "sale_or_trade" | "rent" | "service" | "event" {
   if (listing_type === 'service') return 'service';
   if (listing_type === 'event') return 'event';
 
   // Product types
-  const modeMap: Record<string, string> = {
+  const modeMap: Record<string, "sale" | "trade" | "free" | "sale_or_trade" | "rent"> = {
     'sell': 'sale',
     'trade': 'trade',
     'giveaway': 'free',
@@ -271,13 +283,13 @@ export function mapCanonicalToLegacyType(listing_type: ListingType, offer_mode: 
 }
 
 /**
- * Maps legacy contactModes to canonical contact_methods
+ * Maps legacy contact_methods to canonical contact_methods
  */
-export function mapLegacyContactModes(legacyModes?: string[]): ContactMethod[] {
+export function mapLegacycontact_methods(legacyModes?: string[]): ContactMethod[] {
   if (!legacyModes) return ['in_app_chat'];
 
   return legacyModes
-    .map(mode => {
+    .map((mode): ContactMethod | null => {
       if (mode === 'chat') return 'in_app_chat';
       if (mode === 'whatsapp') return 'whatsapp';
       return null;
@@ -286,7 +298,7 @@ export function mapLegacyContactModes(legacyModes?: string[]): ContactMethod[] {
 }
 
 /**
- * Maps canonical contact_methods back to legacy contactModes
+ * Maps canonical contact_methods back to legacy contact_methods
  */
 export function mapCanonicalContactToLegacy(canonical: ContactMethod[]): string[] {
   return canonical.map(method => {
@@ -312,7 +324,7 @@ export function mapCanonicalVisibilityToLegacy(canonical: VisibilityMode): strin
 }
 
 /**
- * Maps legacy deliveryModes to canonical access_mode
+ * Maps legacy access_mode to canonical access_mode
  */
 export function mapLegacyDeliveryToAccess(legacyDelivery?: string[]): AccessMode[] {
   if (!legacyDelivery) return ['pickup'];
@@ -330,7 +342,7 @@ export function mapLegacyDeliveryToAccess(legacyDelivery?: string[]): AccessMode
 }
 
 /**
- * Maps canonical access_mode back to legacy deliveryModes
+ * Maps canonical access_mode back to legacy access_mode
  */
 export function mapCanonicalAccessToLegacy(canonical: AccessMode[]): string[] {
   return canonical; // Values align except shipping was removed

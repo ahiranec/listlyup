@@ -24,9 +24,11 @@ export function FilterSheetContent({
   openSections,
   onToggleSection,
   onUpdateFilters,
+  className = "",
+  noScroll = false,
 }: FilterSheetContentProps) {
   return (
-    <div className="flex-1 w-full overflow-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className={`w-full px-4 py-4 space-y-3 ${!noScroll ? 'flex-1 overflow-auto' : ''} ${className}`}>
       
       {/* Sort By Section */}
       <SortBySection

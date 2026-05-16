@@ -14,7 +14,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
 import { motion } from 'motion/react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { CampaignSettingsSheet } from '../campaigns/CampaignSettingsSheet';
 import { ConfirmActionDialog } from '../action-center/ConfirmActionDialog';
 

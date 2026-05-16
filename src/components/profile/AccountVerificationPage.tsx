@@ -13,7 +13,7 @@ import { VerificationBadge } from './shared/VerificationBadge';
 import { VerificationDialog } from './shared/VerificationDialog';
 import { useProfile } from '../../contexts/ProfileContext';
 import { validateEmail, validatePhone, validateUsername, sanitizeUsername } from './utils/validation';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface AccountVerificationPageProps {
   onBack: () => void;

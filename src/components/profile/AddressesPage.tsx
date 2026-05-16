@@ -20,7 +20,7 @@ import {
 } from '../ui/alert-dialog';
 import { useProfile } from '../../contexts/ProfileContext';
 import { ProfileNavigation } from './types';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface AddressesPageProps {
   onBack: () => void;

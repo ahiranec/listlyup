@@ -14,7 +14,7 @@ import {
   FeatureDisplayState,
   SMART_FEATURES,
 } from '../components/settings/types';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface FeaturesContextValue {
   // State

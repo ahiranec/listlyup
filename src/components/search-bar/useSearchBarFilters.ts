@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import type { FilterOptions } from '../FilterSheet';
+import type { FilterOptions } from '../filters/types';
 import { getGroupById } from '../../data/groups';
 import { 
   TYPE_OPTIONS, 

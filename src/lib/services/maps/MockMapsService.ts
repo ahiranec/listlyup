@@ -86,12 +86,9 @@ export class MockMapsService implements IMapsService {
   async getCurrentLocation(): Promise<ServiceResult<Location>> {
     await this.simulateDelay(500, 1000);
     
-    // Return Valparaíso Centro as default
-    const defaultLocation = this.mockLocations[0];
-    
     return {
-      success: true,
-      data: { ...defaultLocation.location },
+      success: false,
+      error: 'GPS disabled. Please search for a city or use the "Real Maps" toggle in Settings.',
       fallbackUsed: true,
     };
   }
@@ -167,6 +164,32 @@ export class MockMapsService implements IMapsService {
     return {
       success: false,
       error: 'No results found',
+    };
+  }
+
+  async getPlaceDetails(placeId: string): Promise<ServiceResult<GeocodingResult>> {
+    await this.simulateDelay(200, 400);
+    
+    // Find mock location by placeId
+    const loc = this.mockLocations.find(l => 
+      `mock_${l.name.replace(/\s+/g, '_').toLowerCase()}` === placeId
+    );
+    
+    if (loc) {
+      return {
+        success: true,
+        data: {
+          location: { ...loc.location },
+          formattedAddress: loc.location.address || loc.name,
+          placeId,
+        },
+        fallbackUsed: true,
+      };
+    }
+    
+    return {
+      success: false,
+      error: 'Mock place not found',
     };
   }
   

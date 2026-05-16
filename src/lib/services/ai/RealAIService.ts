@@ -17,7 +17,7 @@ export class RealAIService implements IAIService {
   
   constructor(useEdgeFunction = true) {
     try {
-      const env = import.meta?.env ?? {};
+      const env = (import.meta as any).env || {};
       this.supabaseUrl = env.VITE_SUPABASE_URL || '';
       this.supabaseKey = env.VITE_SUPABASE_ANON_KEY || '';
     } catch {

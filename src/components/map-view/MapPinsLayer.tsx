@@ -1,63 +1,64 @@
 /**
  * Map Pins Layer Component
- * Renders all pins on the map
- * Each pin is matched to a product by ID
+ * Renders all pins on the map using real coordinates
  */
 
-import { MapPin } from './MapPin';
-import { PIN_POSITIONS } from './pinPositions';
+import { AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 import type { CanonicalListing } from '../../types/canonical';
-import { useCurrentUser } from '../../hooks/useCurrentUser';
+
+interface Group {
+  key: string;
+  lat: number;
+  lng: number;
+  products: CanonicalListing[];
+}
 
 interface MapPinsLayerProps {
-  visibleProducts: CanonicalListing[];
-  activeProductId: string | null;
+  groupedProducts: Group[];
+  activeGroupKey: string | null;
   onPinClick: (productId: string) => void;
   isAuthenticated: boolean;
 }
 
 export function MapPinsLayer({ 
-  visibleProducts, 
-  activeProductId,
-  onPinClick,
-  isAuthenticated
+  groupedProducts, 
+  activeGroupKey,
+  onPinClick
 }: MapPinsLayerProps) {
-  const { currentUser } = useCurrentUser({ isAuthenticated });
-
   return (
-    <div className="absolute inset-0 z-10">
-      {PIN_POSITIONS.map((pin) => {
-        // Buscar el producto que corresponde a este pin por ID
-        const product = visibleProducts.find(p => p.id === pin.id);
-        const isActive = activeProductId === pin.id;
+    <>
+      {groupedProducts.map((group) => {
+        const isActive = activeGroupKey === group.key;
+        const count = group.products.length;
         
-        // IMPORTANTE: Renderizar TODOS los pins, incluso sin producto
-        // Si no hay producto, significa que es privado (grupo no accesible)
-        // MapPin mostrará el tooltip "Private Group Listing" automáticamente
-
         return (
-          <MapPin
-            key={pin.id}
-            id={pin.id}
-            left={pin.left}
-            top={pin.top}
-            visible={pin.visible}
-            product={product || null}
-            currentUser={currentUser}
-            isHovered={isActive}
-            index={parseInt(pin.id) || 0}
-            onHoverStart={() => {
-              // Solo permitir selección si hay producto accesible
-              if (product) {
-                onPinClick(pin.id);
-              }
-            }}
-            onHoverEnd={() => {}}
+          <AdvancedMarker
+            key={group.key}
+            position={{ lat: group.lat, lng: group.lng }}
+            onClick={() => onPinClick(group.products[0].id)}
+            zIndex={isActive ? 50 : 1}
           >
-            {/* Card removed - now shown in bottom carousel */}
-          </MapPin>
+            {count > 1 ? (
+              <div 
+                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-lg transition-transform ${
+                  isActive 
+                    ? 'bg-primary text-white border-white scale-110 z-50' 
+                    : 'bg-slate-900 text-white border-slate-700 scale-100'
+                }`}
+              >
+                <span className="text-xs font-bold">{count}</span>
+              </div>
+            ) : (
+              <Pin 
+                background={isActive ? '#2563eb' : '#0f172a'} 
+                borderColor={isActive ? '#ffffff' : '#475569'}
+                glyphColor={isActive ? '#ffffff' : '#cbd5e1'}
+                scale={isActive ? 1.2 : 1.0}
+              />
+            )}
+          </AdvancedMarker>
         );
       })}
-    </div>
+    </>
   );
 }

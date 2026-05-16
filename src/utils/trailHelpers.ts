@@ -24,7 +24,15 @@ export function trailListingToPublishFormData(listing: TrailListing): Partial<Pu
     tags: [], // Not stored in TrailListing
     
     // Product-specific
-    offerType: listing.offerType,
+    offerType: ((): any => {
+      const map: Record<string, string> = {
+        'sale': 'sell',
+        'free': 'giveaway',
+        'trade': 'trade',
+        'sale_or_trade': 'sell_or_trade'
+      };
+      return listing.offerType ? map[listing.offerType] : undefined;
+    })(),
     condition: undefined, // Not stored in TrailListing
     
     // Step 3: Location
@@ -41,11 +49,11 @@ export function trailListingToPublishFormData(listing: TrailListing): Partial<Pu
     price: listing.price,
     currency: 'CLP', // Default
     priceNegotiable: false,
-    deliveryModes: ['pickup'], // Default
-    contactModes: ['chat'], // Default
+    access_mode: ['pickup'], // Changed from access_mode to access_mode (CANONICAL)
+    contact_methods: ['in_app_chat'], // Changed from contact_methods to contact_methods (CANONICAL)
     
     // Step 5: Visibility
-    visibility: listing.visibility,
+    visibility_mode: (listing.visibility === 'group') ? 'groups_only' : 'public', // Corrected comparison and property name
     selectedGroups: listing.groupIds || [],
   };
 }

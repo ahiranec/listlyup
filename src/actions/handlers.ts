@@ -3,7 +3,7 @@
  * Lógica de negocio para cada acción
  */
 
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { shareContent } from '../utils/helpers';
 import { toggleSaveItem, isItemSaved } from '../utils/savedItems';
 import type { ActionEntity } from './types';

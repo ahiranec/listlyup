@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Sparkles, Tag, X, Mic, ChevronDown, ChevronRight, Info, MicOff, FolderTree, PackageCheck, Package, DollarSign, Percent } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useVoiceInput } from '../ui/use-voice-input';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';

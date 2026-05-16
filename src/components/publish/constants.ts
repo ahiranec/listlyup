@@ -4,6 +4,15 @@
  */
 
 import type { PublishFormData } from './types';
+import type { Group } from '../../lib/groupPermissions';
+
+export const MOCK_AVAILABLE_GROUPS: Group[] = [
+  { id: 'viña-del-mar', name: 'Viña del Mar Community', autoApproveListings: true },
+  { id: 'valparaiso', name: 'Valparaíso Marketplace', autoApproveListings: true },
+  { id: 'tech-chile', name: 'Tech Chile', autoApproveListings: false },
+  { id: 'reñaca-neighbors', name: 'Reñaca Neighbors', autoApproveListings: true },
+  { id: 'con-con-local', name: 'Con Con Local', autoApproveListings: true },
+];
 
 export const INITIAL_FORM_DATA: PublishFormData = {
   // Step 1

@@ -12,7 +12,7 @@ import { ProfileSection } from './shared/ProfileSection';
 import { CompletionChecklist } from './shared/CompletionChecklist';
 import { useProfile } from '../../contexts/ProfileContext';
 import { getPublishingCompleteness, calculateCompletenessScore, ProfileNavigation } from './types';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface ProfileHubProps {
   onBack: () => void;

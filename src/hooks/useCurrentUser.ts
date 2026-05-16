@@ -16,7 +16,7 @@ const mapSupabaseUser = (sessionUser: any): CurrentUser => {
     avatarUrl: sessionUser.user_metadata?.avatar_url || '',
     isAuthenticated: true,
     groupIds: [], // Empty initially for minimal impact
-    role: 'user', // Default fallback role
+    role: sessionUser.user_metadata?.role || (sessionUser.email === 'ahirane@gmail.com' ? 'super_admin' : 'user'), // Map super_admin by email or metadata
   };
 };
 

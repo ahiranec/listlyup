@@ -8,7 +8,7 @@ import { useGlobalActionModal } from "../global-action-modal";
 import type { MyListing } from "./types";
 import { lifecycleConfig, visibilityConfig, typeLabels } from "./types";
 import { listingsRepo } from "../../data/repos/listingsRepo";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface ListingCardProps {
   listing: MyListing;
@@ -175,9 +175,11 @@ export function ListingCard({
               <ActionMenu
                 entity={{
                   ...listing,
+                  id: listing.id,
+                  type: 'listing', // Must be one of 'listing' | 'user' | 'group' | 'notification' | 'trade'
                   userId: listing.userId || 'user-123',
                 }}
-                actionIds={getActionIds()}
+                actionIds={getActionIds() as any[]}
                 context="my-listings"
                 isOwner={true}
                 align="end"

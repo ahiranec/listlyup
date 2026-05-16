@@ -7,7 +7,7 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Heart, Search, Trash2, ArrowLeft, SlidersHorizontal } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { BottomNav } from './bottom-nav';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';

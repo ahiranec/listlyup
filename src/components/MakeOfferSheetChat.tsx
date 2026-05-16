@@ -16,7 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from './ui/sheet';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import type { ChatListing } from '../data/chatMessages';
 
 interface MakeOfferSheetProps {

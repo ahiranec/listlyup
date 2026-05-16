@@ -376,7 +376,7 @@ export function FeatureFlagPanel({ feature, onClose, onDelete }: FeatureFlagPane
                       <Checkbox
                         id="free-plan"
                         checked={planOverrides.free}
-                        onCheckedChange={(checked) => handlePlanOverrideToggle('free', checked)}
+                        onCheckedChange={(checked) => handlePlanOverrideToggle('free', checked as boolean)}
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -384,7 +384,7 @@ export function FeatureFlagPanel({ feature, onClose, onDelete }: FeatureFlagPane
                       <Checkbox
                         id="plus-plan"
                         checked={planOverrides.plus}
-                        onCheckedChange={(checked) => handlePlanOverrideToggle('plus', checked)}
+                        onCheckedChange={(checked) => handlePlanOverrideToggle('plus', checked as boolean)}
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -392,7 +392,7 @@ export function FeatureFlagPanel({ feature, onClose, onDelete }: FeatureFlagPane
                       <Checkbox
                         id="pro-plan"
                         checked={planOverrides.pro}
-                        onCheckedChange={(checked) => handlePlanOverrideToggle('pro', checked)}
+                        onCheckedChange={(checked) => handlePlanOverrideToggle('pro', checked as boolean)}
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -400,7 +400,7 @@ export function FeatureFlagPanel({ feature, onClose, onDelete }: FeatureFlagPane
                       <Checkbox
                         id="enterprise-plan"
                         checked={planOverrides.enterprise}
-                        onCheckedChange={(checked) => handlePlanOverrideToggle('enterprise', checked)}
+                        onCheckedChange={(checked) => handlePlanOverrideToggle('enterprise', checked as boolean)}
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -408,7 +408,7 @@ export function FeatureFlagPanel({ feature, onClose, onDelete }: FeatureFlagPane
                       <Checkbox
                         id="internal-plan"
                         checked={planOverrides.internal}
-                        onCheckedChange={(checked) => handlePlanOverrideToggle('internal', checked)}
+                        onCheckedChange={(checked) => handlePlanOverrideToggle('internal', checked as boolean)}
                       />
                     </div>
                   </div>

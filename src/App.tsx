@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useEffect, startTransition } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { motion } from "motion/react";
 import { Share2, SearchX } from "lucide-react";
-import { toast, Toaster } from "sonner@2.0.3";
+import { toast, Toaster } from "sonner";
 import { AuthRequiredSheet } from "./components/AuthRequiredSheet";
 import { ProductAccessDeniedSheet } from "./components/ProductAccessDeniedSheet";
 import { getUnreadMessageCount } from "./data/chatMessages";
@@ -21,6 +21,7 @@ import { FilterSheet } from "./components/filter-sheet/FilterSheet";
 import { FilterSidebar } from "./components/filter-sidebar";
 import ShareSheet from "./components/share/ShareSheet";
 import { ProductModal } from "./components/product-modal";
+import { APIProvider } from "@vis.gl/react-google-maps";
 
 // Lazy load heavy components (only load when needed)
 const SignInPage = lazy(() => import("./components/SignInPage"));
@@ -91,6 +92,7 @@ import { shareContent } from "./utils/helpers";
 import { formatPrice } from "./utils/formatPrice";
 import { getSellerName } from "./utils/sellerHelpers";
 import { mockCurrentUser } from "./data/currentUser";
+import { mapCanonicalToLegacyType } from "./types/canonical";
 import type { SavedSearch } from "./components/settings/types";
 import type { FilterOptions } from "./components/filters/types";
 import { getSuperAdminSession, clearSuperAdminSession } from "./dev/mockAuth";
@@ -200,7 +202,7 @@ export default function App() {
   }, [state.currentView]);
 
   // Apply visibility filtering - CANONICAL NATIVE
-  const listings = useListings();
+  const { listings, isLoading: isDataLoading } = useListings();
   const getListingById = useListingById();
   const { getSession, clearSession } = useSuperAdminSession();
 
@@ -269,11 +271,13 @@ export default function App() {
   const handleFilterClick = () => state.setIsFilterOpen(true);
 
   const handleApplyFilters = (newFilters: any) => {
-    filters.handleApplyFilters(newFilters);
+    filters.applyFilters(newFilters);
   };
 
   const handleClearFilters = () => {
-    filters.clearAllFilters(state.setFilteredGroupId, state.setSearchQuery);
+    filters.clearFilters(); // useAppFilters doesn't take arguments for clearFilters
+    state.setFilteredGroupId(null);
+    state.setSearchQuery('');
   };
 
   const handleSaveSearch = (currentFilters: FilterOptions) => {
@@ -321,12 +325,16 @@ export default function App() {
   };
 
   return (
-    <ServiceProvider>
-      <ProfileProvider>
-        <FeaturesProvider>
-          <GlobalActionModalProvider>
-            {/* Toaster for notifications */}
-            <Toaster position="top-center" richColors />
+    <APIProvider 
+      apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}
+      libraries={['places']}
+    >
+      <ServiceProvider>
+        <ProfileProvider>
+          <FeaturesProvider>
+            <GlobalActionModalProvider>
+              {/* Toaster for notifications */}
+              <Toaster position="top-center" richColors />
             {["profile", "settings", "messages"].includes(state.currentView) ? (
               <Suspense fallback={<LoadingFallback />}>
                 <AppStandaloneRenderer
@@ -339,6 +347,7 @@ export default function App() {
               <Suspense fallback={<LoadingFallback />}>
                 <PublishFlow
                   currentUser={currentUser || undefined}
+                  currentUserRole={currentUser?.role === 'user' ? 'member' : (currentUser?.role as any)}
                   initialData={
                     state.republishData
                       ? state.republishData // Re-publish with pre-filled data
@@ -367,6 +376,7 @@ export default function App() {
                   mode="edit"
                   initialData={undefined /* TODO: Pass real listing for edit once ID strategy is unified */}
                   currentUser={currentUser || undefined}
+                  currentUserRole={currentUser?.role === 'user' ? 'member' : (currentUser?.role as any)}
                   onClose={() => {
                     navigation.navigateToHome();
                   }}
@@ -671,6 +681,7 @@ export default function App() {
                       }
                     });
                   }}
+                  {...({} as any) /* Temporary fix for missing props in ActionCenterPageProps */}
                 />
               </Suspense>
             ) : state.currentView === "notifications" ? (
@@ -715,7 +726,7 @@ export default function App() {
                 />
               </Suspense>
             ) : (
-              <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[1280px] mx-auto relative overflow-x-hidden w-full">
+              <div className="h-screen bg-background flex flex-col relative overflow-hidden w-full ml-0">
                 {state.currentView === "product-detail" && state.selectedProduct ? (
                   <Suspense fallback={<LoadingFallback />}>
                     <ProductDetailPage
@@ -747,7 +758,8 @@ export default function App() {
                         startTransition(() => {
                           if (filterParams?.groupId) {
                             state.setFilteredGroupId(filterParams.groupId);
-                            filters.setActiveFilters({
+                            // filters.setActiveFilters doesn't exist, use applyFilters
+                            filters.applyFilters({
                               ...filters.activeFilters,
                               groupsScope: "specific",
                               specificGroups: [filterParams.groupId],
@@ -777,8 +789,9 @@ export default function App() {
                   <Suspense fallback={<LoadingFallback />}>
                     <GroupDetailPage
                       groupId={state.selectedGroupId}
-                      initialUserRole={state.selectedGroupRole}
+                      initialUserRole={state.selectedGroupRole as any}
                       allProducts={listings}
+                      isPlatformAdmin={isSuperAdminUser(currentUser as any)} // Added prop
                       onBack={() => {
                         startTransition(() => {
                           state.setCurrentView("groups");
@@ -789,6 +802,12 @@ export default function App() {
                       onTabChange={navigation.handleTabChange}
                       onNavigateToProducts={(groupId) => {
                         state.setFilteredGroupId(groupId);
+                        // filters.setActiveFilters doesn't exist, use applyFilters
+                        filters.applyFilters({
+                          ...filters.activeFilters,
+                          groupsScope: "specific",
+                          specificGroups: [groupId],
+                        });
                         navigation.navigateToHome();
                         toast.success(`Viewing products from this group`);
                       }}
@@ -822,26 +841,6 @@ export default function App() {
                           state.setCurrentView("chat-conversation");
                         });
                       }}
-                      isPlatformAdmin={true} // ✅ DUAL FLOW T6: Mock platform admin flag
-                    />
-                  </Suspense>
-                ) : state.currentView === "map" ? (
-                  <Suspense fallback={<LoadingFallback />}>
-                    <MapView
-                      products={mapFilters.filteredAndSortedListings || []}
-                      onBack={() => navigation.navigateToHome()}
-                      logo={imgLogo}
-                      notificationCount={9}
-                      onNotificationClick={navigation.navigateToNotifications}
-                      onFilterClick={handleFilterClick}
-                      searchQuery={state.searchQuery}
-                      onSearchChange={state.setSearchQuery}
-                      hasActiveFilters={filters.hasActiveFilters}
-                      activeTab={state.activeTab}
-                      onTabChange={navigation.handleTabChange}
-                      onProductClick={handleProductClick}
-                      filters={mapFilters.activeFilters}
-                      onFiltersChange={mapFilters.setActiveFilters}
                     />
                   </Suspense>
                 ) : state.currentView === "my-listings" ? (
@@ -856,7 +855,7 @@ export default function App() {
                       onEditListing={navigation.navigateToEditListing}
                       listings={listings
                         .filter(l => l.owner_user_id === currentUser?.id)
-                        .map(l => ({
+                        .map((l: any) => ({
                           id: l.id,
                           title: l.title,
                           type: l.listing_type,
@@ -866,7 +865,7 @@ export default function App() {
                           thumbnail: l.primary_image_url || '',
                           username: currentUser?.username || '',
                           lifecycle: l.status as 'active' | 'paused' | 'draft' | 'expired' | 'archived' | 'sold',
-                          visibility: (l.visibility_mode === 'groups_only' ? 'groups' : 'public') as 'public' | 'private' | 'groups',
+                          visibility: (l.visibility_mode === 'groups_only' ? 'group' : 'public') as 'public' | 'private' | 'group',
                           groupIds: [], // TODO: Fetch from listing_groups table
                           stats: { views: 0, messages: 0, likes: 0 },
                           createdAt: new Date(l.created_at),
@@ -1024,7 +1023,7 @@ export default function App() {
                       onCreateEventListing={() => {
                         toast.info('Redirecting to Publish Flow (Event listing)...');
                         // TODO: Open Publish Flow with type=event pre-selected
-                        navigation.navigateToPublishFlow();
+                        navigation.navigateToPublish();
                       }}
                     />
                   </Suspense>
@@ -1039,27 +1038,29 @@ export default function App() {
                       searchValue={state.searchQuery}
                       onSearchChange={state.setSearchQuery}
                       searchPlaceholder="Search products..."
-                      onMapViewClick={navigation.navigateToMap}
-                      isMapView={false}
+                      userAvatar={currentUser?.avatarUrl}
+                      onProfileClick={() => state.setIsMenuOpen(true)}
                     />
 
-                    <SearchBar
-                      onMapViewClick={navigation.navigateToMap}
-                      filters={filters.activeFilters}
-                      onFiltersChange={(newFilters) => {
-                        if (newFilters.groupsScope === "all" && filters.activeFilters.groupsScope !== "all") {
-                          state.setFilteredGroupId(null);
-                        }
-                        filters.applyFilters(newFilters);
-                      }}
-                      onFilterClick={() => state.setIsFilterOpen(true)}
-                      hasActiveFilters={filters.hasActiveFilters}
-                    />
+                    <div className="lg:hidden">
+                      <SearchBar
+                        onMapViewClick={state.currentView === 'map' ? navigation.navigateToHome : navigation.navigateToMap}
+                        isMapView={state.currentView === 'map'}
+                        filters={filters.activeFilters}
+                        onFiltersChange={(newFilters) => {
+                          if (newFilters.groupsScope === "all" && filters.activeFilters.groupsScope !== "all") {
+                            state.setFilteredGroupId(null);
+                          }
+                          filters.applyFilters(newFilters);
+                        }}
+                        onFilterClick={() => state.setIsFilterOpen(true)}
+                        hasActiveFilters={filters.hasActiveFilters}
+                      />
+                    </div>
 
                     {/* Desktop Layout: Sidebar + Content */}
-                    <div className="flex-1 flex overflow-hidden">
-                      {/* Desktop Filter Sidebar - hidden on mobile */}
-                      <FilterSidebar
+                    <div className="flex-1 flex overflow-hidden min-h-0">
+                          <FilterSidebar
                         className="hidden lg:block"
                         filters={desktopFilters.filters}
                         openSections={desktopFilters.openSections}
@@ -1081,21 +1082,51 @@ export default function App() {
                           // Sync: When filters are applied, update the desktop sidebar's internal state
                           // This ensures the sidebar reflects the currently active filters
                         }}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        unreadMessages={unreadCount}
+                        onMapViewClick={state.currentView === 'map' ? navigation.navigateToHome : navigation.navigateToMap}
+                        isMapView={state.currentView === "map"}
                       />
 
                       {/* Main Content Area */}
-                      <main className="flex-1 p-2 pb-20 lg:p-4 lg:pb-4 overflow-auto">
-                        {state.isLoading ? (
-                          <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4">
-                            {[1, 2, 3, 4, 5, 6].map((i) => (
-                              <div key={i}>
-                                <ProductCardSkeleton />
-                              </div>
-                            ))}
+                      <main className="flex-1 p-2 pb-20 lg:px-12 lg:py-8 lg:pb-8 overflow-auto scrollbar-hide flex flex-col">
+                        {state.isLoading || isDataLoading ? (
+                          <div className="max-w-[820px] w-full">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4">
+                              {[1, 2, 3, 4, 5, 6].map((i) => (
+                                <div key={i}>
+                                  <ProductCardSkeleton />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : state.currentView === "map" ? (
+                          <div className="max-w-[820px] w-full flex-1 flex flex-col min-h-[600px] pb-4">
+                            <Suspense fallback={<LoadingFallback />}>
+                              <MapView
+                                products={mapFilters.filteredAndSortedListings || []}
+                                onBack={() => navigation.navigateToHome()}
+                                logo={imgLogo}
+                                notificationCount={state.isAuthenticated ? 9 : 0}
+                                onNotificationClick={navigation.navigateToNotifications}
+                                userAvatar={currentUser?.avatarUrl}
+                                onProfileClick={() => state.setIsMenuOpen(true)}
+                                onFilterClick={handleFilterClick}
+                                searchQuery={state.searchQuery}
+                                onSearchChange={state.setSearchQuery}
+                                hasActiveFilters={filters.hasActiveFilters}
+                                activeTab={state.activeTab}
+                                onTabChange={navigation.handleTabChange}
+                                onProductClick={handleProductClick}
+                                filters={mapFilters.activeFilters}
+                                onFiltersChange={mapFilters.applyFilters}
+                              />
+                            </Suspense>
                           </div>
                         ) : (
-                          <>
-                            <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
+                          <div className="max-w-[820px] w-full">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
                               {(filters.filteredAndSortedListings || []).map((listing, index) => (
                                 <div
                                   key={listing.id}
@@ -1111,7 +1142,7 @@ export default function App() {
                                     visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
                                     location={listing.location_name} // TODO: Resolve via listing_location_id
                                     ownerName={getSellerName(listing.owner_user_id, listing.owner_user)}
-                                    type={listing.listing_type === 'product' ? listing.offer_mode : listing.listing_type}
+                                    type={mapCanonicalToLegacyType(listing.listing_type, listing.offer_mode)}
                                     eventDate={listing.start_date}
                                     eventEndDate={listing.end_date}
                                     eventTime={listing.event_time_text}
@@ -1125,7 +1156,7 @@ export default function App() {
                               ))}
                             </div>
 
-                            {(filters.filteredAndSortedListings?.length || 0) === 0 && (
+                            {!state.isLoading && !isDataLoading && (filters.filteredAndSortedListings?.length || 0) === 0 && (
                               <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -1156,7 +1187,7 @@ export default function App() {
                                 )}
                               </motion.div>
                             )}
-                          </>
+                          </div>
                         )}
                       </main>
                     </div>
@@ -1171,13 +1202,13 @@ export default function App() {
 
                 <Suspense fallback={<LoadingFallback />}>
                   <ProductModal
-                    product={state.selectedProduct}
+                    product={state.selectedProduct as any}
                     isOpen={state.isModalOpen}
                     onClose={() => state.setIsModalOpen(false)}
                     productImage={state.selectedProduct?.primary_image_url || imgProductImage}
                     onNavigateToGroup={(groupId, groupName) => {
                       state.setFilteredGroupId(groupId);
-                      filters.setActiveFilters({
+                      filters.applyFilters({
                         ...filters.activeFilters,
                         groupsScope: "specific",
                         specificGroups: [groupId],
@@ -1399,5 +1430,6 @@ export default function App() {
         </FeaturesProvider>
       </ProfileProvider>
     </ServiceProvider>
+    </APIProvider>
   );
 }

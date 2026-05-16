@@ -9,7 +9,7 @@ import { ArrowLeft, ChevronRight, TrendingUp, Eye, Heart, Package, Share2, Trend
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { PerformanceCard } from './statistics/PerformanceCard';
 import { ActivityCard } from './statistics/ActivityCard';
 

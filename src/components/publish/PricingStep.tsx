@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Package, MessageCircle, Globe, Users, ChevronDown, ExternalLink, Share2 } from 'lucide-react';
+import { Package, MessageCircle, Globe, Users, ChevronDown, ExternalLink, Share2, Info } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -14,6 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/colla
 import { useProfile } from '../../contexts/ProfileContext';
 import type { ListingType } from './types';
 import type { ContactMethod, AccessMode, VisibilityMode } from '../../types/canonical';
+import { MOCK_AVAILABLE_GROUPS } from './constants';
 
 interface PricingStepProps {
   listingType: ListingType;
@@ -63,13 +64,7 @@ const VISIBILITY_OPTIONS = [
   { id: 'groups_only' as VisibilityMode, label: 'Groups Only', description: 'Only members of selected groups', icon: Users },
 ];
 
-const AVAILABLE_GROUPS = [
-  { id: 'viña-del-mar', name: 'Viña del Mar Community', members: 1234 },
-  { id: 'valparaiso', name: 'Valparaíso Marketplace', members: 3456 },
-  { id: 'tech-chile', name: 'Tech Chile', members: 890 },
-  { id: 'reñaca-neighbors', name: 'Reñaca Neighbors', members: 567 },
-  { id: 'con-con-local', name: 'Con Con Local', members: 234 },
-];
+
 
 export function PricingStep({
   listingType,
@@ -117,14 +112,8 @@ export function PricingStep({
     // 2. access_modes está vacío (usuario no ha seleccionado)
     // 3. Hay profile con defaults
     if (isProduct && access_mode.length === 0 && profile) {
-      const defaults: AccessMode[] = [];
-      if (profile.defaultDelivery.pickup) defaults.push('pickup');
-      if (profile.defaultDelivery.meetup) defaults.push('meetup');
-      if (profile.defaultDelivery.delivery) defaults.push('delivery');
-      if (profile.defaultDelivery.virtual) defaults.push('virtual');
-      
-      if (defaults.length > 0) {
-        setLocalAccessModes(defaults);
+      if (profile.default_access_mode?.length > 0) {
+        setLocalAccessModes(profile.default_access_mode);
       }
     }
   }, []); // Solo al montar el componente
@@ -136,7 +125,7 @@ export function PricingStep({
 
   useEffect(() => {
     onDataChange({
-      type: listingType,
+      type: listingType as any,
       price: localPrice,
       priceNegotiable: localNegotiable,
       access_mode: localAccessModes,
@@ -191,7 +180,7 @@ export function PricingStep({
     return localAccessModes.map(id => ACCESS_OPTIONS.find(o => o.id === id)?.label).join(', ');
   };
 
-  const getContactModesSummary = () => {
+  const getcontact_methodsSummary = () => {
     if (localContactMethods.length === 0) return 'None selected';
     return localContactMethods.map(id => CONTACT_OPTIONS.find(o => o.id === id)?.label).join(', ');
   };
@@ -269,7 +258,7 @@ export function PricingStep({
                     </p>
                   </div>
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                    {AVAILABLE_GROUPS.map((group) => (
+                    {MOCK_AVAILABLE_GROUPS.map((group) => (
                       <div 
                         key={group.id} 
                         className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50"
@@ -284,7 +273,7 @@ export function PricingStep({
                           className="flex-1 cursor-pointer"
                         >
                           <p className="text-sm font-medium">{group.name}</p>
-                          <p className="text-xs text-muted-foreground">{group.members.toLocaleString()} members</p>
+                          <p className="text-xs text-muted-foreground">Community Group</p>
                         </label>
                       </div>
                     ))}
@@ -316,7 +305,7 @@ export function PricingStep({
                           Posting in:
                         </p>
                         {localSelectedGroups.map((groupId) => {
-                          const group = AVAILABLE_GROUPS.find(g => g.id === groupId);
+                          const group = MOCK_AVAILABLE_GROUPS.find(g => g.id === groupId);
                           return group ? (
                             <p key={groupId} className="text-xs text-blue-700 mt-1">
                               • {group.name}
@@ -407,7 +396,7 @@ export function PricingStep({
                   <span>Contact Methods <span className="text-red-500">*</span></span>
                   {!contactOpen && (
                     <span className="text-xs font-normal text-muted-foreground ml-2 truncate">
-                      • {getContactModesSummary()}
+                      • {getcontact_methodsSummary()}
                     </span>
                   )}
                 </div>

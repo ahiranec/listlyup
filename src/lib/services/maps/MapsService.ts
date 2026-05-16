@@ -32,6 +32,11 @@ export interface IMapsService {
   geocode(address: string): Promise<ServiceResult<GeocodingResult>>;
   
   /**
+   * Get full details for a place by ID
+   */
+  getPlaceDetails(placeId: string): Promise<ServiceResult<GeocodingResult>>;
+  
+  /**
    * Check if the service is available and configured
    */
   isAvailable(): boolean;

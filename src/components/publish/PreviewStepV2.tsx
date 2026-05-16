@@ -125,7 +125,11 @@ export function PreviewStepV2({
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  {formData.location.city}, {formData.location.region}
+                  {formData.location.address || 
+                   [formData.location.city, formData.location.region].filter(Boolean).join(", ") || 
+                   (formData.location.latitude && formData.location.longitude 
+                     ? `Coordenadas (${Number(formData.location.latitude).toFixed(4)}, ${Number(formData.location.longitude).toFixed(4)})` 
+                     : "Sin ubicación")}
                 </span>
               </div>
             )}

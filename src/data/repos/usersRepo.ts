@@ -50,6 +50,8 @@ export const usersRepo = {
       email: data.email,
       username: data.username,
       avatarUrl: data.avatar_url,
+      isAuthenticated: true,
+      groupIds: [],
     };
   },
 
@@ -79,6 +81,8 @@ export const usersRepo = {
       email: data.email,
       username: data.username,
       avatarUrl: data.avatar_url,
+      isAuthenticated: true,
+      groupIds: [],
     };
   },
 };

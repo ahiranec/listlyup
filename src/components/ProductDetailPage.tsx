@@ -41,15 +41,14 @@ import {
   QuestionsAnswers,
   LocationModal,
   SellerSheet,
-  ReportSheet,
-  type ExtendedListing
+  ReportSheet
 } from "./product-detail";
 
 import { shareContent } from "../utils/helpers";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { isItemSaved, toggleSaveItem } from "../utils/savedItems";
 import { trackProductView, getRecentlyViewedExcluding, clearRecentlyViewed } from "../utils/recentlyViewed";
-import { convertDeliveryModesToOptions } from "../utils/deliveryHelpers";
+import { convertaccess_modeToOptions } from "../utils/deliveryHelpers";
 import ShareSheet from "./share/ShareSheet";
 import { MakeOfferSheet } from "./sheets/MakeOfferSheet";
 import { AskQuestionSheet } from "./sheets/AskQuestionSheet";
@@ -121,7 +120,15 @@ export function ProductDetailPage({
 
     // ✅ TRACK PRODUCT VIEW (Recently Viewed) - Auto-track for buyers only
     if (!isOwner && product) {
-      trackProductView(product);
+      trackProductView({
+        id: product.id,
+        title: product.title,
+        price: priceDisplay || '',
+        image: imageUrl,
+        location: product.location_name || 'Sin ubicación',
+        type: legacyType,
+        condition: product.condition
+      } as any);
     }
 
     // Initialize Open Graph tags for rich sharing
@@ -183,7 +190,7 @@ export function ProductDetailPage({
         listingImage: imageUrl,
         productPrice: priceDisplay,
         sellerId: product.owner_user_id,
-        sellerName: extendedProduct.seller.name,
+        sellerName: sellerInfo.name,
       },
       onConfirm: () => {
         // Existing completion behavior preserved
@@ -206,88 +213,8 @@ export function ProductDetailPage({
   // ❌ MVP: Rating feature removed - no rating system in MVP
   // const canRate = !isOwner && product.id === "4"; // Solo para demo: Coffee Maker comprado
 
-  // Mock extended data (en una app real vendría del backend)
-  // Solo el producto con precio "25 USD" tiene descuento y negotiable
-  const hasDiscount = priceDisplay === "25 USD";
-  // ❌ MVP: Reviews removed - no rating system in MVP
-  const hasProductReviews = false; // Disabled for MVP
-  const hasSellerRating = false; // Disabled for MVP
-
   // 🆕 GET SELLER INFO DYNAMICALLY using centralized helper (Audit Fix)
   const sellerInfo = getSellerInfo(product.owner_user_id, product.owner_user);
-
-  const extendedProduct: ExtendedListing = {
-    ...product,
-    originalPrice: hasDiscount ? "35 USD" : undefined,
-    discount: hasDiscount ? 29 : undefined,
-    negotiable: hasDiscount ? true : undefined,
-    itemRating: undefined,
-    itemReviews: undefined,
-    seller: {
-      ...sellerInfo,
-      rating: hasSellerRating ? sellerInfo.rating : undefined,
-      reviews: hasSellerRating ? sellerInfo.reviews : undefined,
-    },
-    deliveryOptions: convertDeliveryModesToOptions(product.access_mode),
-    contactMethods: {
-      whatsapp: { enabled: true, preferred: true, hours: "24/7" },
-      phone: { enabled: true, hours: "9am-8pm daily" },
-      sms: false,
-      telegram: false,
-      email: false
-    },
-    paymentMethods: ["Cash", "Bank Transfer", "PayPal"],
-    category: {
-      main: product.category || "Sin categoría",
-      sub: product.subcategory || "Sin subcategoría",
-    },
-    tags: product.tags || [],
-    privacyPin: { enabled: true, radius: "10km" },
-    questions: [
-      {
-        id: "q3",
-        question: "Can you ship to Santiago?",
-        askedBy: "María",
-        askedAt: "3h ago",
-        helpful: 1
-      },
-      {
-        id: "q1",
-        question: "Does it work perfectly?",
-        askedBy: "Juan Pérez",
-        askedAt: "1d ago",
-        helpful: 3,
-        answer: { text: "Yes! Works like new. Tested this morning.", answeredAt: "1d ago", helpful: 5 }
-      },
-      {
-        id: "q2",
-        question: "What brand is it?",
-        askedBy: "Carlos",
-        askedAt: "2d ago",
-        helpful: 0,
-        answer: { text: "It's an Oster brand, model BVST-CM5. Very reliable.", answeredAt: "2d ago", helpful: 2 }
-      }
-    ],
-    stats: isOwner ? {
-      views: 156,
-      favorites: 12,
-      messages: 8,
-      shares: 24,
-      viewsChange: 23
-    } : undefined,
-    conversations: isOwner ? [
-      { id: "c1", userName: "Juan Pérez", lastMessage: "Is it still available?", time: "2h ago", unread: true },
-      { id: "c2", userName: "María González", lastMessage: "Can we meet today?", time: "1d ago", unread: false },
-      { id: "c3", userName: "Carlos Silva", lastMessage: "What's the lowest price?", time: "2d ago", unread: false }
-    ] : undefined,
-    mediaItems: [
-      { type: 'image', url: productImage },
-      { type: 'image', url: productImage },
-      { type: 'video', url: productImage, thumbnail: productImage },
-      { type: 'image', url: productImage }
-    ],
-    lookingFor: legacyType === 'trade' || legacyType === 'sale_or_trade' ? ["laptop", "tablet", "smartphone"] : undefined
-  };
 
   // Calcular tiempo desde publicación
   const getTimeAgo = (dateString?: string) => {
@@ -445,7 +372,7 @@ export function ProductDetailPage({
           image: p.primary_image_url || '',
           condition: p.condition,
           location: p.location_name || 'Sin ubicación',
-          type: pType,
+          type: pType as any,
         };
       });
   };
@@ -479,7 +406,7 @@ export function ProductDetailPage({
           image: p.primary_image_url || '',
           condition: p.condition,
           location: p.location_name || 'Sin ubicación',
-          type: pType,
+          type: pType as any,
         };
       });
   };
@@ -497,14 +424,16 @@ export function ProductDetailPage({
         // Enriquecer con data completa de allProducts si está disponible
         const fullProduct = allProducts.find(p => p.id === item.id);
         if (fullProduct) {
+          const fpPrice = fullProduct.price_amount && fullProduct.price_currency ? `${fullProduct.price_amount} ${fullProduct.price_currency}` : undefined;
+          const fpType = fullProduct.listing_type === 'product' ? fullProduct.offer_mode : fullProduct.listing_type;
           return {
             id: fullProduct.id,
             title: fullProduct.title,
-            price: fullProduct.price,
-            image: fullProduct.image,
+            price: fpPrice,
+            image: fullProduct.primary_image_url || '',
             condition: fullProduct.condition,
-            location: fullProduct.location,
-            type: fullProduct.type,
+            location: fullProduct.location_name || 'Sin ubicación',
+            type: fpType as any,
           };
         }
         // Fallback: usar data del historial
@@ -567,7 +496,7 @@ export function ProductDetailPage({
                     productPrice: priceDisplay,
                     productLocation: product.location_name || 'Sin ubicación',
                     productType: legacyType,
-                    sellerName: extendedProduct.seller.name,
+                    sellerName: sellerInfo.name,
                   },
                   onConfirm: () => {
                     // ShareSheet handles internal logic
@@ -623,18 +552,20 @@ export function ProductDetailPage({
 
         {/* SECTION 1: Photo Carousel */}
         <ProductImageCarousel
-          mediaItems={extendedProduct.mediaItems}
+          mediaItems={product.media && product.media.length > 0 
+            ? product.media.map(m => ({ url: m.url, type: m.media_type }))
+            : (imageUrl ? [{ type: 'image', url: imageUrl }] : [])
+          }
           productImage={productImage}
           condition={product.condition}
           title={product.title}
           isOwner={isOwner}
-          stats={extendedProduct.stats}
+          stats={undefined}
         />
 
         {/* SECTION 2: Hero - Title + Price + Meta principal */}
         <ProductHeaderCompact
           product={product}
-          extendedProduct={extendedProduct}
           isOwner={isOwner}
         />
 
@@ -643,7 +574,7 @@ export function ProductDetailPage({
         {/* SECTION 3: Metadata compactada */}
         <ProductMetadataCompact
           product={product}
-          extendedProduct={extendedProduct}
+          sellerName={sellerInfo.name}
           isOwner={isOwner}
           listingStatus={listingStatus}
           timeAgo={timeAgo}
@@ -662,7 +593,7 @@ export function ProductDetailPage({
         <section className="space-y-0">
 
           {/* 5. Delivery Methods */}
-          <DeliveryOptions deliveryOptions={extendedProduct.deliveryOptions} />
+          <DeliveryOptions deliveryOptions={convertaccess_modeToOptions(product.access_mode)} />
 
           <Separator className="my-0 mx-4 opacity-30" />
 
@@ -672,19 +603,19 @@ export function ProductDetailPage({
             contact_whatsapp_phone={product.contact_whatsapp_phone}
             contact_website_url={product.contact_website_url}
             contact_social_url={product.contact_social_url}
-            responseTime={extendedProduct.seller?.responseTime}
+            responseTime={undefined}
           />
 
           <Separator className="my-0 mx-4 opacity-30" />
 
           {/* 7. Description */}
-          <ProductDescription product={product} />
+          <ProductDescription product={product as any} />
 
           <Separator className="my-0 mx-4 opacity-30" />
 
           {/* 8. Questions & Answers */}
           <QuestionsAnswers
-            questions={extendedProduct.questions}
+            questions={[]}
             isOwner={isOwner}
             onAnswerClick={(question) => {
               setSelectedQuestionToRespond(question);
@@ -704,7 +635,7 @@ export function ProductDetailPage({
           {/* 9. More Items - MVP: Solo Similar Listings y More from this user */}
           {/* ❌ MVP: Recently Viewed removed - passing empty array */}
           <RelatedProducts
-            sellerName={extendedProduct.seller?.name}
+            sellerName={sellerInfo.name}
             isOwner={isOwner}
             recentlyViewedProducts={[]}
             similarProducts={similarProducts}
@@ -735,9 +666,9 @@ export function ProductDetailPage({
       {/* ========== FOOTER - Sticky Bottom ========== */}
       <ProductActions
         isOwner={isOwner}
-        product={product}
+        product={product as any}
         isAuthenticated={isAuthenticated} // NEW: Pass auth status
-        onAuthRequired={onAuthRequired} // NEW: Pass auth gate handler
+        onAuthRequired={onAuthRequired as any} // NEW: Pass auth gate handler
         onNavigateToChat={onNavigateToChat}
         onMakeOfferClick={handleMakeOfferClick}
         onAskQuestionClick={handleAskQuestionClick}
@@ -751,14 +682,16 @@ export function ProductDetailPage({
         open={isLocationModalOpen}
         onOpenChange={setIsLocationModalOpen}
         location={product.location_name || 'Sin ubicación'}
-        privacyPin={extendedProduct.privacyPin}
+        latitude={product.latitude}
+        longitude={product.longitude}
+        privacyPin={undefined}
       />
 
       {/* Seller Sheet - Desliza desde abajo */}
       <SellerSheet
         open={isSellerModalOpen}
         onOpenChange={setIsSellerModalOpen}
-        seller={extendedProduct.seller}
+        seller={sellerInfo as any}
         location={product.location_name || 'Sin ubicación'}
       />
 
@@ -798,8 +731,8 @@ export function ProductDetailPage({
         productTitle={product.title}
         productPrice={priceDisplay || '$0'}
         productImage={productImage}
-        sellerId={extendedProduct.seller.id}
-        sellerName={extendedProduct.seller.name}
+        sellerId={product.owner_user_id}
+        sellerName={sellerInfo.name}
         onOfferSubmitted={(offerId) => {
           // Navigate to chat with the new offer
           onNavigateToChat?.(offerId);
@@ -812,7 +745,7 @@ export function ProductDetailPage({
         onOpenChange={setIsAskQuestionSheetOpen}
         productTitle={product.title}
         productImage={productImage}
-        sellerName={extendedProduct.seller.name}
+        sellerName={sellerInfo.name}
       />
 
       {/* ========== SELLER/OWNER SHEETS ========== */}

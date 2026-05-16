@@ -173,7 +173,7 @@ export function PreviewStep({ formData, onPublish, onBack, onEdit, isPublishing 
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Delivery</p>
                   <div className="flex flex-wrap gap-0.5">
-                    {formData.deliveryModes.map(mode => (
+                    {formData.access_mode.map(mode => (
                       <Badge key={mode} variant="outline" className="text-xs py-0 capitalize">
                         {mode}
                       </Badge>
@@ -184,7 +184,7 @@ export function PreviewStep({ formData, onPublish, onBack, onEdit, isPublishing 
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Contact</p>
                   <div className="flex flex-wrap gap-0.5">
-                    {formData.contactModes.map(mode => (
+                    {formData.contact_methods.map(mode => (
                       <Badge key={mode} variant="outline" className="text-xs py-0 capitalize">
                         {mode}
                       </Badge>
@@ -195,13 +195,13 @@ export function PreviewStep({ formData, onPublish, onBack, onEdit, isPublishing 
 
               {/* Visibility compact */}
               <div className="flex items-center gap-1.5 pt-0.5">
-                {formData.visibility === 'public' && (
+                {formData.visibility_mode === 'public' && (
                   <>
                     <Globe className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
                     <span className="text-xs">Public</span>
                   </>
                 )}
-                {formData.visibility === 'groups' && (
+                {formData.visibility_mode === 'groups_only' && (
                   <>
                     <Users className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                     <span className="text-xs">
@@ -221,7 +221,7 @@ export function PreviewStep({ formData, onPublish, onBack, onEdit, isPublishing 
                     )}
                   </>
                 )}
-                {formData.visibility === 'private' && (
+                {formData.visibility_mode === 'private' as any && (
                   <>
                     <Lock className="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
                     <span className="text-xs">Private</span>

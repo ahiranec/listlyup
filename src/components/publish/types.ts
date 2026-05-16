@@ -102,10 +102,10 @@ export interface PublishFormData {
     value?: number;
   };
   
-  // CANONICAL: access_mode (replaces deliveryModes)
+  // CANONICAL: access_mode (replaces access_mode)
   access_mode: AccessMode[];
   
-  // CANONICAL: contact_methods (replaces contactModes)
+  // CANONICAL: contact_methods (replaces contact_methods)
   contact_methods: ContactMethod[];
   contact_whatsapp_phone?: string;
   contact_website_url?: string;
@@ -115,6 +115,7 @@ export interface PublishFormData {
   // CANONICAL: visibility_mode (replaces visibility)
   visibility_mode: VisibilityMode;
   selectedGroups?: string[];
+  lockedGroups?: boolean; // NEW: Lock groups selection (used when publishing from a specific group)
   
   // Campaigns & Events (optional)
   selectedCampaigns?: string[];

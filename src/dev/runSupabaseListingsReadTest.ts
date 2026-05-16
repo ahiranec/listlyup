@@ -5,7 +5,7 @@ type TestResult =
     | { ok: false; error: unknown };
 
 export async function runSupabaseListingsReadTest(): Promise<TestResult> {
-    const env = import.meta.env;
+    const env = (import.meta as any).env;
 
     console.group('🧪 [ListlyUp] Supabase Read Test');
 
@@ -36,7 +36,7 @@ export async function runSupabaseListingsReadTest(): Promise<TestResult> {
         }
 
         if (data.length > 0) {
-            const first = data[0] as Record<string, unknown>;
+            const first = data[0] as unknown as Record<string, unknown>;
 
             console.log('Available keys:', Object.keys(first));
             console.log('Shape check:', {

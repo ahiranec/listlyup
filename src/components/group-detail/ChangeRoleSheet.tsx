@@ -15,7 +15,7 @@ import {
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface ChangeRoleSheetProps {
   open: boolean;

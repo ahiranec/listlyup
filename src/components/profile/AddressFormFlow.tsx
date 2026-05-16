@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useProfile } from '../../contexts/ProfileContext';
 import { Address } from './types';
 import { validateAddressLabel } from './utils/validation';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface AddressFormFlowProps {
   addressId?: string;

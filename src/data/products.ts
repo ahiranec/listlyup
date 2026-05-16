@@ -11,9 +11,9 @@ export interface Product {
   rating?: number;
   groupIds?: string[]; // IDs de grupos donde este producto está compartido (solo si visibility === "group")
   ownerId?: string; // ID del dueño del producto
-  contactModes?: ('chat' | 'phone' | 'whatsapp' | 'email')[]; // Métodos de contacto preferidos del vendedor
-  phoneNumber?: string; // Requerido si contactModes incluye 'phone'
-  deliveryModes?: ('pickup' | 'meetup' | 'delivery' | 'shipping' | 'virtual')[]; // Métodos de entrega disponibles
+  contact_methods?: ('chat' | 'phone' | 'whatsapp' | 'email')[]; // Métodos de contacto preferidos del vendedor
+  phoneNumber?: string; // Requerido si contact_methods incluye 'phone'
+  access_mode?: ('pickup' | 'meetup' | 'delivery' | 'shipping' | 'virtual')[]; // Métodos de entrega disponibles
   description?: string; // Descripción del producto
   // Event-specific fields
   eventDate?: string; // Fecha inicio del evento (solo para type === "event") - formato: "2025-12-17"
@@ -32,7 +32,7 @@ export interface Product {
   // Service-specific fields
   businessHours?: string; // e.g., "Monday to Friday 8:30 AM - 6:00 PM"
   // Lifecycle status
-  status?: 'active' | 'paused' | 'draft' | 'pending' | 'rejected' | 'archived';
+  status?: 'active' | 'paused' | 'draft' | 'pending' | 'rejected' | 'archived' | 'sold';
   pausedAt?: string; // ISO timestamp when listing was paused
   pausedReason?: 'sold' | 'unavailable' | 'update' | 'other';
   pausedDaysAgo?: number; // Days since paused (for display)
@@ -78,8 +78,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-05T10:00:00Z",
     rating: 4.5,
     ownerId: "user456", // Otro usuario
-    contactModes: ['chat', 'whatsapp'], // Acepta ambos
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat', 'whatsapp'], // Acepta ambos
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "A modern desk lamp with adjustable brightness and a sleek design.",
     tags: ["desk lamp", "modern", "adjustable"],
     category: "home",
@@ -99,9 +99,9 @@ export const mockProducts: Product[] = [
     rating: 4.3,
     groupIds: ["1"], // Vecinos Valparaíso
     ownerId: "user456",
-    contactModes: ['whatsapp', 'chat'],
+    contact_methods: ['whatsapp', 'chat'],
     phoneNumber: "+56987654321",
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: "Bicicleta de paseo en buen estado, ideal para recorrer el plan. Incluye canasta delantera y luz LED.",
     tags: ["bicicleta", "paseo", "valparaíso"],
     category: "sports",
@@ -120,9 +120,9 @@ export const mockProducts: Product[] = [
     rating: 4.6,
     groupIds: ["1"], // Vecinos Valparaíso
     ownerId: "user789",
-    contactModes: ['chat', 'phone'],
+    contact_methods: ['chat', 'phone'],
     phoneNumber: "+56923456789",
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products (furniture - pickup only)
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products (furniture - pickup only)
     description: "Mesa de madera maciza para 6 personas. Perfecta para comedores o cocinas grandes. Me mudo y no puedo llevarla.",
     tags: ["mesa", "comedor", "madera"],
     category: "home",
@@ -141,9 +141,9 @@ export const mockProducts: Product[] = [
     rating: 4.8,
     groupIds: ["1"], // Vecinos Valparaíso
     ownerId: "user555",
-    contactModes: ['whatsapp'],
+    contact_methods: ['whatsapp'],
     phoneNumber: "+56934567890",
-    deliveryModes: ['pickup', 'meetup'], // ✅ P2 FIX: Added delivery modes for realistic product
+    access_mode: ['pickup', 'meetup'], // ✅ P2 FIX: Added delivery modes for realistic product
     description: "Paquete de 4 plantas de interior: pothos, suculentas y cactus. Incluye macetas decorativas. Perfectas para departamentos.",
     tags: ["plantas", "interior", "decoración"],
     category: "home",
@@ -162,9 +162,9 @@ export const mockProducts: Product[] = [
     rating: 4.8,
     groupIds: ["2"], // Tech Lovers Chile (formerly "group2")
     ownerId: "user456", // Otro usuario
-    contactModes: ['whatsapp', 'phone'], // Solo externos
+    contact_methods: ['whatsapp', 'phone'], // Solo externos
     phoneNumber: "+56912345678",
-    deliveryModes: ['pickup', 'shipping'], // ✅ P2 FIX: Added delivery modes for WhatsApp+Phone scenario
+    access_mode: ['pickup', 'shipping'], // ✅ P2 FIX: Added delivery modes for WhatsApp+Phone scenario
     description: "A vintage camera with a classic design and excellent condition.",
     tags: ["vintage camera", "classic design"],
     category: "electronics",
@@ -182,8 +182,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-07T09:15:00Z",
     rating: 4.2,
     ownerId: "user789", // Otro usuario
-    contactModes: ['chat'], // Solo chat interno
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat'], // Solo chat interno
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "Wireless headphones with excellent sound quality and comfort.",
     tags: ["wireless headphones", "sound quality"],
     category: "electronics",
@@ -202,8 +202,8 @@ export const mockProducts: Product[] = [
     rating: 4.2,
     groupIds: ["3"], // Local Community V Region (formerly "group3")
     ownerId: "user789", // Otro usuario
-    contactModes: ['chat', 'whatsapp'], // Acepta ambos
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat', 'whatsapp'], // Acepta ambos
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: "A coffee maker with a modern design and efficient brewing.",
     tags: ["coffee maker", "modern design"],
     category: "home",
@@ -221,8 +221,8 @@ export const mockProducts: Product[] = [
     rating: 4.7,
     groupIds: ["3"], // Local Community V Region (formerly "group3")
     ownerId: "user456", // Otro usuario
-    contactModes: ['whatsapp'], // Solo WhatsApp
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products (bike - pickup only)
+    contact_methods: ['whatsapp'], // Solo WhatsApp
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products (bike - pickup only)
     description: "A mountain bike in excellent condition, perfect for outdoor adventures.",
     tags: ["mountain bike", "outdoor adventures"],
     category: "sports",
@@ -241,9 +241,9 @@ export const mockProducts: Product[] = [
     rating: 4.6,
     groupIds: ["1"], // Tech Enthusiasts Chile
     ownerId: "user789", // Otro usuario
-    contactModes: ['chat', 'phone', 'whatsapp'], // Acepta todos
+    contact_methods: ['chat', 'phone', 'whatsapp'], // Acepta todos
     phoneNumber: "+56987654321",
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "A new smartphone with the latest technology and features.",
     tags: ["smartphone", "latest technology"],
     category: "electronics",
@@ -261,9 +261,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-04T13:30:00Z",
     rating: 4.3,
     ownerId: "user999", // Otro usuario
-    contactModes: ['phone'], // Solo teléfono
+    contact_methods: ['phone'], // Solo teléfono
     phoneNumber: "+56923456789",
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: "A skateboard in excellent condition, perfect for street riding.",
     tags: ["skateboard", "street riding"],
     category: "sports",
@@ -281,8 +281,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-01T15:10:00Z",
     rating: 4.0,
     ownerId: "user555", // Otro usuario
-    contactModes: ['chat'], // Solo chat interno
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat'], // Solo chat interno
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "A backpack with multiple compartments and a comfortable design.",
     tags: ["backpack", "multiple compartments"],
     category: "accessories",
@@ -300,8 +300,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-08T12:00:00Z",
     rating: 4.9,
     ownerId: "user888", // Otro usuario
-    contactModes: ['whatsapp', 'chat'], // Ambos
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    contact_methods: ['whatsapp', 'chat'], // Ambos
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: "An electric guitar in excellent condition, perfect for musicians.",
     tags: ["electric guitar", "musicians"],
     category: "music",
@@ -320,9 +320,9 @@ export const mockProducts: Product[] = [
     rating: 4.4,
     groupIds: ["1", "2"], // Tech Enthusiasts Chile, Vintage Marketplace
     ownerId: "user777", // Otro usuario
-    contactModes: ['chat', 'whatsapp', 'phone'], // Todos
+    contact_methods: ['chat', 'whatsapp', 'phone'], // Todos
     phoneNumber: "+56934567890",
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: "A wooden chair with a classic design and excellent comfort.",
     tags: ["wooden chair", "classic design"],
     category: "home",
@@ -340,8 +340,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-18T09:00:00Z", // Updated: Second newest (position 2)
     rating: 4.7,
     ownerId: "user666", // Otro usuario
-    contactModes: ['chat'], // Solo chat
-    deliveryModes: ['pickup'], // ✅ P2 FIX: Added delivery mode
+    contact_methods: ['chat'], // Solo chat
+    access_mode: ['pickup'], // ✅ P2 FIX: Added delivery mode
     description: "New running shoes with excellent cushioning and support.",
     tags: ["running shoes", "cushioning"],
     category: "sports",
@@ -358,8 +358,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-03T09:00:00Z",
     rating: 4.1,
     ownerId: "user444", // Otro usuario
-    contactModes: ['whatsapp'], // Solo WhatsApp para items free
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products (free items - pickup only)
+    contact_methods: ['whatsapp'], // Solo WhatsApp para items free
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products (free items - pickup only)
     description: "A bookshelf with multiple shelves and a sturdy design.",
     tags: ["bookshelf", "sturdy design"],
     category: "home",
@@ -377,7 +377,7 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-10T08:00:00Z",
     rating: 4.8,
     ownerId: "user999", // Otro usuario
-    contactModes: ['whatsapp', 'phone'], // Servicios profesionales prefieren contacto directo
+    contact_methods: ['whatsapp', 'phone'], // Servicios profesionales prefieren contacto directo
     phoneNumber: "+56987654321",
     description: "Professional plumbing services: pipe repair, sanitary fixture installation, drain unclogging, 24/7 emergencies. 15 years of experience in the field.",
     pricingModel: 'fixed',
@@ -397,7 +397,7 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-12T10:00:00Z",
     rating: 4.9,
     ownerId: "user1000", // Otro usuario
-    contactModes: ['phone', 'whatsapp', 'chat'], // Todos los métodos
+    contact_methods: ['phone', 'whatsapp', 'chat'], // Todos los métodos
     phoneNumber: "+56923456789",
     description: "Comprehensive dental care: dental cleaning, cavity treatment, orthodontics, whitening, and more. First consultation with discount. By appointment from Monday to Saturday.",
     pricingModel: 'fixed',
@@ -419,7 +419,7 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-15T09:00:00Z",
     rating: 4.9,
     ownerId: "user1001", // Otro usuario
-    contactModes: ['whatsapp', 'phone'], // Contacto directo para alquileres
+    contact_methods: ['whatsapp', 'phone'], // Contacto directo para alquileres
     phoneNumber: "+56945678901",
     description: "High-quality surfboard rentals in Maitencillo, El Abanico sector. Boards for all levels: beginners, intermediate and advanced. Includes wetsuit and leash. Hours: 8:00 AM - 6:00 PM every day. Discounts for multiple days.",
     pricingModel: 'daily',
@@ -445,7 +445,7 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-16T06:00:00Z",
     rating: 4.7,
     ownerId: "user1003", // Otro usuario
-    contactModes: ['whatsapp', 'chat'], // Contacto para info del evento
+    contact_methods: ['whatsapp', 'chat'], // Contacto para info del evento
     phoneNumber: "+56967890123",
     description: "Flea market every Sunday in Laguna Verde. Find antiques, vintage clothing, local crafts, used books, restored furniture and much more. Over 50 vendors each week. Hours: 9:00 AM - 4:00 PM. Free entry. Parking available. Family-friendly atmosphere. Food trucks and live music. Don't miss it!",
     ticketType: 'free',
@@ -472,8 +472,8 @@ export const mockProducts: Product[] = [
     rating: 4.5,
     groupIds: ["4"], // Private Design Collective
     ownerId: "user888",
-    contactModes: ['chat'],
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat'],
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: "Handmade ceramic vase set, exclusive to group members.",
     tags: ["ceramic vase set", "handmade"],
     category: "home",
@@ -492,9 +492,9 @@ export const mockProducts: Product[] = [
     rating: 4.8,
     groupIds: ["5"], // Fashion Insiders
     ownerId: "user777",
-    contactModes: ['whatsapp'],
+    contact_methods: ['whatsapp'],
     phoneNumber: "+56923456789",
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "Premium leather jacket, available only to group members.",
     tags: ["leather jacket", "premium"],
     category: "fashion",
@@ -512,8 +512,8 @@ export const mockProducts: Product[] = [
     rating: 4.6,
     groupIds: ["6"], // Music Collectors Club
     ownerId: "user666",
-    contactModes: ['chat', 'whatsapp'],
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products
+    contact_methods: ['chat', 'whatsapp'],
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products
     description: "Rare vinyl collection for trade within group.",
     tags: ["vinyl record collection", "rare"],
     category: "music",
@@ -532,9 +532,9 @@ export const mockProducts: Product[] = [
     rating: 4.3,
     groupIds: ["7"], // Artists Network
     ownerId: "user555",
-    contactModes: ['phone'],
+    contact_methods: ['phone'],
     phoneNumber: "+56934567890",
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "Professional art supplies for group members only.",
     tags: ["art supplies bundle", "professional"],
     category: "art",
@@ -553,9 +553,9 @@ export const mockProducts: Product[] = [
     rating: 4.9,
     groupIds: ["4"], // Private Design Collective
     ownerId: "user444",
-    contactModes: ['chat', 'phone'],
+    contact_methods: ['chat', 'phone'],
     phoneNumber: "+56945678901",
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "Luxury designer watch for exclusive group.",
     tags: ["designer watch", "luxury"],
     category: "fashion",
@@ -573,9 +573,9 @@ export const mockProducts: Product[] = [
     rating: 4.4,
     groupIds: ["5"], // Fashion Insiders (also fitness)
     ownerId: "user333",
-    contactModes: ['whatsapp'],
+    contact_methods: ['whatsapp'],
     phoneNumber: "+56956789012",
-    deliveryModes: ['pickup'], // ✅ VALIDATION: Required for products (gym equipment - pickup only)
+    access_mode: ['pickup'], // ✅ VALIDATION: Required for products (gym equipment - pickup only)
     description: "Complete home gym setup for group trade.",
     tags: ["home gym equipment", "complete setup"],
     category: "fitness",
@@ -594,9 +594,9 @@ export const mockProducts: Product[] = [
     rating: 4.7,
     groupIds: ["6"], // Music Collectors Club (also artisans)
     ownerId: "user222",
-    contactModes: ['chat', 'whatsapp', 'phone'],
+    contact_methods: ['chat', 'whatsapp', 'phone'],
     phoneNumber: "+56967890123",
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "Artisan jewelry collection, exclusive to group.",
     tags: ["handmade jewelry set", "artisan"],
     category: "art",
@@ -615,9 +615,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-14T10:00:00Z",
     rating: 4.9,
     ownerId: "user456",
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     phoneNumber: "+56912345678",
-    deliveryModes: ['pickup', 'meetup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'meetup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "MacBook Pro 14\" with M2 chip, 16GB RAM, 512GB SSD. Like new condition, barely used. Includes original box and charger.",
     tags: ["macbook", "laptop", "m2", "apple"],
     category: "electronics",
@@ -635,9 +635,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-13T14:30:00Z",
     rating: 4.8,
     ownerId: "user789",
-    contactModes: ['chat', 'phone'],
+    contact_methods: ['chat', 'phone'],
     phoneNumber: "+56923456789",
-    deliveryModes: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "Canon EOS R6 mirrorless camera with RF 24-105mm f/4-7.1 IS STM lens. Excellent condition, low shutter count. Perfect for both photo and video.",
     tags: ["canon", "camera", "photography", "mirrorless"],
     category: "electronics",
@@ -655,9 +655,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-12T11:00:00Z",
     rating: 4.7,
     ownerId: "user555",
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     phoneNumber: "+56934567890",
-    deliveryModes: ['pickup', 'meetup', 'shipping'], // ✅ VALIDATION: Required for products
+    access_mode: ['pickup', 'meetup', 'shipping'], // ✅ VALIDATION: Required for products
     description: "iPad Pro 11\" with M1 chip, 128GB. Includes Apple Pencil (2nd gen) and Magic Keyboard. Perfect for students and professionals.",
     tags: ["ipad", "tablet", "apple", "m1"],
     category: "electronics",
@@ -679,9 +679,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T10:00:00Z",
     rating: 4.8,
     ownerId: "user456",
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     phoneNumber: "+56912345678",
-    deliveryModes: ['pickup', 'shipping'],
+    access_mode: ['pickup', 'shipping'],
     description: "iPad Pro 11\" in excellent condition. Includes original charger and case.",
     tags: ["ipad", "tablet", "apple"],
     category: "electronics",
@@ -699,9 +699,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T11:00:00Z",
     rating: 4.9,
     ownerId: "user789",
-    contactModes: ['chat', 'phone'],
+    contact_methods: ['chat', 'phone'],
     phoneNumber: "+56923456789",
-    deliveryModes: ['pickup', 'shipping'],
+    access_mode: ['pickup', 'shipping'],
     description: "Brand new AirPods Max with Active Noise Cancellation. Sealed in box.",
     tags: ["airpods", "headphones", "apple"],
     category: "electronics",
@@ -721,9 +721,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T12:00:00Z",
     rating: 4.7,
     ownerId: "user888",
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     phoneNumber: "+56934567890",
-    deliveryModes: ['pickup'],
+    access_mode: ['pickup'],
     description: "Professional DJ equipment set including controller, mixer, and headphones. Perfect for events.",
     tags: ["dj", "equipment", "music", "events"],
     category: "music",
@@ -741,9 +741,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T13:00:00Z",
     rating: 4.6,
     ownerId: "user777",
-    contactModes: ['whatsapp'],
+    contact_methods: ['whatsapp'],
     phoneNumber: "+56945678901",
-    deliveryModes: ['pickup', 'delivery'],
+    access_mode: ['pickup', 'delivery'],
     description: "Set of 5 high-quality yoga mats. Non-slip, eco-friendly material.",
     tags: ["yoga", "mats", "fitness", "wellness"],
     category: "sports",
@@ -763,8 +763,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T14:00:00Z",
     rating: 4.5,
     ownerId: "user666",
-    contactModes: ['chat'],
-    deliveryModes: ['pickup', 'shipping'],
+    contact_methods: ['chat'],
+    access_mode: ['pickup', 'shipping'],
     description: "Adjustable aluminum laptop stand. Ergonomic design, improves posture.",
     tags: ["laptop", "stand", "ergonomic", "desk"],
     category: "electronics",
@@ -782,9 +782,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T15:00:00Z",
     rating: 4.7,
     ownerId: "user555",
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     phoneNumber: "+56956789012",
-    deliveryModes: ['pickup', 'shipping'],
+    access_mode: ['pickup', 'shipping'],
     description: "Premium wireless headphones with noise cancellation and 30-hour battery life.",
     tags: ["headphones", "wireless", "audio", "bluetooth"],
     category: "electronics",
@@ -805,9 +805,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-19T10:00:00Z",
     rating: 4.8,
     ownerId: "user123",
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     phoneNumber: "+56912345678",
-    deliveryModes: ['pickup', 'delivery'],
+    access_mode: ['pickup', 'delivery'],
     description: "Sony WH-1000XM4 wireless headphones with premium noise cancellation. Sold to Juan Pérez.",
     tags: ["headphones", "sony", "wireless", "noise cancellation"],
     category: "electronics",
@@ -827,9 +827,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-18T14:00:00Z",
     rating: 4.9,
     ownerId: "user123",
-    contactModes: ['chat', 'phone'],
+    contact_methods: ['chat', 'phone'],
     phoneNumber: "+56987654321",
-    deliveryModes: ['pickup', 'shipping'],
+    access_mode: ['pickup', 'shipping'],
     description: "iPhone 13 Pro with 128GB storage. In excellent condition with all accessories.",
     tags: ["iphone", "apple", "smartphone"],
     category: "electronics",
@@ -847,9 +847,9 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-17T16:00:00Z",
     rating: 5.0,
     ownerId: "user123",
-    contactModes: ['chat', 'whatsapp'],
+    contact_methods: ['chat', 'whatsapp'],
     phoneNumber: "+56912348765",
-    deliveryModes: ['pickup', 'delivery'],
+    access_mode: ['pickup', 'delivery'],
     description: "Brand new MacBook Air M2 with 256GB SSD and 8GB RAM. Perfect for work and study.",
     tags: ["macbook", "apple", "laptop", "m2"],
     category: "electronics",
@@ -869,8 +869,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T10:00:00Z",
     rating: 4.5,
     ownerId: "user123",
-    contactModes: ['chat'],
-    deliveryModes: ['pickup', 'delivery'],
+    contact_methods: ['chat'],
+    access_mode: ['pickup', 'delivery'],
     description: "Beautiful vintage lamp with classic design. Sold to Pedro R.",
     tags: ["lamp", "vintage", "home decor"],
     category: "home",
@@ -888,8 +888,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-20T12:00:00Z",
     rating: 4.7,
     ownerId: "user123",
-    contactModes: ['chat', 'whatsapp'],
-    deliveryModes: ['pickup', 'shipping'],
+    contact_methods: ['chat', 'whatsapp'],
+    access_mode: ['pickup', 'shipping'],
     description: "Logitech wireless mouse in excellent condition. Sold to Ana García.",
     tags: ["mouse", "logitech", "wireless", "computer"],
     category: "electronics",
@@ -907,8 +907,8 @@ export const mockProducts: Product[] = [
     createdAt: "2026-01-21T08:00:00Z",
     rating: 4.8,
     ownerId: "user123",
-    contactModes: ['chat'],
-    deliveryModes: ['pickup', 'delivery'],
+    contact_methods: ['chat'],
+    access_mode: ['pickup', 'delivery'],
     description: "Mechanical keyboard with RGB lighting. Sale completed, confirmed by Juan.",
     tags: ["keyboard", "mechanical", "rgb", "gaming"],
     category: "electronics",

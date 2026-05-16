@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react';
 import { Package } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { SearchAndFilterBar, EmptyState, SelectAllRow } from '../my-listings';
 import { TrailHeader, TrailBulkActionsToolbar } from '../my-trail';
