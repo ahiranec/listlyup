@@ -11,6 +11,7 @@ import { useReportSheet } from "./hooks/useReportSheet";
 import { verifyCredentials, isSuperAdminUser } from "./data/mockCredentials";
 import { storeSuperAdminSession } from "./dev/mockAuth";
 import { AppStandaloneRenderer } from "./AppStandaloneRenderer";
+import { AppShell, DesktopShell, DashboardLayout } from "./components/layout";
 import { BottomNav } from "./components/bottom-nav";
 import { Header } from "./components/header";
 import { SearchBar } from "./components/search-bar";
@@ -726,7 +727,7 @@ export default function App() {
                 />
               </Suspense>
             ) : (
-              <div className="h-screen bg-background flex flex-col relative overflow-hidden w-full ml-0">
+              <AppShell className="ml-0">
                 {state.currentView === "product-detail" && state.selectedProduct ? (
                   <Suspense fallback={<LoadingFallback />}>
                     <ProductDetailPage
@@ -1028,39 +1029,38 @@ export default function App() {
                     />
                   </Suspense>
                 ) : (
-                  <>
-                    {/* Status bar removed - PWA/WebView mobile */}
-
-                    <Header
-                      logo={imgLogo}
-                      notificationCount={state.isAuthenticated ? 9 : 0} // Only show if authenticated
-                      onNotificationClick={navigation.navigateToNotifications}
-                      searchValue={state.searchQuery}
-                      onSearchChange={state.setSearchQuery}
-                      searchPlaceholder="Search products..."
-                      userAvatar={currentUser?.avatarUrl}
-                      onProfileClick={() => state.setIsMenuOpen(true)}
-                    />
-
-                    <div className="lg:hidden">
-                      <SearchBar
-                        onMapViewClick={state.currentView === 'map' ? navigation.navigateToHome : navigation.navigateToMap}
-                        isMapView={state.currentView === 'map'}
-                        filters={filters.activeFilters}
-                        onFiltersChange={(newFilters) => {
-                          if (newFilters.groupsScope === "all" && filters.activeFilters.groupsScope !== "all") {
-                            state.setFilteredGroupId(null);
-                          }
-                          filters.applyFilters(newFilters);
-                        }}
-                        onFilterClick={() => state.setIsFilterOpen(true)}
-                        hasActiveFilters={filters.hasActiveFilters}
-                      />
-                    </div>
-
-                    {/* Desktop Layout: Sidebar + Content */}
-                    <div className="flex-1 flex overflow-hidden min-h-0">
-                          <FilterSidebar
+                  <DesktopShell
+                    header={
+                      <>
+                        <Header
+                          logo={imgLogo}
+                          notificationCount={state.isAuthenticated ? 9 : 0} // Only show if authenticated
+                          onNotificationClick={navigation.navigateToNotifications}
+                          searchValue={state.searchQuery}
+                          onSearchChange={state.setSearchQuery}
+                          searchPlaceholder="Search products..."
+                          userAvatar={currentUser?.avatarUrl}
+                          onProfileClick={() => state.setIsMenuOpen(true)}
+                        />
+                        <div className="lg:hidden">
+                          <SearchBar
+                            onMapViewClick={state.currentView === 'map' ? navigation.navigateToHome : navigation.navigateToMap}
+                            isMapView={state.currentView === 'map'}
+                            filters={filters.activeFilters}
+                            onFiltersChange={(newFilters) => {
+                              if (newFilters.groupsScope === "all" && filters.activeFilters.groupsScope !== "all") {
+                                state.setFilteredGroupId(null);
+                              }
+                              filters.applyFilters(newFilters);
+                            }}
+                            onFilterClick={() => state.setIsFilterOpen(true)}
+                            hasActiveFilters={filters.hasActiveFilters}
+                          />
+                        </div>
+                      </>
+                    }
+                    sidebar={
+                      <FilterSidebar
                         className="hidden lg:block"
                         filters={desktopFilters.filters}
                         openSections={desktopFilters.openSections}
@@ -1071,16 +1071,12 @@ export default function App() {
                         onReset={() => {
                           desktopFilters.handleReset();
                           state.setFilteredGroupId(null);
-                          // Reset will update desktopFilters.filters via handleReset
-                          // We need to apply the default filters after reset completes
                           setTimeout(() => {
                             filters.clearFilters();
                           }, 0);
                         }}
                         onApply={() => {
                           filters.applyFilters(desktopFilters.filters);
-                          // Sync: When filters are applied, update the desktop sidebar's internal state
-                          // This ensures the sidebar reflects the currently active filters
                         }}
                         activeTab={state.activeTab}
                         onTabChange={navigation.handleTabChange}
@@ -1088,116 +1084,116 @@ export default function App() {
                         onMapViewClick={state.currentView === 'map' ? navigation.navigateToHome : navigation.navigateToMap}
                         isMapView={state.currentView === "map"}
                       />
-
-                      {/* Main Content Area */}
-                      <main className="flex-1 p-2 pb-20 lg:px-12 lg:py-8 lg:pb-8 overflow-auto scrollbar-hide flex flex-col">
-                        {state.isLoading || isDataLoading ? (
-                          <div className="max-w-[820px] w-full">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4">
-                              {[1, 2, 3, 4, 5, 6].map((i) => (
-                                <div key={i}>
-                                  <ProductCardSkeleton />
-                                </div>
-                              ))}
-                            </div>
+                    }
+                    bottomNav={
+                      <BottomNav
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        badges={{ messages: unreadCount || undefined }}
+                      />
+                    }
+                  >
+                    <DashboardLayout layoutMode={state.currentView === "map" ? "fluid" : "constrained"}>
+                      {state.isLoading || isDataLoading ? (
+                        <div className="max-w-[820px] w-full mx-auto lg:mx-0 p-2 lg:p-0">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4">
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                              <div key={i}>
+                                <ProductCardSkeleton />
+                              </div>
+                            ))}
                           </div>
-                        ) : state.currentView === "map" ? (
-                          <div className="max-w-[820px] w-full flex-1 flex flex-col min-h-[600px] pb-4">
-                            <Suspense fallback={<LoadingFallback />}>
-                              <MapView
-                                products={mapFilters.filteredAndSortedListings || []}
-                                onBack={() => navigation.navigateToHome()}
-                                logo={imgLogo}
-                                notificationCount={state.isAuthenticated ? 9 : 0}
-                                onNotificationClick={navigation.navigateToNotifications}
-                                userAvatar={currentUser?.avatarUrl}
-                                onProfileClick={() => state.setIsMenuOpen(true)}
-                                onFilterClick={handleFilterClick}
-                                searchQuery={state.searchQuery}
-                                onSearchChange={state.setSearchQuery}
-                                hasActiveFilters={filters.hasActiveFilters}
-                                activeTab={state.activeTab}
-                                onTabChange={navigation.handleTabChange}
-                                onProductClick={handleProductClick}
-                                filters={mapFilters.activeFilters}
-                                onFiltersChange={mapFilters.applyFilters}
-                              />
-                            </Suspense>
-                          </div>
-                        ) : (
-                          <div className="max-w-[820px] w-full">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
-                              {(filters.filteredAndSortedListings || []).map((listing, index) => (
-                                <div
-                                  key={listing.id}
-                                  className="animate-in fade-in slide-in-from-bottom-4"
-                                  style={{ animationDelay: `${index * 50}ms`, animationFillMode: "backwards" }}
-                                >
-                                  <ProductCard
-                                    id={listing.id}
-                                    image={listing.primary_image_url || ''}
-                                    title={listing.title}
-                                    price={listing.price_amount ? formatPrice(listing.price_amount, listing.price_currency || 'USD') : undefined}
-                                    condition={listing.condition}
-                                    visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
-                                    location={listing.location_name} // TODO: Resolve via listing_location_id
-                                    ownerName={getSellerName(listing.owner_user_id, listing.owner_user)}
-                                    type={mapCanonicalToLegacyType(listing.listing_type, listing.offer_mode)}
-                                    eventDate={listing.start_date}
-                                    eventEndDate={listing.end_date}
-                                    eventTime={listing.event_time_text}
-                                    eventTimeEnd={undefined} // Not in canonical contract
-                                    pricingModel={listing.pricing_model}
-                                    ticketType={listing.ticket_type}
-                                    duration={listing.event_duration_type === 'multi_day' ? 'multi' : 'single'}
-                                    onClick={() => handleProductClick(listing.id)}
-                                  />
-                                </div>
-                              ))}
-                            </div>
-
-                            {!state.isLoading && !isDataLoading && (filters.filteredAndSortedListings?.length || 0) === 0 && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                                className="flex flex-col items-center justify-center py-16 px-6"
+                        </div>
+                      ) : state.currentView === "map" ? (
+                        <div className="w-full flex-1 flex flex-col min-h-[600px] pb-4">
+                          <Suspense fallback={<LoadingFallback />}>
+                            <MapView
+                              products={mapFilters.filteredAndSortedListings || []}
+                              onBack={() => navigation.navigateToHome()}
+                              logo={imgLogo}
+                              notificationCount={state.isAuthenticated ? 9 : 0}
+                              onNotificationClick={navigation.navigateToNotifications}
+                              userAvatar={currentUser?.avatarUrl}
+                              onProfileClick={() => state.setIsMenuOpen(true)}
+                              onFilterClick={handleFilterClick}
+                              searchQuery={state.searchQuery}
+                              onSearchChange={state.setSearchQuery}
+                              hasActiveFilters={filters.hasActiveFilters}
+                              activeTab={state.activeTab}
+                              onTabChange={navigation.handleTabChange}
+                              onProductClick={handleProductClick}
+                              filters={mapFilters.activeFilters}
+                              onFiltersChange={mapFilters.applyFilters}
+                            />
+                          </Suspense>
+                        </div>
+                      ) : (
+                        <div className="w-full p-2 lg:p-0">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
+                            {(filters.filteredAndSortedListings || []).map((listing, index) => (
+                              <div
+                                key={listing.id}
+                                className="animate-in fade-in slide-in-from-bottom-4"
+                                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "backwards" }}
                               >
-                                <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                  <SearchX className="w-12 h-12 text-muted-foreground" />
-                                </div>
-
-                                <h3 className="text-xl font-semibold text-foreground mb-2">
-                                  No products found
-                                </h3>
-
-                                <p className="text-sm text-muted-foreground text-center mb-6">
-                                  Try adjusting your filters or search terms
-                                </p>
-
-                                {filters.hasActiveFilters && (
-                                  <motion.button
-                                    onClick={handleClearFilters}
-                                    className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:shadow-lg hover:shadow-primary/30 transition-all"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                  >
-                                    Clear Filters
-                                  </motion.button>
-                                )}
-                              </motion.div>
-                            )}
+                                <ProductCard
+                                  id={listing.id}
+                                  image={listing.primary_image_url || ''}
+                                  title={listing.title}
+                                  price={listing.price_amount ? formatPrice(listing.price_amount, listing.price_currency || 'USD') : undefined}
+                                  condition={listing.condition}
+                                  visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
+                                  location={listing.location_name} // TODO: Resolve via listing_location_id
+                                  ownerName={getSellerName(listing.owner_user_id, listing.owner_user)}
+                                  type={mapCanonicalToLegacyType(listing.listing_type, listing.offer_mode)}
+                                  eventDate={listing.start_date}
+                                  eventEndDate={listing.end_date}
+                                  eventTime={listing.event_time_text}
+                                  eventTimeEnd={undefined} // Not in canonical contract
+                                  pricingModel={listing.pricing_model}
+                                  ticketType={listing.ticket_type}
+                                  duration={listing.event_duration_type === 'multi_day' ? 'multi' : 'single'}
+                                  onClick={() => handleProductClick(listing.id)}
+                                />
+                              </div>
+                            ))}
                           </div>
-                        )}
-                      </main>
-                    </div>
 
-                    <BottomNav
-                      activeTab={state.activeTab}
-                      onTabChange={navigation.handleTabChange}
-                      badges={{ messages: unreadCount || undefined }}
-                    />
-                  </>
+                          {!state.isLoading && !isDataLoading && (filters.filteredAndSortedListings?.length || 0) === 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                              className="flex flex-col items-center justify-center py-16 px-6"
+                            >
+                              <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                <SearchX className="w-12 h-12 text-muted-foreground" />
+                              </div>
+
+                              <h3 className="text-xl font-semibold text-foreground mb-2">
+                                No products found
+                              </h3>
+
+                              <p className="text-sm text-muted-foreground text-center mb-6">
+                                Try adjusting your filters or search terms
+                              </p>
+
+                              {filters.hasActiveFilters && (
+                                <motion.button
+                                  onClick={handleClearFilters}
+                                  className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:shadow-lg hover:shadow-primary/30 transition-all"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  Clear Filters
+                                </motion.button>
+                              )}
+                            </motion.div>
+                          )}
+                        </div>
+                      )}
+                    </DashboardLayout>
+                  </DesktopShell>
                 )}
 
                 <Suspense fallback={<LoadingFallback />}>
@@ -1415,7 +1411,7 @@ export default function App() {
                     campaignId={state.selectedCampaignId || undefined}
                   />
                 </Suspense>
-              </div>
+              </AppShell>
             )}
 
             {/* Global Report Sheet */}
