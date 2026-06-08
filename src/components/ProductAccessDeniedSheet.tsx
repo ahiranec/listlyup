@@ -6,10 +6,10 @@
  */
 
 import { Lock, Users, EyeOff, AlertCircle } from 'lucide-react';
-import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet';
 import { Button } from './ui/button';
 import type { AccessDeniedReason } from '../utils/productAccess';
 import { motion } from 'motion/react';
+import { ResponsiveModal } from './shared/ResponsiveModal';
 
 interface ProductAccessDeniedSheetProps {
   open: boolean;
@@ -227,16 +227,16 @@ export function ProductAccessDeniedSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-6 max-w-[480px] mx-auto">
-        <SheetTitle className="sr-only">Access Denied</SheetTitle>
-        <SheetDescription className="sr-only">
-          This content requires specific permissions to access
-        </SheetDescription>
-        <div className="flex flex-col items-center">
-          {renderContent()}
-        </div>
-      </SheetContent>
-    </Sheet>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Access Denied"
+      description="This content requires specific permissions to access"
+      desktopMaxWidth="max-w-md"
+    >
+      <div className="flex flex-col items-center p-6">
+        {renderContent()}
+      </div>
+    </ResponsiveModal>
   );
 }
