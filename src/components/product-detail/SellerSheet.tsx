@@ -1,5 +1,5 @@
 import { User, Star, Clock, MapPin, Package, MessageCircle } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../ui/sheet";
+import { ResponsiveModal } from "../shared/ResponsiveModal";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
@@ -18,24 +18,27 @@ export function SellerSheet({ open, onOpenChange, seller, location = "Viña del 
   if (!seller) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-auto max-h-[85vh] p-0 rounded-t-2xl">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Seller Information"
+      description="View seller profile, ratings, and contact information"
+      desktopMaxWidth="max-w-lg"
+      mobileHeight="h-[85vh]"
+    >
         {/* Drag indicator */}
-        <div className="flex justify-center pt-3 pb-2">
+        <div className="flex-none flex justify-center pt-3 pb-2">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
-        
-        <SheetHeader className="px-4 pb-3 border-b">
-          <SheetTitle className="flex items-center gap-2 text-left">
+
+        <div className="flex-none px-4 pb-3 border-b">
+          <h2 className="flex items-center gap-2 text-left font-semibold">
             <User className="w-5 h-5 text-primary" />
             Seller Information
-          </SheetTitle>
-          <SheetDescription className="sr-only">
-            View seller profile, ratings, and contact information
-          </SheetDescription>
-        </SheetHeader>
-        
-        <ScrollArea className="max-h-[calc(85vh-120px)]">
+          </h2>
+        </div>
+
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-[var(--space-lg)] space-y-4">
             {/* Seller Info */}
             <div className="flex items-start gap-3">
@@ -119,7 +122,6 @@ export function SellerSheet({ open, onOpenChange, seller, location = "Viña del 
             </div>
           </div>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }

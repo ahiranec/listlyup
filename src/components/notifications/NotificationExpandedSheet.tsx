@@ -3,13 +3,7 @@
  * Modal bottom sheet para mostrar notificaciones agrupadas expandidas
  */
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '../ui/sheet';
+import { ResponsiveModal } from '../shared/ResponsiveModal';
 import { Button } from '../ui/button';
 import { NotificationCard, NotificationType, NotificationPriority } from './NotificationCard';
 
@@ -50,32 +44,36 @@ export function NotificationExpandedSheet({
   actionAllLabel = 'Mark all as read',
 }: NotificationExpandedSheetProps) {
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent 
-        side="bottom" 
-        className="max-h-[80vh] overflow-auto rounded-t-2xl max-w-[480px] mx-auto"
-      >
-        <SheetHeader className="mb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <SheetTitle>{title}</SheetTitle>
-              <SheetDescription>
-                {notifications.length} {notifications.length === 1 ? 'notification' : 'notifications'}
-              </SheetDescription>
-            </div>
-            {onActionAll && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onActionAll}
-                className="h-8 text-xs"
-              >
-                {actionAllLabel}
-              </Button>
-            )}
+    <ResponsiveModal
+      open={isOpen}
+      onOpenChange={onClose}
+      title={title}
+      description={`${notifications.length} ${notifications.length === 1 ? 'notification' : 'notifications'}`}
+      desktopMaxWidth="max-w-lg"
+      mobileHeight="h-[80vh]"
+    >
+      <div className="flex-none px-6 pt-6 pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-foreground">{title}</h2>
+            <p className="text-sm text-muted-foreground">
+              {notifications.length} {notifications.length === 1 ? 'notification' : 'notifications'}
+            </p>
           </div>
-        </SheetHeader>
+          {onActionAll && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onActionAll}
+              className="h-8 text-xs"
+            >
+              {actionAllLabel}
+            </Button>
+          )}
+        </div>
+      </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto px-6">
         <div className="space-y-3 pb-6">
           {notifications.map((notification) => (
             <NotificationCard
@@ -85,7 +83,7 @@ export function NotificationExpandedSheet({
             />
           ))}
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </ResponsiveModal>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Users, Package, Wrench, MapPin, Check, Clock, Crown, Shield, CheckCircle } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../ui/sheet";
+import { ResponsiveModal } from "../shared/ResponsiveModal";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -144,14 +144,20 @@ export function ExploreGroupsSheet({ open, onOpenChange, onGroupClick, myGroups,
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] flex flex-col p-0 rounded-t-xl">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b">
-          <SheetTitle>Explore Groups</SheetTitle>
-          <SheetDescription>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Explore Groups"
+      description="Discover and join new groups in your area"
+      desktopMaxWidth="max-w-lg"
+      mobileHeight="h-[85vh]"
+    >
+        <div className="flex-none px-6 pt-6 pb-4 border-b">
+          <h2 className="font-semibold text-foreground">Explore Groups</h2>
+          <p className="text-sm text-muted-foreground">
             Discover and join new groups in your area
-          </SheetDescription>
-        </SheetHeader>
+          </p>
+        </div>
 
         {/* Search */}
         <div className="px-6 py-3 border-b">
@@ -168,7 +174,7 @@ export function ExploreGroupsSheet({ open, onOpenChange, onGroupClick, myGroups,
         </div>
 
         {/* Groups List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {filteredGroups.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-6">
               <div className="text-4xl mb-2">🔍</div>
@@ -289,8 +295,7 @@ export function ExploreGroupsSheet({ open, onOpenChange, onGroupClick, myGroups,
             </div>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }
 
