@@ -91,7 +91,7 @@ export function CreateEventHubFlow({ onBack, onComplete, onCreateEventListing }:
   const selectedFlyerData = mockEventListings.find(e => e.id === selectedFlyer);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}
