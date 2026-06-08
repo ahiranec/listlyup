@@ -564,7 +564,7 @@ export function MyGroupsPage({ onBack, groups = mockGroups, activeTab, onTabChan
   };
 
   return (
-    <div className="flex flex-col h-full bg-background max-w-[480px] lg:max-w-[1280px] mx-auto">
+    <div className="flex flex-col h-full bg-background max-w-[480px] lg:max-w-[640px] mx-auto">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}
