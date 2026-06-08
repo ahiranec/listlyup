@@ -19,6 +19,7 @@ import { ShareToGroupSheet } from "./groups/ShareToGroupSheet";
 import { BottomNav } from "./bottom-nav";
 import { ConfirmActionDialog } from "./action-center/ConfirmActionDialog";
 import { useGlobalActionModal } from "./global-action-modal"; // ✅ Phase 5.1: GAM for confirmations
+import { StandardPageLayout } from "./layout/StandardPageLayout";
 
 interface MyListingsPageProps {
   onBack: () => void;
@@ -629,108 +630,81 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
   }), [listings]);
 
   return (
-    <div className="flex flex-col h-full bg-background max-w-[480px] lg:max-w-[1024px] mx-auto">
-      {/* Status bar removed - PWA/WebView mobile */}
-      
-      {/* Header with Search and Tabs */}
-      <MyListingsHeader
-        onBack={onBack}
-        counts={counts}
-        selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
-      />
+    <StandardPageLayout
+      header={
+        <MyListingsHeader
+          onBack={onBack}
+          counts={counts}
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+        />
+      }
+      maxWidth="lg"
+      className="bg-background"
+      contentClassName="p-0"
+    >
+      <div className="flex flex-col min-h-full">
+        {/* Search and Filter Bar */}
+        <SearchAndFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeFilterCount={activeFilterCount}
+          onOpenFilterSheet={() => setIsFilterSheetOpen(true)}
+        />
 
-      {/* Search and Filter Bar */}
-      <SearchAndFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeFilterCount={activeFilterCount}
-        onOpenFilterSheet={() => setIsFilterSheetOpen(true)}
-      />
-
-      {/* Filter Chips */}
-      {filterChips.length > 0 && (
-        <div className="px-4 py-2 bg-muted/30 border-b flex-shrink-0">
-          <div className="flex flex-wrap gap-2">
-            {filterChips.map((chip) => (
-              <button
-                key={chip.key}
-                onClick={chip.onRemove}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs hover:bg-primary/20 transition-colors"
-              >
-                <span>{chip.label}</span>
-                <span className="text-primary/60">×</span>
-              </button>
-            ))}
-            <button
-              onClick={clearAllFilters}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-destructive/10 text-destructive rounded-full text-xs hover:bg-destructive/20 transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Actions Toolbar */}
-      <BulkActionsToolbar
-        isVisible={isSelectionMode}
-        selectedCount={selectedIds.size}
-        onDeselectAll={deselectAll}
-        onBulkPause={handleBulkPause}
-        onBulkArchive={handleBulkArchive}
-        onBulkDelete={handleBulkDelete}
-      />
-
-      {/* Listings List */}
-      <div className="flex-1 overflow-auto">
-        {filteredListings.length === 0 ? (
-          <EmptyState searchQuery={searchQuery} />
-        ) : (
-          <>
-            {/* Mobile: Vertical List */}
-            <div className="divide-y divide-border lg:hidden">
-              {/* Select All Row */}
-              <SelectAllRow
-                totalCount={filteredListings.length}
-                isAllSelected={selectedIds.size === filteredListings.length}
-                onSelectAll={selectAll}
-                onDeselectAll={deselectAll}
-              />
-
-              {/* Listing Rows */}
-              {filteredListings.map((listing, index) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  index={index}
-                  isSelected={selectedIds.has(listing.id)}
-                  onToggleSelection={toggleSelection}
-                  onNavigateToDetail={onNavigateToDetail}
-                  onEdit={onEditListing}
-                  activeTab={selectedTab}
-                  onActionComplete={() => {
-                    // Callback cuando se completa una acción (ej: después de marcar como sold)
-                    // Podríamos actualizar la lista aquí si fuera necesario
-                  }}
-                />
+        {/* Filter Chips */}
+        {filterChips.length > 0 && (
+          <div className="px-4 py-2 bg-muted/30 border-b flex-shrink-0">
+            <div className="flex flex-wrap gap-2">
+              {filterChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  onClick={chip.onRemove}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs hover:bg-primary/20 transition-colors"
+                >
+                  <span>{chip.label}</span>
+                  <span className="text-primary/60">×</span>
+                </button>
               ))}
+              <button
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-destructive/10 text-destructive rounded-full text-xs hover:bg-destructive/20 transition-colors"
+              >
+                Clear All
+              </button>
             </div>
+          </div>
+        )}
 
-            {/* Desktop: Grid Layout */}
-            <div className="hidden lg:block p-4">
-              {/* Select All Row */}
-              <div className="mb-4">
+        {/* Bulk Actions Toolbar */}
+        <BulkActionsToolbar
+          isVisible={isSelectionMode}
+          selectedCount={selectedIds.size}
+          onDeselectAll={deselectAll}
+          onBulkPause={handleBulkPause}
+          onBulkArchive={handleBulkArchive}
+          onBulkDelete={handleBulkDelete}
+        />
+
+        {/* Listings List */}
+        <div className="flex-1">
+          {filteredListings.length === 0 ? (
+            <div className="py-12">
+              <EmptyState searchQuery={searchQuery} />
+            </div>
+          ) : (
+            <>
+              {/* Mobile: Vertical List */}
+              <div className="divide-y divide-border lg:hidden">
+                {/* Select All Row */}
                 <SelectAllRow
                   totalCount={filteredListings.length}
                   isAllSelected={selectedIds.size === filteredListings.length}
                   onSelectAll={selectAll}
                   onDeselectAll={deselectAll}
                 />
-              </div>
 
-              {/* Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {/* Listing Rows */}
                 {filteredListings.map((listing, index) => (
                   <ListingCard
                     key={listing.id}
@@ -743,52 +717,84 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
                     activeTab={selectedTab}
                     onActionComplete={() => {
                       // Callback cuando se completa una acción (ej: después de marcar como sold)
-                      // Podríamos actualizar la lista aquí si fuera necesario
                     }}
                   />
                 ))}
               </div>
-            </div>
-          </>
+
+              {/* Desktop: Grid Layout */}
+              <div className="hidden lg:block p-4">
+                {/* Select All Row */}
+                <div className="mb-4">
+                  <SelectAllRow
+                    totalCount={filteredListings.length}
+                    isAllSelected={selectedIds.size === filteredListings.length}
+                    onSelectAll={selectAll}
+                    onDeselectAll={deselectAll}
+                  />
+                </div>
+
+                {/* Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredListings.map((listing, index) => (
+                    <div
+                      key={listing.id}
+                      className={`h-full border rounded-xl shadow-sm overflow-hidden bg-card hover:bg-muted/50 transition-colors [&>div]:border-none ${
+                        selectedIds.has(listing.id) ? 'border-blue-200 ring-1 ring-blue-100' : 'border-border'
+                      }`}
+                    >
+                      <ListingCard
+                        listing={listing}
+                        index={index}
+                        isSelected={selectedIds.has(listing.id)}
+                        onToggleSelection={toggleSelection}
+                        onNavigateToDetail={onNavigateToDetail}
+                        onEdit={onEditListing}
+                        activeTab={selectedTab}
+                        onActionComplete={() => {
+                          // Callback cuando se completa una acción
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Filter Sheet */}
+        <MyListingsFilterSheet
+          open={isFilterSheetOpen}
+          onOpenChange={setIsFilterSheetOpen}
+          filters={filters}
+          groups={groups}
+          activeFilterCount={activeFilterCount}
+          onStatusChange={(status) => toggleFilter("status", status)}
+          onHasMessagesChange={(val) => setFilters(prev => ({ ...prev, hasMessages: val }))}
+          onIsReportedChange={(val) => setFilters(prev => ({ ...prev, isReported: val }))}
+          onIsExpiringSoonChange={(val) => setFilters(prev => ({ ...prev, isExpiringSoon: val }))}
+          onTypeChange={(type) => toggleFilter("type", type)}
+          onVisibilityChange={(visibility) => toggleFilter("visibility", visibility)}
+          onGroupsScopeChange={(scope) => setFilters(prev => ({ ...prev, groupsScope: scope }))}
+          onGroupToggle={toggleGroupFilter}
+          onHasDiscountChange={(val) => setFilters(prev => ({ ...prev, discounted: val }))}
+          onLowViewsChange={(val) => setFilters(prev => ({ ...prev, lowEngagement: val }))}
+          onHighViewsChange={(val) => setFilters(prev => ({ ...prev, highEngagement: val }))}
+          onClearAll={clearAllFilters}
+        />
+
+        {/* Share to Group Sheet */}
+        {listingToShare && (
+          <ShareToGroupSheet
+            open={isShareToGroupSheetOpen}
+            onOpenChange={setIsShareToGroupSheetOpen}
+            productTitle={listingToShare.title}
+            productId={listingToShare.id}
+          />
         )}
       </div>
-
-      {/* Filter Sheet */}
-      <MyListingsFilterSheet
-        open={isFilterSheetOpen}
-        onOpenChange={setIsFilterSheetOpen}
-        filters={filters}
-        groups={groups}
-        activeFilterCount={activeFilterCount}
-        onStatusChange={(status) => toggleFilter("status", status)}
-        onHasMessagesChange={(val) => setFilters(prev => ({ ...prev, hasMessages: val }))}
-        onIsReportedChange={(val) => setFilters(prev => ({ ...prev, isReported: val }))}
-        onIsExpiringSoonChange={(val) => setFilters(prev => ({ ...prev, isExpiringSoon: val }))}
-        onTypeChange={(type) => toggleFilter("type", type)}
-        onVisibilityChange={(visibility) => toggleFilter("visibility", visibility)}
-        onGroupsScopeChange={(scope) => setFilters(prev => ({ ...prev, groupsScope: scope }))}
-        onGroupToggle={toggleGroupFilter}
-        onHasDiscountChange={(val) => setFilters(prev => ({ ...prev, discounted: val }))}
-        onLowViewsChange={(val) => setFilters(prev => ({ ...prev, lowEngagement: val }))}
-        onHighViewsChange={(val) => setFilters(prev => ({ ...prev, highEngagement: val }))}
-        onClearAll={clearAllFilters}
-      />
-
-      {/* Share to Group Sheet */}
-      {listingToShare && (
-        <ShareToGroupSheet
-          open={isShareToGroupSheetOpen}
-          onOpenChange={setIsShareToGroupSheetOpen}
-          productTitle={listingToShare.title}
-          productId={listingToShare.id}
-        />
-      )}
-
-      {/* Bottom Navigation */}
-      <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
-
-      {/* ✅ Phase 5.1: Confirm Dialog removed - now handled by GAM Provider */}
-    </div>
+    </StandardPageLayout>
   );
 }
 
