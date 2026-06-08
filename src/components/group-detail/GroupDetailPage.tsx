@@ -549,7 +549,7 @@ export function GroupDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-[480px] lg:max-w-[1280px] mx-auto">
+    <div className="min-h-screen bg-background max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Header */}
       <GroupHeader
         groupName={group.name}
