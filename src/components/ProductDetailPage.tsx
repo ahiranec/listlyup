@@ -470,7 +470,7 @@ export function ProductDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-white max-w-[480px] lg:max-w-[1024px] mx-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-white max-w-[480px] lg:max-w-[640px] mx-auto">
 
       {/* ========== HEADER - Sticky Top ========== */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 h-14">
