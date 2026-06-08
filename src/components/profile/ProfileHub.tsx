@@ -17,9 +17,10 @@ import { toast } from 'sonner';
 interface ProfileHubProps {
   onBack: () => void;
   onNavigate: ProfileNavigation;
+  embedded?: boolean;
 }
 
-export function ProfileHub({ onBack, onNavigate }: ProfileHubProps) {
+export function ProfileHub({ onBack, onNavigate, embedded }: ProfileHubProps) {
   const { profile, hasChanges, saveProfile, isLoading } = useProfile();
   
   const completeness = getPublishingCompleteness(profile);
@@ -54,15 +55,17 @@ export function ProfileHub({ onBack, onNavigate }: ProfileHubProps) {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="h-9 w-9 p-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          
+          {!embedded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="h-9 w-9 p-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+
           <h1 className="font-semibold">My Profile</h1>
           
           <Button

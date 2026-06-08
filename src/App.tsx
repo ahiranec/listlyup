@@ -471,6 +471,7 @@ export default function App() {
                         currentView={state.currentView as "profile" | "settings"}
                         onNavigateToHome={navigation.navigateToHome}
                         onNavigateToChat={navigation.navigateToChat}
+                        embedded
                       />
                     ) : state.currentView === "statistics" ? (
                       <StatisticsPage

@@ -13,9 +13,10 @@ import { DataProvider, useData } from './contexts/DataContext';
 interface SettingsHubProps {
   onBack: () => void;
   onNavigate: SettingsNavigation;
+  embedded?: boolean;
 }
 
-function SettingsHubContent({ onBack, onNavigate }: SettingsHubProps) {
+function SettingsHubContent({ onBack, onNavigate, embedded }: SettingsHubProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
@@ -23,15 +24,17 @@ function SettingsHubContent({ onBack, onNavigate }: SettingsHubProps) {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="h-9 w-9 p-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          
+          {!embedded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="h-9 w-9 p-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+
           <h1 className="font-semibold">Settings</h1>
           
           {/* No save button - auto-save */}

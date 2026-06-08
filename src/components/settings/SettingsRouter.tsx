@@ -21,9 +21,10 @@ const HelpSupportPage = lazy(() => import('./HelpSupportPage')); // ✅ PHASE 3.
 
 interface SettingsRouterProps {
   onClose: () => void;
+  embedded?: boolean;
 }
 
-export function SettingsRouter({ onClose }: SettingsRouterProps) {
+export function SettingsRouter({ onClose, embedded }: SettingsRouterProps) {
   const [currentView, setCurrentView] = useState<SettingsView>('hub');
   const [history, setHistory] = useState<SettingsView[]>([]);
 
@@ -62,7 +63,7 @@ export function SettingsRouter({ onClose }: SettingsRouterProps) {
 
   // Hub doesn't need lazy loading (instant load)
   if (currentView === 'hub') {
-    return <SettingsHub onBack={onClose} onNavigate={navigation} />;
+    return <SettingsHub onBack={onClose} onNavigate={navigation} embedded={embedded} />;
   }
 
   // All other pages are lazy-loaded
