@@ -1,8 +1,6 @@
-import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { motion } from 'motion/react';
-import { Lock, MessageCircle, Plus, Star, Users, Send, TrendingUp, DollarSign, HelpCircle, User } from 'lucide-react';
-import { useMediaQuery } from '../hooks/useMediaQuery';
+import { Lock, MessageCircle, Plus, Star, Users, Send, TrendingUp, DollarSign, HelpCircle } from 'lucide-react';
+import { ResponsiveModal } from './shared/ResponsiveModal';
 
 export type AuthRequiredContext = 
   | 'message' 
@@ -85,12 +83,10 @@ function AuthRequiredContent({
   config, 
   handleSignIn, 
   handleSignUp,
-  isDesktop
 }: { 
   config: any, 
   handleSignIn: () => void, 
   handleSignUp: () => void,
-  isDesktop: boolean
 }) {
   const Icon = config.icon;
   const benefits = [
@@ -102,7 +98,7 @@ function AuthRequiredContent({
   ];
 
   return (
-    <div className={`px-6 py-8 ${isDesktop ? 'bg-white rounded-2xl' : ''}`}>
+    <div className="px-6 py-8">
       {/* Icon + Title */}
       <div className="flex flex-col items-center text-center mb-6">
         <motion.div
@@ -183,7 +179,6 @@ export function AuthRequiredSheet({
   onSignUp,
   onSignIn,
 }: AuthRequiredSheetProps) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
   const config = contextConfig[context];
 
   const handleSignUp = () => {
@@ -196,44 +191,19 @@ export function AuthRequiredSheet({
     onSignIn();
   };
 
-  // Render Dialog for Desktop/Tablet
-  if (isDesktop) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl backdrop-blur-sm bg-white/95">
-          <DialogTitle className="sr-only">Authentication Required</DialogTitle>
-          <DialogDescription className="sr-only">
-            {config.subtitle}
-          </DialogDescription>
-          <AuthRequiredContent 
-            config={config}
-            handleSignIn={handleSignIn}
-            handleSignUp={handleSignUp}
-            isDesktop={true}
-          />
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Render Sheet for Mobile
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="bottom" 
-        className="h-auto rounded-t-3xl border-t border-gray-200/50 shadow-2xl max-w-lg mx-auto p-0 overflow-hidden"
-      >
-        <SheetTitle className="sr-only">Authentication Required</SheetTitle>
-        <SheetDescription className="sr-only">
-          {config.subtitle}
-        </SheetDescription>
-        <AuthRequiredContent 
-          config={config}
-          handleSignIn={handleSignIn}
-          handleSignUp={handleSignUp}
-          isDesktop={false}
-        />
-      </SheetContent>
-    </Sheet>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Authentication Required"
+      description={config.subtitle}
+      desktopMaxWidth="max-w-md"
+    >
+      <AuthRequiredContent
+        config={config}
+        handleSignIn={handleSignIn}
+        handleSignUp={handleSignUp}
+      />
+    </ResponsiveModal>
   );
 }
