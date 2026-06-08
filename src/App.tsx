@@ -11,7 +11,9 @@ import { useReportSheet } from "./hooks/useReportSheet";
 import { verifyCredentials, isSuperAdminUser } from "./data/mockCredentials";
 import { storeSuperAdminSession } from "./dev/mockAuth";
 import { AppStandaloneRenderer } from "./AppStandaloneRenderer";
-import { AppShell, DesktopShell, DashboardLayout } from "./components/layout";
+import { AppShell, DesktopShell, DashboardLayout, AccountShell } from "./components/layout";
+import { AccountSidebar } from "./components/account/AccountSidebar";
+import { useMediaQuery } from "./hooks/useMediaQuery";
 import { BottomNav } from "./components/bottom-nav";
 import { Header } from "./components/header";
 import { SearchBar } from "./components/search-bar";
@@ -257,6 +259,24 @@ export default function App() {
   }, [state.currentView, state.isAuthenticated]); // Re-check when view or auth changes
 
   // Handlers
+  // Desktop master-detail Account shell (Phase 1 spike: action-center default + statistics)
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics'];
+
+  const handleAccountSelect = (key: string) => {
+    switch (key) {
+      case 'action-center': navigation.navigateToActionCenter(); break;
+      case 'settings': navigation.navigateToSettings(); break;
+      case 'profile': navigation.navigateToProfile(); break;
+      case 'statistics': navigation.navigateToStatistics(); break;
+      case 'saved-items': navigation.navigateToSavedItems(); break;
+      case 'my-listings': navigation.navigateToMyListings(); break;
+      case 'groups': navigation.navigateToGroups(); break;
+      case 'my-trail': navigation.navigateToMyTrail(); break;
+      case 'help-support': navigation.navigateToHelpSupport(); break;
+    }
+  };
+
   const handleProductClick = async (productId: string) => {
     // ✅ CANONICAL: Find and use canonical listing directly
     const listing = await getListingById(productId);
@@ -336,7 +356,91 @@ export default function App() {
             <GlobalActionModalProvider>
               {/* Toaster for notifications */}
               <Toaster position="top-center" richColors />
-            {["profile", "settings", "messages"].includes(state.currentView) ? (
+            {isDesktop && ACCOUNT_SHELL_VIEWS.includes(state.currentView) ? (
+              <AppShell className="ml-0">
+                <AccountShell
+                  sidebar={
+                    <AccountSidebar
+                      activeSection={state.currentView}
+                      onSelect={handleAccountSelect}
+                      user={{ name: currentUser?.name, plan: currentUser?.plan, avatarUrl: currentUser?.avatarUrl }}
+                      onLogout={() => {
+                        state.setIsAuthenticated(false);
+                        clearUser();
+                        clearSuperAdminSession();
+                        navigation.navigateToHome();
+                        toast.success("Logged out successfully");
+                      }}
+                    />
+                  }
+                >
+                  <Suspense fallback={<LoadingFallback />}>
+                    {state.currentView === "statistics" ? (
+                      <StatisticsPage
+                        onBack={() => navigation.navigateToHome()}
+                        user={{
+                          id: mockCurrentUser.id,
+                          name: mockCurrentUser.name,
+                          email: mockCurrentUser.email,
+                          plan: (mockCurrentUser.plan?.charAt(0).toUpperCase() + mockCurrentUser.plan?.slice(1)) as 'Free' | 'Plus' | 'Pro',
+                        }}
+                      />
+                    ) : (
+                      <ActionCenterPage
+                        onBack={() => navigation.navigateToHome()}
+                        onChatClick={(chatId) => navigation.navigateToChat(chatId)}
+                        onContinueDraft={(draftId) => navigation.navigateToPublish(draftId)}
+                        onViewListing={(listingId) => {
+                          startTransition(() => {
+                            const canonical = listings.find(l => l.id === listingId);
+                            if (canonical) {
+                              state.setSelectedProduct(canonical);
+                              state.setCurrentView("product-detail");
+                            } else {
+                              toast.error('Listing not found');
+                            }
+                          });
+                        }}
+                        onReviewGroupReport={(reportId) => {
+                          startTransition(() => {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedGroupReportId(reportId);
+                            state.setCurrentView("group-report-detail");
+                          });
+                        }}
+                        onReviewPlatformReport={(reportId) => {
+                          startTransition(() => {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedReportId(reportId);
+                            state.setCurrentView("report-detail");
+                          });
+                        }}
+                        onReviewUserIssue={(issueId) => {
+                          startTransition(() => {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedUserIssueId(issueId);
+                            state.setCurrentView("user-issue-detail");
+                          });
+                        }}
+                        onReviewFlaggedListing={(listingId) => {
+                          startTransition(() => {
+                            const canonical = listings.find(l => l.id === listingId);
+                            if (canonical) {
+                              state.setPreviousView(state.currentView);
+                              state.setSelectedProduct(canonical);
+                              state.setCurrentView("product-detail");
+                            } else {
+                              toast.info("Listing details coming soon.");
+                            }
+                          });
+                        }}
+                        {...({} as any)}
+                      />
+                    )}
+                  </Suspense>
+                </AccountShell>
+              </AppShell>
+            ) : ["profile", "settings", "messages"].includes(state.currentView) ? (
               <Suspense fallback={<LoadingFallback />}>
                 <AppStandaloneRenderer
                   currentView={state.currentView as "profile" | "settings" | "messages"}
@@ -1040,7 +1144,15 @@ export default function App() {
                           onSearchChange={state.setSearchQuery}
                           searchPlaceholder="Search products..."
                           userAvatar={currentUser?.avatarUrl}
-                          onProfileClick={() => state.setIsMenuOpen(true)}
+                          onProfileClick={() => {
+                            // Desktop: enter the Account shell (defaults to Action Center).
+                            // Mobile: keep the existing menu sheet.
+                            if (isDesktop) {
+                              navigation.navigateToActionCenter();
+                            } else {
+                              state.setIsMenuOpen(true);
+                            }
+                          }}
                         />
                         <div className="lg:hidden">
                           <SearchBar

@@ -6,3 +6,4 @@ export * from './DashboardLayout';
 export * from './DetailLayout';
 export * from './SplitLayout';
 export * from './SettingsLayout';
+export * from './AccountShell';
