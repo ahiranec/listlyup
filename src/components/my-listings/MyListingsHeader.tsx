@@ -25,7 +25,7 @@ export function MyListingsHeader({
 }: MyListingsHeaderProps) {
   return (
     <div className="bg-background">
-      <div className="max-w-screen-lg mx-auto">
+      <div className="max-w-[640px] mx-auto">
         <div className="flex items-center gap-3 px-4 py-3 pb-2">
           <Button
             variant="ghost"

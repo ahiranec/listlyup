@@ -641,7 +641,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
       }
       maxWidth="lg"
       className="bg-background"
-      contentClassName="p-0"
+      contentClassName="p-0 !max-w-[640px]"
     >
       <div className="flex flex-col min-h-full">
         {/* Search and Filter Bar */}
@@ -735,7 +735,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
                 </div>
 
                 {/* Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {filteredListings.map((listing, index) => (
                     <div
                       key={listing.id}
