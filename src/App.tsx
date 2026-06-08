@@ -261,7 +261,7 @@ export default function App() {
   // Handlers
   // Desktop master-detail Account shell (Phase 1 spike: action-center default + statistics)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics'];
+  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics', 'saved-items', 'my-trail', 'help-support', 'groups'];
 
   const handleAccountSelect = (key: string) => {
     switch (key) {
@@ -375,7 +375,52 @@ export default function App() {
                   }
                 >
                   <Suspense fallback={<LoadingFallback />}>
-                    {state.currentView === "statistics" ? (
+                    {state.currentView === "saved-items" ? (
+                      <SavedItemsPage
+                        onBack={() => navigation.navigateToHome()}
+                        onProductClick={handleProductClick}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                      />
+                    ) : state.currentView === "my-trail" ? (
+                      <MyTrailPage
+                        onBack={() => navigation.navigateToHome()}
+                        onNavigateToDetail={(listingId) => {
+                          const canonical = listings.find(l => l.id === listingId);
+                          if (canonical) {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedProduct(canonical);
+                            state.setCurrentView('product-detail');
+                          } else {
+                            toast.info('Listing details coming soon.');
+                          }
+                        }}
+                        onRepublish={(listingId) => {
+                          console.log('Republish requested for listing:', listingId);
+                          toast.info('Trail re-publish integration coming soon.');
+                        }}
+                      />
+                    ) : state.currentView === "help-support" ? (
+                      <HelpSupportPage onBack={() => navigation.navigateToHome()} />
+                    ) : state.currentView === "groups" ? (
+                      <MyGroupsPage
+                        onBack={() => navigation.navigateToHome()}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        isAuthenticated={state.isAuthenticated}
+                        onAuthRequired={(context) => {
+                          state.setAuthRequiredContext(context);
+                          state.setIsAuthRequiredOpen(true);
+                        }}
+                        onGroupClick={(groupId, userRole) => {
+                          startTransition(() => {
+                            state.setSelectedGroupId(groupId);
+                            state.setSelectedGroupRole(userRole);
+                            state.setCurrentView("group-detail");
+                          });
+                        }}
+                      />
+                    ) : state.currentView === "statistics" ? (
                       <StatisticsPage
                         onBack={() => navigation.navigateToHome()}
                         user={{
