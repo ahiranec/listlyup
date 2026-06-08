@@ -261,7 +261,7 @@ export default function App() {
   // Handlers
   // Desktop master-detail Account shell (Phase 1 spike: action-center default + statistics)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics', 'saved-items', 'my-trail', 'help-support', 'groups'];
+  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics', 'saved-items', 'my-trail', 'help-support', 'groups', 'my-listings'];
 
   const handleAccountSelect = (key: string) => {
     switch (key) {
@@ -276,6 +276,38 @@ export default function App() {
       case 'help-support': navigation.navigateToHelpSupport(); break;
     }
   };
+
+  // Owner's listings mapped to the MyListings display shape (shared by mobile branch + desktop shell).
+  const ownerListingsForDisplay = listings
+    .filter(l => l.owner_user_id === currentUser?.id)
+    .map((l: any) => ({
+      id: l.id,
+      title: l.title,
+      type: l.listing_type,
+      offerType: l.offer_mode,
+      price: l.price_amount ? `${l.price_amount} ${l.price_currency || 'USD'}` : 'Free',
+      location: l.location_name || 'Sin ubicación',
+      thumbnail: l.primary_image_url || '',
+      username: currentUser?.username || '',
+      lifecycle: l.status as 'active' | 'paused' | 'draft' | 'expired' | 'archived' | 'sold',
+      visibility: (l.visibility_mode === 'groups_only' ? 'group' : 'public') as 'public' | 'private' | 'group',
+      groupIds: [], // TODO: Fetch from listing_groups table
+      stats: { views: 0, messages: 0, likes: 0 },
+      createdAt: new Date(l.created_at),
+      updatedAt: new Date(l.updated_at),
+      hasUnreadMessages: false,
+      messageType: undefined,
+      lastMessagePreview: undefined,
+      lastMessageFrom: undefined,
+      lastMessageAt: undefined,
+      isReported: false,
+      reportReason: undefined,
+      reportDetails: undefined,
+      reportedBy: undefined,
+      reportedAt: undefined,
+      daysUntilExpiration: undefined,
+      expiresAt: undefined,
+    }));
 
   const handleProductClick = async (productId: string) => {
     // ✅ CANONICAL: Find and use canonical listing directly
@@ -419,6 +451,15 @@ export default function App() {
                             state.setCurrentView("group-detail");
                           });
                         }}
+                      />
+                    ) : state.currentView === "my-listings" ? (
+                      <MyListingsPage
+                        onBack={() => navigation.navigateToHome()}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        onNavigateToDetail={handleProductClick}
+                        onEditListing={navigation.navigateToEditListing}
+                        listings={ownerListingsForDisplay}
                       />
                     ) : state.currentView === "statistics" ? (
                       <StatisticsPage
@@ -1003,37 +1044,7 @@ export default function App() {
                       onTabChange={navigation.handleTabChange}
                       onNavigateToDetail={handleProductClick}
                       onEditListing={navigation.navigateToEditListing}
-                      listings={listings
-                        .filter(l => l.owner_user_id === currentUser?.id)
-                        .map((l: any) => ({
-                          id: l.id,
-                          title: l.title,
-                          type: l.listing_type,
-                          offerType: l.offer_mode,
-                          price: l.price_amount ? `${l.price_amount} ${l.price_currency || 'USD'}` : 'Free',
-                          location: l.location_name || 'Sin ubicación',
-                          thumbnail: l.primary_image_url || '',
-                          username: currentUser?.username || '',
-                          lifecycle: l.status as 'active' | 'paused' | 'draft' | 'expired' | 'archived' | 'sold',
-                          visibility: (l.visibility_mode === 'groups_only' ? 'group' : 'public') as 'public' | 'private' | 'group',
-                          groupIds: [], // TODO: Fetch from listing_groups table
-                          stats: { views: 0, messages: 0, likes: 0 },
-                          createdAt: new Date(l.created_at),
-                          updatedAt: new Date(l.updated_at),
-                          // Runtime fields - would come from backend in real app
-                          hasUnreadMessages: false,
-                          messageType: undefined,
-                          lastMessagePreview: undefined,
-                          lastMessageFrom: undefined,
-                          lastMessageAt: undefined,
-                          isReported: false,
-                          reportReason: undefined,
-                          reportDetails: undefined,
-                          reportedBy: undefined,
-                          reportedAt: undefined,
-                          daysUntilExpiration: undefined,
-                          expiresAt: undefined,
-                        }))}
+                      listings={ownerListingsForDisplay}
                     />
                   </Suspense>
                 ) : state.currentView === "groups" ? (
