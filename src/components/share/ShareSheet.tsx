@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
+import { ResponsiveModal } from '../shared/ResponsiveModal';
 import { MessageCircle, Users, Link2, QrCode, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 import SharePreviewCard from './SharePreviewCard';
@@ -129,17 +129,16 @@ export default function ShareSheet({
   
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[85vh] bg-gray-50/40">
-          {/* Accessibility headers */}
-          <SheetHeader className="sr-only">
-            <SheetTitle>Share Listing</SheetTitle>
-            <SheetDescription>
-              Share {product.title} via WhatsApp, groups, link, or QR code
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="py-4">
+      <ResponsiveModal
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Share Listing"
+        description={`Share ${product.title} via WhatsApp, groups, link, or QR code`}
+        desktopMaxWidth="max-w-md"
+        mobileHeight="h-auto"
+        className="bg-gray-50/40"
+      >
+          <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Share Listing</h2>
             
             <SharePreviewCard 
@@ -178,10 +177,9 @@ export default function ShareSheet({
               )}
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
-      
-      <GroupSelectorSheet 
+      </ResponsiveModal>
+
+      <GroupSelectorSheet
         open={showGroups}
         onOpenChange={setShowGroups}
         onShare={(groupIds) => {
