@@ -414,6 +414,7 @@ export default function App() {
                         onProductClick={handleProductClick}
                         activeTab={state.activeTab}
                         onTabChange={navigation.handleTabChange}
+                        embedded
                       />
                     ) : state.currentView === "my-trail" ? (
                       <MyTrailPage
@@ -432,9 +433,10 @@ export default function App() {
                           console.log('Republish requested for listing:', listingId);
                           toast.info('Trail re-publish integration coming soon.');
                         }}
+                        embedded
                       />
                     ) : state.currentView === "help-support" ? (
-                      <HelpSupportPage onBack={() => navigation.navigateToHome()} />
+                      <HelpSupportPage onBack={() => navigation.navigateToHome()} embedded />
                     ) : state.currentView === "groups" ? (
                       <MyGroupsPage
                         onBack={() => navigation.navigateToHome()}
@@ -452,6 +454,7 @@ export default function App() {
                             state.setCurrentView("group-detail");
                           });
                         }}
+                        embedded
                       />
                     ) : state.currentView === "my-listings" ? (
                       <MyListingsPage
@@ -461,6 +464,7 @@ export default function App() {
                         onNavigateToDetail={handleProductClick}
                         onEditListing={navigation.navigateToEditListing}
                         listings={ownerListingsForDisplay}
+                        embedded
                       />
                     ) : (state.currentView === "settings" || state.currentView === "profile") ? (
                       <AppStandaloneRenderer
@@ -477,6 +481,7 @@ export default function App() {
                           email: mockCurrentUser.email,
                           plan: (mockCurrentUser.plan?.charAt(0).toUpperCase() + mockCurrentUser.plan?.slice(1)) as 'Free' | 'Plus' | 'Pro',
                         }}
+                        embedded
                       />
                     ) : (
                       <ActionCenterPage
@@ -527,6 +532,7 @@ export default function App() {
                             }
                           });
                         }}
+                        embedded
                         {...({} as any)}
                       />
                     )}

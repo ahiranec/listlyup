@@ -22,9 +22,10 @@ interface MyTrailPageProps {
   onBack: () => void;
   onNavigateToDetail?: (listingId: string) => void;
   onRepublish?: (listingId: string) => void;
+  embedded?: boolean;
 }
 
-export function MyTrailPage({ onBack, onNavigateToDetail, onRepublish }: MyTrailPageProps) {
+export function MyTrailPage({ onBack, onNavigateToDetail, onRepublish, embedded }: MyTrailPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'sold' | 'archived'>('all');
   
@@ -148,6 +149,7 @@ export function MyTrailPage({ onBack, onNavigateToDetail, onRepublish }: MyTrail
         onBack={onBack}
         totalCount={trailListings.length}
         filteredCount={filteredListings.length}
+        embedded={embedded}
       />
 
       {/* Search and Filter */}

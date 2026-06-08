@@ -37,6 +37,7 @@ interface MyGroupsPageProps {
   onGroupClick?: (groupId: string, userRole?: "admin" | "moderator" | "member") => void;
   isAuthenticated?: boolean; // NEW: To differentiate "Explore Groups" vs "My Groups"
   onAuthRequired?: (context: 'groups' | 'publish') => void; // NEW: Callback to trigger auth modal
+  embedded?: boolean;
 }
 
 // Mock data
@@ -187,7 +188,7 @@ const mockGroups: MyGroup[] = [
   },
 ];
 
-export function MyGroupsPage({ onBack, groups = mockGroups, activeTab, onTabChange, onGroupClick, isAuthenticated = true, onAuthRequired }: MyGroupsPageProps) {
+export function MyGroupsPage({ onBack, groups = mockGroups, activeTab, onTabChange, onGroupClick, isAuthenticated = true, onAuthRequired, embedded }: MyGroupsPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [isExploreSheetOpen, setIsExploreSheetOpen] = useState(false);
@@ -568,7 +569,7 @@ export function MyGroupsPage({ onBack, groups = mockGroups, activeTab, onTabChan
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}
-      <GroupsHeader onBack={onBack} isAuthenticated={isAuthenticated} />
+      <GroupsHeader onBack={onBack} isAuthenticated={isAuthenticated} embedded={embedded} />
 
       {/* Group Actions Bar */}
       <GroupActionsBar

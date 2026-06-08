@@ -15,6 +15,7 @@ interface MyListingsHeaderProps {
   };
   selectedTab: "all" | "paused" | "messages" | "reported" | "expiring";
   onTabChange: (tab: "all" | "paused" | "messages" | "reported" | "expiring") => void;
+  embedded?: boolean;
 }
 
 export function MyListingsHeader({
@@ -22,19 +23,22 @@ export function MyListingsHeader({
   counts,
   selectedTab,
   onTabChange,
+  embedded,
 }: MyListingsHeaderProps) {
   return (
     <div className="bg-background">
       <div className="max-w-[640px] mx-auto">
         <div className="flex items-center gap-3 px-4 py-3 pb-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="flex-shrink-0"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
+          {!embedded && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onBack}
+              className="flex-shrink-0"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          )}
           <div className="flex-1">
             <h1 className="font-semibold text-lg">My Listings</h1>
             <p className="text-xs text-muted-foreground">

@@ -18,6 +18,7 @@ interface SavedItemsPageProps {
   onProductClick: (productId: string) => void;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  embedded?: boolean;
 }
 
 export function SavedItemsPage({
@@ -25,6 +26,7 @@ export function SavedItemsPage({
   onProductClick,
   activeTab = 'home',
   onTabChange = () => {},
+  embedded,
 }: SavedItemsPageProps) {
   const [savedItems, setSavedItems] = useState<SavedItem[]>(getSavedItems());
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,14 +60,16 @@ export function SavedItemsPage({
       <div className="bg-background border-b border-border sticky top-0 z-10">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="h-9 w-9"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            {!embedded && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className="h-9 w-9"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            )}
             <div>
               <h1 className="font-semibold">Favorites</h1>
               <p className="text-xs text-muted-foreground">

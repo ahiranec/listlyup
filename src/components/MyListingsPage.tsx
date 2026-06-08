@@ -30,6 +30,7 @@ interface MyListingsPageProps {
   onTabChange?: (tab: string) => void;
   onNavigateToDetail?: (listingId: string) => void;
   onEditListing?: (listingId: string) => void; // NEW: Edit listing handler
+  embedded?: boolean;
 }
 
 // Mock event types
@@ -166,7 +167,7 @@ const mockListings: MyListing[] = [
   },
 ];
 
-export function MyListingsPage({ onBack, listings = mockListings, groups = mockGroups, eventTypes = mockEventTypes, activeTab = "all", onTabChange, onNavigateToDetail, onEditListing }: MyListingsPageProps) {
+export function MyListingsPage({ onBack, listings = mockListings, groups = mockGroups, eventTypes = mockEventTypes, activeTab = "all", onTabChange, onNavigateToDetail, onEditListing, embedded }: MyListingsPageProps) {
   // ✅ Phase 5.1: Global Action Modal for confirmations
   const { dispatch } = useGlobalActionModal();
   
@@ -637,6 +638,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
           counts={counts}
           selectedTab={selectedTab}
           onTabChange={setSelectedTab}
+          embedded={embedded}
         />
       }
       maxWidth="lg"
