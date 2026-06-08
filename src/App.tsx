@@ -261,7 +261,7 @@ export default function App() {
   // Handlers
   // Desktop master-detail Account shell (Phase 1 spike: action-center default + statistics)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics', 'saved-items', 'my-trail', 'help-support', 'groups', 'my-listings'];
+  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics', 'saved-items', 'my-trail', 'help-support', 'groups', 'my-listings', 'settings', 'profile'];
 
   const handleAccountSelect = (key: string) => {
     switch (key) {
@@ -460,6 +460,12 @@ export default function App() {
                         onNavigateToDetail={handleProductClick}
                         onEditListing={navigation.navigateToEditListing}
                         listings={ownerListingsForDisplay}
+                      />
+                    ) : (state.currentView === "settings" || state.currentView === "profile") ? (
+                      <AppStandaloneRenderer
+                        currentView={state.currentView as "profile" | "settings"}
+                        onNavigateToHome={navigation.navigateToHome}
+                        onNavigateToChat={navigation.navigateToChat}
                       />
                     ) : state.currentView === "statistics" ? (
                       <StatisticsPage
