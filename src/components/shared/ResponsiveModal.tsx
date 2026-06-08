@@ -66,8 +66,10 @@ export function ResponsiveModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           className={[
-            // Override the primitive's default sm:max-w-lg with our own width
-            '!max-w-[calc(100%-2rem)]', desktopMaxWidth,
+            // Make our desktop width authoritative: override the primitive's
+            // default max-w-[calc(100%-2rem)] AND sm:max-w-lg. The leading "!"
+            // (important) is required to beat the primitive's responsive sm: variant.
+            `!${desktopMaxWidth}`,
             // Proper dialog styling
             'p-0 overflow-hidden rounded-2xl border border-gray-200/60',
             'shadow-2xl bg-background',
