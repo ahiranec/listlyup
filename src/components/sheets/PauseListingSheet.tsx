@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { Pause, Play, Clock, ChevronLeft } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
+import { ResponsiveModal } from '../shared/ResponsiveModal';
 import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
@@ -80,15 +80,16 @@ export function PauseListingSheet({
   // Reactivate View (if already paused)
   if (isPaused) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[70vh] p-0">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Reactivate Listing</SheetTitle>
-            <SheetDescription>Reactivate {productTitle}</SheetDescription>
-          </SheetHeader>
-
+      <ResponsiveModal
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Reactivate Listing"
+        description={`Reactivate ${productTitle}`}
+        desktopMaxWidth="max-w-md"
+        mobileHeight="h-[70vh]"
+      >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b z-10">
+          <div className="flex-none bg-white border-b z-10">
             <div className="flex items-center h-14 px-4">
               <button
                 onClick={() => onOpenChange(false)}
@@ -103,7 +104,7 @@ export function PauseListingSheet({
             </div>
           </div>
 
-          <ScrollArea className="h-[calc(70vh-140px)]">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="px-4 py-6 space-y-6">
               {/* Product Preview */}
               <div className="flex gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
@@ -155,7 +156,7 @@ export function PauseListingSheet({
           </ScrollArea>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-white border-t p-4">
+          <div className="flex-none bg-white border-t p-4">
             <Button
               onClick={handlePause}
               disabled={isSubmitting}
@@ -171,22 +172,22 @@ export function PauseListingSheet({
               )}
             </Button>
           </div>
-        </SheetContent>
-      </Sheet>
+      </ResponsiveModal>
     );
   }
 
   // Pause View
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] p-0">
-        <SheetHeader className="sr-only">
-          <SheetTitle>Pause Listing</SheetTitle>
-          <SheetDescription>Temporarily pause {productTitle}</SheetDescription>
-        </SheetHeader>
-
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Pause Listing"
+      description={`Temporarily pause ${productTitle}`}
+      desktopMaxWidth="max-w-md"
+      mobileHeight="h-[90vh]"
+    >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b z-10">
+        <div className="flex-none bg-white border-b z-10">
           <div className="flex items-center h-14 px-4">
             <button
               onClick={() => onOpenChange(false)}
@@ -201,7 +202,7 @@ export function PauseListingSheet({
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(90vh-140px)]">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="px-4 py-6 space-y-6">
             {/* Product Preview */}
             <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
@@ -290,7 +291,7 @@ export function PauseListingSheet({
         </ScrollArea>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t p-4">
+        <div className="flex-none bg-white border-t p-4">
           <Button
             onClick={handlePause}
             disabled={!selectedReason || isSubmitting}
@@ -307,7 +308,6 @@ export function PauseListingSheet({
             )}
           </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }

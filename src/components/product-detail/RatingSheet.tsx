@@ -1,5 +1,5 @@
 import { Star, Package } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../ui/sheet";
+import { ResponsiveModal } from "../shared/ResponsiveModal";
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
@@ -23,19 +23,25 @@ export function RatingSheet({ open, onOpenChange, productTitle, productPrice, pr
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh]">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Rate Your Purchase"
+      description="Share your experience with this product and seller"
+      desktopMaxWidth="max-w-md"
+      mobileHeight="h-[90vh]"
+    >
+        <div className="flex flex-col gap-1.5 p-4 flex-none">
+          <h2 className="font-semibold flex items-center gap-2">
             <Star className="w-5 h-5 text-yellow-600" />
             Rate Your Purchase
-          </SheetTitle>
-          <SheetDescription>
+          </h2>
+          <p className="text-sm text-muted-foreground">
             Share your experience with this product and seller
-          </SheetDescription>
-        </SheetHeader>
-        
-        <ScrollArea className="h-[calc(90vh-80px)] mt-4">
+          </p>
+        </div>
+
+        <ScrollArea className="flex-1 min-h-0 mt-4">
           <div className="space-y-4 pb-6">
             {/* Product Preview */}
             <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-[var(--space-lg)] rounded-lg border border-yellow-200">
@@ -122,7 +128,6 @@ export function RatingSheet({ open, onOpenChange, productTitle, productPrice, pr
             </Button>
           </div>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }

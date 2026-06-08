@@ -31,7 +31,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
+import { ResponsiveModal } from './shared/ResponsiveModal';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -138,24 +138,27 @@ export function ReplySheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent 
-        side="bottom" 
-        className="h-[85vh] max-w-[480px] mx-auto p-0 flex flex-col"
-      >
+    <ResponsiveModal
+      open={open}
+      onOpenChange={handleClose}
+      title="Answer Question"
+      description="Your answer will be public and visible to everyone"
+      desktopMaxWidth="max-w-md"
+      mobileHeight="h-[85vh]"
+    >
         {/* Header */}
-        <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0">
+        <div className="px-4 pt-4 pb-3 border-b flex-none">
           <div className="flex items-center gap-2 mb-1">
             <HelpCircle className="w-5 h-5 text-primary" />
-            <SheetTitle>Answer Question</SheetTitle>
+            <h2 className="font-semibold">Answer Question</h2>
           </div>
-          <SheetDescription className="text-left">
+          <p className="text-sm text-muted-foreground text-left">
             Your answer will be public and visible to everyone
-          </SheetDescription>
-        </SheetHeader>
+          </p>
+        </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
           {/* Listing Preview */}
           <div className="rounded-lg border bg-card p-3">
             <p className="text-xs text-muted-foreground mb-2">About listing:</p>
@@ -250,7 +253,7 @@ export function ReplySheet({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-4 py-3 border-t shrink-0 space-y-2">
+        <div className="px-4 py-3 border-t flex-none space-y-2">
           <Button
             onClick={handleSubmit}
             disabled={!isValid || isSubmitting}
@@ -279,7 +282,6 @@ export function ReplySheet({
             Cancel
           </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }

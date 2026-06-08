@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { DollarSign, MessageSquare, TrendingDown, CheckCircle2, ChevronLeft, AlertCircle } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
+import { ResponsiveModal } from '../shared/ResponsiveModal';
 import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -94,18 +94,16 @@ export function MakeOfferSheet({
   ];
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] p-0">
-        {/* Accessibility Header */}
-        <SheetHeader className="sr-only">
-          <SheetTitle>Make an Offer</SheetTitle>
-          <SheetDescription>
-            Propose a price for {productTitle}
-          </SheetDescription>
-        </SheetHeader>
-
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Make an Offer"
+      description={`Propose a price for ${productTitle}`}
+      desktopMaxWidth="max-w-md"
+      mobileHeight="h-[90vh]"
+    >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b z-10">
+        <div className="flex-none bg-white border-b z-10">
           <div className="flex items-center h-14 px-4">
             <button
               onClick={handleCancel}
@@ -120,7 +118,7 @@ export function MakeOfferSheet({
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(90vh-170px)]">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="px-4 py-6 space-y-6">
             {/* Product Preview */}
             <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
@@ -243,7 +241,7 @@ export function MakeOfferSheet({
         </ScrollArea>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t p-4">
+        <div className="flex-none bg-white border-t p-4">
           <Button
             onClick={handleSubmit}
             disabled={!isValidOffer || isSubmitting}
@@ -259,7 +257,6 @@ export function MakeOfferSheet({
             )}
           </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }
