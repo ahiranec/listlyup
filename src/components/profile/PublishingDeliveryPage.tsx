@@ -31,7 +31,7 @@ export function PublishingDeliveryPage({ onBack }: PublishingDeliveryPageProps) 
   const isChecked = (mode: AccessMode) => profile.default_access_mode.includes(mode);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center h-14 px-4">

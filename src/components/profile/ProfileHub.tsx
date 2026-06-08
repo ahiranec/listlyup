@@ -48,7 +48,7 @@ export function ProfileHub({ onBack, onNavigate }: ProfileHubProps) {
   const canPublish = profile.displayName && profile.username;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

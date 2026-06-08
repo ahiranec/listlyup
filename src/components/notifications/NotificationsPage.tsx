@@ -388,7 +388,7 @@ export function NotificationsPage({ onBack, onChatClick, onViewProduct, onViewRe
   const activeFilterCount = Object.values(filters).filter((v) => v !== 'all').length;
 
   return (
-    <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[1024px] mx-auto">
+    <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

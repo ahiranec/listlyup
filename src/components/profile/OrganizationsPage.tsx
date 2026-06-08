@@ -24,7 +24,7 @@ export function OrganizationsPage({ onBack, onNavigate }: OrganizationsPageProps
   const hasOrganizations = profile.organizations.length > 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}
