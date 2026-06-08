@@ -1,4 +1,4 @@
-import { Bell, Settings, User, BarChart3, Star, Package, Users, MapPin, HelpCircle, LogOut } from 'lucide-react';
+import { Bell, Settings, User, BarChart3, Star, Package, Users, MapPin, HelpCircle, LogOut, ChevronLeft } from 'lucide-react';
 
 export interface AccountSectionItem {
   key: string;
@@ -24,11 +24,23 @@ interface AccountSidebarProps {
   onSelect: (key: string) => void;
   user?: { name?: string; plan?: string; avatarUrl?: string };
   onLogout?: () => void;
+  onHome?: () => void;
 }
 
-export function AccountSidebar({ activeSection, onSelect, user, onLogout }: AccountSidebarProps) {
+export function AccountSidebar({ activeSection, onSelect, user, onLogout, onHome }: AccountSidebarProps) {
   return (
     <div className="flex flex-col h-full p-3 gap-1">
+      {/* Back to Home */}
+      {onHome && (
+        <button
+          onClick={onHome}
+          className="flex items-center gap-2 px-3 py-2 mb-1 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4 flex-shrink-0" />
+          <span>Back to Home</span>
+        </button>
+      )}
+
       {/* Profile header */}
       <div className="flex items-center gap-3 px-2 py-3 mb-1">
         {user?.avatarUrl ? (

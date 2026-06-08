@@ -26,9 +26,11 @@ export function AccountShell({ sidebar, children, className = '' }: AccountShell
         {sidebar}
       </aside>
 
-      {/* Right: active section content */}
+      {/* Right: active section content (left-aligned next to the sidebar, capped width) */}
       <main className="flex-1 h-full overflow-y-auto bg-background">
-        {children}
+        <div className="w-full max-w-[680px] px-2 lg:px-4">
+          {children}
+        </div>
       </main>
     </div>
   );

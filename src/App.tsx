@@ -395,6 +395,7 @@ export default function App() {
                     <AccountSidebar
                       activeSection={state.currentView}
                       onSelect={handleAccountSelect}
+                      onHome={() => navigation.navigateToHome()}
                       user={{ name: currentUser?.name, plan: currentUser?.plan, avatarUrl: currentUser?.avatarUrl }}
                       onLogout={() => {
                         state.setIsAuthenticated(false);
