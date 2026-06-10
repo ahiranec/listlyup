@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { isItemSaved, toggleSaveItem } from '../../utils/savedItems';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface UseProductCardProps {
   id: string;

@@ -30,6 +30,7 @@ interface ProductCardContentProps {
   pricingModel?: 'hourly' | 'fixed' | 'quote' | 'session' | 'daily' | 'monthly'; // SERVICE/RENTAL: Pricing model
   ticketType?: 'free' | 'paid'; // EVENT: Ticket type (not shown in badge)
   duration?: 'single' | 'multi'; // EVENT: Duration
+  ownerName?: string;
 }
 
 export function ProductCardContent({
@@ -45,7 +46,8 @@ export function ProductCardContent({
   condition,
   pricingModel,
   ticketType,
-  duration
+  ownerName,
+  duration,
 }: ProductCardContentProps) {
   // Determine which badges to show based on listing type
   const isProduct = type === 'sale' || type === 'trade' || type === 'free' || type === 'sale_or_trade';
@@ -59,13 +61,19 @@ export function ProductCardContent({
         {title}
       </h3>
 
+      {ownerName && (
+        <div className="text-xs text-gray-500 mt-1">
+          {ownerName}
+        </div>
+      )}
+
       {/* Info - Price and Location */}
       <div className="flex flex-col gap-1.5 text-sm">
         {/* Price */}
         <div className="flex items-center gap-1.5 font-medium text-primary" data-field="price-type">
           <span className="truncate">{formatPrice(type, price)}</span>
         </div>
-        
+
         {/* Event Date - Only for events */}
         {type === 'event' && eventDate && (
           <div className="flex items-center gap-1.5 text-muted-foreground" data-field="event-date">
@@ -73,11 +81,11 @@ export function ProductCardContent({
             <span className="truncate">{formatEventDateRange(eventDate, eventTime, eventTimeEnd, duration, eventEndDate)}</span>
           </div>
         )}
-        
+
         {/* Location */}
         <div className="flex items-center gap-1.5 text-muted-foreground" data-field="location">
           <MapPin className="w-4 h-4 flex-shrink-0" />
-          <span className="truncate">{location || "Zapallar"}</span>
+          <span className="truncate">{location || "Sin ubicación"}</span>
         </div>
       </div>
 

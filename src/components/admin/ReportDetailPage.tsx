@@ -17,7 +17,7 @@ interface ReportDetailPageProps {
 
 export function ReportDetailPage({ reportId, onBack }: ReportDetailPageProps) {
   return (
-    <div className="h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Header */}
       <header className="h-14 px-4 flex items-center gap-3 border-b bg-background shrink-0">
         <Button

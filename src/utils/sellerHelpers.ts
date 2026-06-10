@@ -93,24 +93,43 @@ const SELLER_DATABASE: Record<string, SellerInfo> = {
 };
 
 /**
- * Obtiene información del vendedor basada en ownerId
- * 
- * @param ownerId - ID del owner del producto
- * @returns SellerInfo con datos completos del vendedor
+ * Fallback constante para vendedores no resueltos
  */
-export function getSellerInfo(ownerId?: string): SellerInfo {
+export const FALLBACK_SELLER_NAME = "Vendedor";
+
+/**
+ * Obtiene información del vendedor con estrategia de prioridad:
+ * 1. Data real de owner_user (Supabase)
+ * 2. Mock database legacy (para compatibilidad con demos)
+ * 3. Fallback seguro
+ */
+export function getSellerInfo(ownerId?: string, ownerUser?: any): SellerInfo {
+  // 1. Preferencia absoluta a data real inyectada (owner_user)
+  if (ownerUser) {
+    return {
+      id: ownerUser.id || ownerId || 'unknown',
+      name: ownerUser.name || FALLBACK_SELLER_NAME,
+      username: ownerUser.username || 'user',
+      avatar: ownerUser.avatarUrl || ownerUser.avatar_url,
+      verified: !!ownerUser.isVerified,
+      isStore: ownerUser.accountType === 'store' || ownerUser.account_type === 'store',
+      memberSince: 'Reciente',
+      responseTime: '~1h',
+      itemsSold: 0,
+    };
+  }
+
   if (!ownerId) {
     return createUnknownSeller();
   }
 
-  // Buscar en base de datos de usuarios conocidos
+  // 2. Buscar en base de datos de usuarios conocidos (Legacy/Mocks)
   const seller = SELLER_DATABASE[ownerId];
-  
   if (seller) {
     return seller;
   }
 
-  // Fallback para usuarios desconocidos
+  // 3. Fallback final
   return createUnknownSeller(ownerId);
 }
 
@@ -120,8 +139,8 @@ export function getSellerInfo(ownerId?: string): SellerInfo {
 function createUnknownSeller(ownerId?: string): SellerInfo {
   return {
     id: ownerId || 'unknown',
-    name: 'Usuario Desconocido',
-    username: 'unknown',
+    name: FALLBACK_SELLER_NAME,
+    username: 'user',
     avatar: undefined,
     rating: undefined,
     reviews: undefined,
@@ -143,13 +162,15 @@ export function isKnownSeller(ownerId?: string): boolean {
 /**
  * Obtiene el nombre completo del vendedor (fallback seguro)
  */
-export function getSellerName(ownerId?: string): string {
+export function getSellerName(ownerId?: string, ownerUser?: any): string {
+  if (ownerUser?.name) return ownerUser.name;
   return getSellerInfo(ownerId).name;
 }
 
 /**
  * Obtiene el username del vendedor (fallback seguro)
  */
-export function getSellerUsername(ownerId?: string): string {
+export function getSellerUsername(ownerId?: string, ownerUser?: any): string {
+  if (ownerUser?.username) return ownerUser.username;
   return getSellerInfo(ownerId).username;
 }

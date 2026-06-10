@@ -87,7 +87,7 @@ export const mockTrailListings: TrailListing[] = [
     location: "Online",
     username: "techseller",
     lifecycle: "archived",
-    visibility: "groups",
+    visibility: "group",
     groupIds: ["g1", "g3"],
     thumbnail: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400",
     createdAt: new Date("2024-05-01"),

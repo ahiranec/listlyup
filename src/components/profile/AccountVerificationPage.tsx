@@ -13,7 +13,7 @@ import { VerificationBadge } from './shared/VerificationBadge';
 import { VerificationDialog } from './shared/VerificationDialog';
 import { useProfile } from '../../contexts/ProfileContext';
 import { validateEmail, validatePhone, validateUsername, sanitizeUsername } from './utils/validation';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface AccountVerificationPageProps {
   onBack: () => void;
@@ -68,7 +68,7 @@ export function AccountVerificationPage({ onBack }: AccountVerificationPageProps
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

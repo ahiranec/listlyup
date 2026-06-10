@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Users2, Search, CheckCircle2 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../ui/sheet";
+import { ResponsiveModal } from "../shared/ResponsiveModal";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface Group {
   id: string;
@@ -111,21 +111,27 @@ export function ShareToGroupSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent side="bottom" className="h-[75vh] flex flex-col p-0 rounded-t-xl">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={handleClose}
+      title="Share to Group"
+      description={`Share "${productTitle}" with your groups`}
+      desktopMaxWidth="max-w-lg"
+      mobileHeight="h-[75vh]"
+    >
         {/* Header */}
-        <SheetHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
-          <SheetTitle className="flex items-center gap-2">
+        <div className="px-6 pt-6 pb-4 border-b flex-none">
+          <h2 className="font-semibold flex items-center gap-2">
             <Users2 className="w-5 h-5" />
             Share to Group
-          </SheetTitle>
-          <SheetDescription className="line-clamp-1">
+          </h2>
+          <p className="text-sm text-muted-foreground line-clamp-1">
             Share "{productTitle}" with your groups
-          </SheetDescription>
-        </SheetHeader>
+          </p>
+        </div>
 
         {/* Search */}
-        <div className="px-6 pt-4 flex-shrink-0">
+        <div className="px-6 pt-4 flex-none">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -138,7 +144,7 @@ export function ShareToGroupSheet({
         </div>
 
         {/* Groups List */}
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="flex-1 min-h-0 px-6 py-4">
           <div className="space-y-2">
             {filteredGroups.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
@@ -188,7 +194,7 @@ export function ShareToGroupSheet({
         </ScrollArea>
 
         {/* Footer */}
-        <div className="px-6 pt-4 pb-6 border-t flex-shrink-0">
+        <div className="px-6 pt-4 pb-6 border-t flex-none">
           <div className="flex gap-3">
             <Button
               variant="outline"
@@ -206,7 +212,6 @@ export function ShareToGroupSheet({
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }

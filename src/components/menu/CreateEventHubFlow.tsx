@@ -13,7 +13,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface CreateEventHubFlowProps {
   onBack: () => void;
@@ -91,7 +91,7 @@ export function CreateEventHubFlow({ onBack, onComplete, onCreateEventListing }:
   const selectedFlyerData = mockEventListings.find(e => e.id === selectedFlyer);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

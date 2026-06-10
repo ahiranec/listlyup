@@ -24,6 +24,8 @@ export interface FilterSheetContentProps {
   openSections: OpenSections;
   onToggleSection: (section: keyof OpenSections) => void;
   onUpdateFilters: (filters: FilterOptions) => void;
+  className?: string;
+  noScroll?: boolean;
 }
 
 export interface OpenSections {
@@ -40,4 +42,5 @@ export interface OpenSections {
   contact: boolean;
   price: boolean;
   advanced: boolean;
+  [key: string]: boolean;
 }

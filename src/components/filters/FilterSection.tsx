@@ -31,7 +31,7 @@ export function FilterSection({
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <motion.div 
-        className={`${bgClass} rounded-xl sm:rounded-2xl border p-3 sm:p-4 shadow-sm`}
+        className={`${bgClass} rounded-lg border p-3 shadow-sm`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay }}

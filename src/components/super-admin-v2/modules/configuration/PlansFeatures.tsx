@@ -29,6 +29,7 @@ interface FeatureFlag {
   dependencies?: string[];
   planOverrides: {
     free: boolean;
+    plus: boolean;
     pro: boolean;
     enterprise: boolean;
     internal: boolean;
@@ -64,7 +65,7 @@ const mockFeatures: FeatureFlag[] = [
     globalEnabled: true,
     rolloutPercentage: 100,
     dependencies: ['AI Provider'],
-    planOverrides: { free: false, pro: true, enterprise: true, internal: true },
+    planOverrides: { free: false, plus: true, pro: true, enterprise: true, internal: true },
     userOverrides: [
       {
         userId: '1',
@@ -82,7 +83,7 @@ const mockFeatures: FeatureFlag[] = [
     globalEnabled: false,
     rolloutPercentage: 50,
     dependencies: ['AI Provider', 'Moderation Engine'],
-    planOverrides: { free: false, pro: false, enterprise: true, internal: true },
+    planOverrides: { free: false, plus: false, pro: false, enterprise: true, internal: true },
     userOverrides: [],
   },
   {
@@ -93,7 +94,7 @@ const mockFeatures: FeatureFlag[] = [
     globalEnabled: true,
     rolloutPercentage: 100,
     dependencies: [],
-    planOverrides: { free: false, pro: true, enterprise: true, internal: true },
+    planOverrides: { free: false, plus: true, pro: true, enterprise: true, internal: true },
     userOverrides: [],
   },
   {
@@ -104,7 +105,7 @@ const mockFeatures: FeatureFlag[] = [
     globalEnabled: true,
     rolloutPercentage: 100,
     dependencies: [],
-    planOverrides: { free: false, pro: false, enterprise: true, internal: true },
+    planOverrides: { free: false, plus: false, pro: false, enterprise: true, internal: true },
     userOverrides: [],
   },
   {
@@ -115,7 +116,7 @@ const mockFeatures: FeatureFlag[] = [
     globalEnabled: true,
     rolloutPercentage: 100,
     dependencies: [],
-    planOverrides: { free: false, pro: true, enterprise: true, internal: true },
+    planOverrides: { free: false, plus: true, pro: true, enterprise: true, internal: true },
     userOverrides: [],
   },
   {
@@ -126,7 +127,7 @@ const mockFeatures: FeatureFlag[] = [
     globalEnabled: false,
     rolloutPercentage: 0,
     dependencies: [],
-    planOverrides: { free: false, pro: false, enterprise: false, internal: true },
+    planOverrides: { free: false, plus: false, pro: false, enterprise: false, internal: true },
     userOverrides: [],
   },
 ];
@@ -181,7 +182,7 @@ export function PlansFeatures() {
   };
 
   // Toggle plan override for a feature
-  const toggleFeaturePlan = (featureId: string, plan: 'free' | 'pro' | 'enterprise' | 'internal') => {
+  const toggleFeaturePlan = (featureId: string, plan: 'free' | 'plus' | 'pro' | 'enterprise' | 'internal') => {
     setFeatures(prev =>
       prev.map(f =>
         f.id === featureId
@@ -216,7 +217,7 @@ export function PlansFeatures() {
       description: 'Description of new feature',
       globalEnabled: false,
       rolloutPercentage: 0,
-      planOverrides: { free: false, pro: false, enterprise: false, internal: false },
+      planOverrides: { free: false, plus: false, pro: false, enterprise: false, internal: false },
       userOverrides: [],
     };
     setFeatures(prev => [...prev, newFeature]);
@@ -368,6 +369,9 @@ export function PlansFeatures() {
                                   Free
                                 </th>
                                 <th className="text-center text-xs font-medium text-gray-500 px-3 py-2 w-20">
+                                  Plus
+                                </th>
+                                <th className="text-center text-xs font-medium text-gray-500 px-3 py-2 w-20">
                                   Pro
                                 </th>
                                 <th className="text-center text-xs font-medium text-gray-500 px-3 py-2 w-20">
@@ -400,6 +404,12 @@ export function PlansFeatures() {
                                     <Checkbox 
                                       checked={feature.planOverrides.free} 
                                       onCheckedChange={() => toggleFeaturePlan(feature.id, 'free')} 
+                                    />
+                                  </td>
+                                  <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox 
+                                      checked={feature.planOverrides.plus} 
+                                      onCheckedChange={() => toggleFeaturePlan(feature.id, 'plus' as any)} 
                                     />
                                   </td>
                                   <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>

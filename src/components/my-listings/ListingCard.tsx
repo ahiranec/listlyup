@@ -7,7 +7,8 @@ import { ActionMenu } from "../actions";
 import { useGlobalActionModal } from "../global-action-modal";
 import type { MyListing } from "./types";
 import { lifecycleConfig, visibilityConfig, typeLabels } from "./types";
-import { toast } from "sonner@2.0.3";
+import { listingsRepo } from "../../data/repos/listingsRepo";
+import { toast } from "sonner";
 
 interface ListingCardProps {
   listing: MyListing;
@@ -39,7 +40,30 @@ export function ListingCard({
     paused: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
     expired: "bg-red-500/10 text-red-700 dark:text-red-400",
     draft: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
+    expiring_soon: "bg-amber-500/10 text-amber-700 dark:text-amber-600",
   };
+
+  // ✅ Lifecycle Integration: Get finalized stage with safe fallback
+  const getLifecycleStage = () => {
+    // 1. Prefer backend stage if available
+    const backendStage = (listing as any).lifecycle_stage;
+    if (backendStage === 'expired' || backendStage === 'expiring_soon') return backendStage;
+
+    // 2. Safe Fallback Rules
+    const now = new Date();
+    const expiresAt = (listing as any).expires_at ? new Date((listing as any).expires_at) : null;
+    const expiringSoonAt = (listing as any).expiring_soon_at ? new Date((listing as any).expiring_soon_at) : null;
+
+    if (listing.lifecycle === 'expired') return 'expired';
+    if (expiresAt && now >= expiresAt) return 'expired';
+    if (expiringSoonAt && now >= expiringSoonAt) return 'expiring_soon';
+    
+    // Default to existing lifecycle (paused, draft, active)
+    return listing.lifecycle;
+  };
+
+  const currentStage = getLifecycleStage();
+  const stageLifecycle = lifecycleConfig[currentStage === 'expiring_soon' ? 'active' : currentStage as any] || lifecycleConfig.active;
 
   // Determinar actionIds según el activeTab y lifecycle del listing
   const getActionIds = () => {
@@ -82,9 +106,12 @@ export function ListingCard({
     
     // CONDITIONAL: Mark as Sold (only for Product)
     const markAsSoldAction = listing.type === 'product' ? ['mark-as-sold'] : [];
+
+    // ✅ Lifecycle: Refresh action for expiring/active listings
+    const refreshAction = (currentStage === 'active' || currentStage === 'expiring_soon') ? ['refresh-listing'] : [];
     
     // Build final actions array
-    return [...baseActions, ...reviewAction, ...renewAction, ...markAsSoldAction, 'delete-listing'];
+    return [...baseActions, ...reviewAction, ...renewAction, ...markAsSoldAction, ...refreshAction, 'delete-listing'];
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -148,9 +175,11 @@ export function ListingCard({
               <ActionMenu
                 entity={{
                   ...listing,
+                  id: listing.id,
+                  type: 'listing', // Must be one of 'listing' | 'user' | 'group' | 'notification' | 'trade'
                   userId: listing.userId || 'user-123',
                 }}
-                actionIds={getActionIds()}
+                actionIds={getActionIds() as any[]}
                 context="my-listings"
                 isOwner={true}
                 align="end"
@@ -186,6 +215,15 @@ export function ListingCard({
                     console.log('[Reply] Opening chat for listing:', entity.id, 'chatId:', chatId);
                     // TODO: Call onNavigateToChat when available
                     toast.info(`Opening chat to reply to message...`);
+                  },
+                  'refresh-listing': async (entity) => {
+                    try {
+                      await listingsRepo.refreshListing(entity.id);
+                      toast.success("Listing refreshed successfully!");
+                      if (onActionComplete) onActionComplete();
+                    } catch (err) {
+                      toast.error("Failed to refresh listing");
+                    }
                   }
                 }}
               />
@@ -216,22 +254,15 @@ export function ListingCard({
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2">
               {/* Lifecycle Badge */}
-              <Badge variant="secondary" className={`${lifecycleColors[listing.lifecycle]} text-xs h-5`}>
-                <div className={`w-2 h-2 rounded-full ${lifecycle.color} mr-1`} />
-                {lifecycle.label}
+              <Badge variant="secondary" className={`${lifecycleColors[currentStage as keyof typeof lifecycleColors] || lifecycleColors.active} text-xs h-5`}>
+                <div className={`w-2 h-2 rounded-full ${currentStage === 'expiring_soon' ? 'bg-amber-500' : lifecycle.color} mr-1`} />
+                {currentStage === 'expiring_soon' ? 'Expiring Soon' : lifecycle.label}
               </Badge>
 
               {/* Visibility Badge */}
               <Badge variant="secondary" className="text-xs h-5">
                 {visibility.icon} {visibility.label}
               </Badge>
-
-              {/* Expiring Soon Badge - MVP requirement */}
-              {listing.lifecycle === 'active' && listing.daysUntilExpiration !== undefined && listing.daysUntilExpiration <= 7 && (
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs h-5">
-                  ⏰ Expiring Soon
-                </Badge>
-              )}
             </div>
           </div>
         </div>

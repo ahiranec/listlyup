@@ -16,7 +16,7 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft, Filter, MoreVertical, CheckCheck } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { NotificationSection } from './NotificationSection';
 import { mockNotifications, type Notification } from '../../data/notifications';
 import { NotificationsFilterSheet, type NotificationFilters } from './NotificationsFilterSheet';
@@ -388,7 +388,7 @@ export function NotificationsPage({ onBack, onChatClick, onViewProduct, onViewRe
   const activeFilterCount = Object.values(filters).filter((v) => v !== 'all').length;
 
   return (
-    <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[1024px] mx-auto">
+    <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

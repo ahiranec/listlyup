@@ -8,9 +8,11 @@ interface SharePreviewCardProps {
     rating?: number;
     type: string;
   };
+  sellerName?: string;
+  sellerAvatar?: string;
 }
 
-export default function SharePreviewCard({ product }: SharePreviewCardProps) {
+export default function SharePreviewCard({ product, sellerName }: SharePreviewCardProps) {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-4 border border-blue-100">
       <div className="flex gap-3">
@@ -19,7 +21,12 @@ export default function SharePreviewCard({ product }: SharePreviewCardProps) {
           alt={product.title}
           className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
         />
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          {sellerName && (
+            <p className="text-[10px] text-gray-400 border-b border-gray-100 uppercase tracking-tighter mb-1 pb-0.5 font-semibold">
+              {sellerName}
+            </p>
+          )}
           <h3 className="text-sm font-medium truncate">{product.title}</h3>
           <p className="text-lg font-bold text-blue-600 mt-1">{product.price}</p>
           <p className="text-xs text-gray-500 mt-1">{product.location}</p>

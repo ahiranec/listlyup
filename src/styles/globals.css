@@ -13,6 +13,10 @@
   --status-bar-height: 45px;
   --filter-button-height: 40px;    /* Botones de filtro */
   --card-min-height: 280px;        /* Altura mínima cards */
+
+  @media (min-width: 1024px) {
+    --header-height: 72px;         /* Espacioso premium para desktop */
+  }
   
   /* Spacing System - Consistent */
   --space-xs: 0.25rem;    /* 4px */
@@ -84,8 +88,8 @@
   --muted-foreground: #697077;
   
   /* Backgrounds */
-  --background: #ffffff;
-  --muted: #f5f5f5;
+  --background: #f1f3f5;
+  --muted: #e9ecef;
   --card: #ffffff;
   --card-foreground: #21272a;
   --popover: #ffffff;
@@ -244,6 +248,24 @@
     @apply bg-background text-foreground;
     width: 100%;
     overflow-x: hidden;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.15);
   }
 }
 

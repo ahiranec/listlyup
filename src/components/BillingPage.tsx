@@ -9,7 +9,7 @@ import { ArrowLeft, ChevronRight, Check, CreditCard, Calendar, Download } from '
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface BillingPageProps {
   onBack: () => void;
@@ -130,7 +130,7 @@ export function BillingPage({ onBack, user }: BillingPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

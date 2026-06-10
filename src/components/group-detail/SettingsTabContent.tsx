@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { actionRegistry } from "../../actions/registry";
 
 // MODELO CANÓNICO DE TIPOS

@@ -19,7 +19,7 @@ import { useState } from 'react';
 import { ArrowLeft, Settings, Bell, MessageSquare, AlertTriangle, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { ReplySheet } from './ReplySheet';
 import {
   QuickCountCard,
@@ -66,16 +66,18 @@ interface ActionCenterPageProps {
   onContinueDraft?: (draftId: string) => void;
   onViewListing?: (listingId: string) => void;
   onReviewGroupReport?: (reportId: string) => void;
+  embedded?: boolean;
 }
 
 type Tab = 'listings' | 'groups';
 
-export function ActionCenterPage({ 
-  onBack, 
-  onChatClick, 
-  onContinueDraft, 
-  onViewListing, 
-  onReviewGroupReport 
+export function ActionCenterPage({
+  onBack,
+  onChatClick,
+  onContinueDraft,
+  onViewListing,
+  onReviewGroupReport,
+  embedded
 }: ActionCenterPageProps) {
   const { dispatch } = useGlobalActionModal();
   
@@ -273,19 +275,21 @@ export function ActionCenterPage({
   const totalCount = listingsCount + groupsCount;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[1024px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="h-9 w-9 p-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          
+          {!embedded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="h-9 w-9 p-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+
           <h1 className="font-semibold">Action Center</h1>
           
           <div className="flex items-center gap-1">

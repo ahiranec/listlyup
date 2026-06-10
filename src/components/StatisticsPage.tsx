@@ -9,7 +9,7 @@ import { ArrowLeft, ChevronRight, TrendingUp, Eye, Heart, Package, Share2, Trend
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { PerformanceCard } from './statistics/PerformanceCard';
 import { ActivityCard } from './statistics/ActivityCard';
 
@@ -21,9 +21,10 @@ interface StatisticsPageProps {
     email: string;
     plan: 'Free' | 'Plus' | 'Pro';
   };
+  embedded?: boolean;
 }
 
-export function StatisticsPage({ onBack }: StatisticsPageProps) {
+export function StatisticsPage({ onBack, embedded }: StatisticsPageProps) {
   const [expandedPerformanceTips, setExpandedPerformanceTips] = useState(false);
   const [expandedActivityHistory, setExpandedActivityHistory] = useState(false);
 
@@ -36,21 +37,23 @@ export function StatisticsPage({ onBack }: StatisticsPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="h-9 w-9 p-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          
+          {!embedded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="h-9 w-9 p-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+
           <h1 className="font-semibold">Statistics</h1>
           
           <div className="w-9" />

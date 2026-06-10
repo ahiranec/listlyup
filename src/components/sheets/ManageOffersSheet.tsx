@@ -6,14 +6,14 @@
 
 import { useState } from 'react';
 import { DollarSign, Check, X, MessageSquare, ChevronLeft, TrendingUp, Clock, User } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
+import { ResponsiveModal } from '../shared/ResponsiveModal';
 import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface Offer {
   id: string;
@@ -152,15 +152,16 @@ export function ManageOffersSheet({
     const isValidCounter = !isNaN(counterNum) && counterNum > offerNum && counterNum < originalPriceNum;
 
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[85vh] p-0">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Counter Offer</SheetTitle>
-            <SheetDescription>Send a counter offer to {selectedOffer.buyerName}</SheetDescription>
-          </SheetHeader>
-
+      <ResponsiveModal
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Counter Offer"
+        description={`Send a counter offer to ${selectedOffer.buyerName}`}
+        desktopMaxWidth="max-w-lg"
+        mobileHeight="h-[85vh]"
+      >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b z-10">
+          <div className="flex-none bg-white border-b z-10">
             <div className="flex items-center h-14 px-4">
               <button
                 onClick={() => setSelectedOffer(null)}
@@ -175,7 +176,7 @@ export function ManageOffersSheet({
             </div>
           </div>
 
-          <ScrollArea className="h-[calc(85vh-140px)]">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="px-4 py-6 space-y-6">
               {/* Buyer Info */}
               <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
@@ -264,7 +265,7 @@ export function ManageOffersSheet({
           </ScrollArea>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-white border-t p-4">
+          <div className="flex-none bg-white border-t p-4">
             <Button
               onClick={handleCounter}
               disabled={!isValidCounter || actionInProgress}
@@ -273,22 +274,22 @@ export function ManageOffersSheet({
               {actionInProgress ? 'Sending...' : `Send Counter (${counterAmount || '...'} ${currency})`}
             </Button>
           </div>
-        </SheetContent>
-      </Sheet>
+      </ResponsiveModal>
     );
   }
 
   // Main Offers List View
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] p-0">
-        <SheetHeader className="sr-only">
-          <SheetTitle>Manage Offers</SheetTitle>
-          <SheetDescription>View and respond to offers for {productTitle}</SheetDescription>
-        </SheetHeader>
-
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Manage Offers"
+      description={`View and respond to offers for ${productTitle}`}
+      desktopMaxWidth="max-w-lg"
+      mobileHeight="h-[90vh]"
+    >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b z-10">
+        <div className="flex-none bg-white border-b z-10">
           <div className="flex items-center h-14 px-4">
             <button
               onClick={() => onOpenChange(false)}
@@ -323,7 +324,7 @@ export function ManageOffersSheet({
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(90vh-150px)]">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="px-4 py-4 space-y-6">
             {/* Pending Offers */}
             {pendingOffers.length > 0 ? (
@@ -468,7 +469,6 @@ export function ManageOffersSheet({
             )}
           </div>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }

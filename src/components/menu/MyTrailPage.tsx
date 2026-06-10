@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react';
 import { Package } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { SearchAndFilterBar, EmptyState, SelectAllRow } from '../my-listings';
 import { TrailHeader, TrailBulkActionsToolbar } from '../my-trail';
@@ -22,9 +22,10 @@ interface MyTrailPageProps {
   onBack: () => void;
   onNavigateToDetail?: (listingId: string) => void;
   onRepublish?: (listingId: string) => void;
+  embedded?: boolean;
 }
 
-export function MyTrailPage({ onBack, onNavigateToDetail, onRepublish }: MyTrailPageProps) {
+export function MyTrailPage({ onBack, onNavigateToDetail, onRepublish, embedded }: MyTrailPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'sold' | 'archived'>('all');
   
@@ -142,12 +143,13 @@ export function MyTrailPage({ onBack, onNavigateToDetail, onRepublish }: MyTrail
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Header */}
       <TrailHeader
         onBack={onBack}
         totalCount={trailListings.length}
         filteredCount={filteredListings.length}
+        embedded={embedded}
       />
 
       {/* Search and Filter */}

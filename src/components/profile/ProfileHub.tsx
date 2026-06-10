@@ -12,14 +12,15 @@ import { ProfileSection } from './shared/ProfileSection';
 import { CompletionChecklist } from './shared/CompletionChecklist';
 import { useProfile } from '../../contexts/ProfileContext';
 import { getPublishingCompleteness, calculateCompletenessScore, ProfileNavigation } from './types';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface ProfileHubProps {
   onBack: () => void;
   onNavigate: ProfileNavigation;
+  embedded?: boolean;
 }
 
-export function ProfileHub({ onBack, onNavigate }: ProfileHubProps) {
+export function ProfileHub({ onBack, onNavigate, embedded }: ProfileHubProps) {
   const { profile, hasChanges, saveProfile, isLoading } = useProfile();
   
   const completeness = getPublishingCompleteness(profile);
@@ -48,21 +49,23 @@ export function ProfileHub({ onBack, onNavigate }: ProfileHubProps) {
   const canPublish = profile.displayName && profile.username;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="h-9 w-9 p-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          
+          {!embedded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="h-9 w-9 p-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+
           <h1 className="font-semibold">My Profile</h1>
           
           <Button

@@ -28,7 +28,7 @@ import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { CounterOfferSheet } from './CounterOfferSheet';
 import { ConfirmActionDialog, ConfirmActionDialogData } from './ConfirmActionDialog';
 import { buildTradeAcceptDialogData, buildTradeDeclineDialogData } from '../../utils/tradeOfferConfirmPresets';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface TradeOfferCardProps {
   from: string;

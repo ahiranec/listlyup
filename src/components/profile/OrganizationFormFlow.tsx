@@ -12,7 +12,7 @@ import { Textarea } from '../ui/textarea';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { useProfile } from '../../contexts/ProfileContext';
 import { Organization } from './types';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface OrganizationFormFlowProps {
   organizationId?: string;
@@ -80,7 +80,7 @@ export function OrganizationFormFlow({ organizationId, onBack }: OrganizationFor
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

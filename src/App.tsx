@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useEffect, startTransition } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { motion } from "motion/react";
 import { Share2, SearchX } from "lucide-react";
-import { toast, Toaster } from "sonner@2.0.3";
+import { toast, Toaster } from "sonner";
 import { AuthRequiredSheet } from "./components/AuthRequiredSheet";
 import { ProductAccessDeniedSheet } from "./components/ProductAccessDeniedSheet";
 import { getUnreadMessageCount } from "./data/chatMessages";
@@ -11,6 +11,9 @@ import { useReportSheet } from "./hooks/useReportSheet";
 import { verifyCredentials, isSuperAdminUser } from "./data/mockCredentials";
 import { storeSuperAdminSession } from "./dev/mockAuth";
 import { AppStandaloneRenderer } from "./AppStandaloneRenderer";
+import { AppShell, DesktopShell, DashboardLayout, AccountShell } from "./components/layout";
+import { AccountSidebar } from "./components/account/AccountSidebar";
+import { useMediaQuery } from "./hooks/useMediaQuery";
 import { BottomNav } from "./components/bottom-nav";
 import { Header } from "./components/header";
 import { SearchBar } from "./components/search-bar";
@@ -21,6 +24,7 @@ import { FilterSheet } from "./components/filter-sheet/FilterSheet";
 import { FilterSidebar } from "./components/filter-sidebar";
 import ShareSheet from "./components/share/ShareSheet";
 import { ProductModal } from "./components/product-modal";
+import { APIProvider } from "@vis.gl/react-google-maps";
 
 // Lazy load heavy components (only load when needed)
 const SignInPage = lazy(() => import("./components/SignInPage"));
@@ -88,14 +92,15 @@ import { useSuperAdminSession } from "./hooks/useSuperAdminSession";
 
 // Utils & Data
 import { shareContent } from "./utils/helpers";
-import canonicalListings from "./data/products"; // ✅ CANONICAL SOURCE - All data starts as CanonicalListing[]
+import { formatPrice } from "./utils/formatPrice";
+import { getSellerName } from "./utils/sellerHelpers";
 import { mockCurrentUser } from "./data/currentUser";
-import { mockListingForEdit } from "./data/mockListingForEdit";
+import { mapCanonicalToLegacyType } from "./types/canonical";
 import type { SavedSearch } from "./components/settings/types";
 import type { FilterOptions } from "./components/filters/types";
 import { getSuperAdminSession, clearSuperAdminSession } from "./dev/mockAuth";
 import { trailListingToPublishFormData } from "./utils/trailHelpers";
-import { getTrailListings } from "./data/trailListings";
+import { supabase } from "./lib/supabaseClient";
 
 // Assets
 import imgLogo from "figma:asset/9d920bf2177dcd7ccef7e97e9cc7d4a98384cf54.png";
@@ -129,15 +134,20 @@ function LoadingFallback() {
 export default function App() {
   // Consolidated state management
   const state = useAppState();
-  
+
   // Centralized user state - SINGLE SOURCE OF TRUTH
-  const { currentUser, userId, setLoginMethod, clearUser } = useCurrentUser({ 
-    isAuthenticated: state.isAuthenticated 
+  const { currentUser, userId, setLoginMethod, clearUser } = useCurrentUser({
+    isAuthenticated: state.isAuthenticated
   });
-  
+
+  // ✅ AUTH BRIDGE: Sincronizar estado visual legacy con la sesión real de Supabase
+  useEffect(() => {
+    state.setIsAuthenticated(!!currentUser);
+  }, [currentUser]);
+
   // Global Report Sheet state
   const reportSheet = useReportSheet();
-  
+
   // Navigation handlers
   const navigation = useAppNavigation({
     setActiveTab: state.setActiveTab,
@@ -195,10 +205,10 @@ export default function App() {
   }, [state.currentView]);
 
   // Apply visibility filtering - CANONICAL NATIVE
-  const listings = useListings();
+  const { listings, isLoading: isDataLoading } = useListings();
   const getListingById = useListingById();
   const { getSession, clearSession } = useSuperAdminSession();
-  
+
   const { visibleListings } = useVisibleProducts({
     listings: listings,
     currentUser: currentUser,
@@ -210,14 +220,14 @@ export default function App() {
     searchQuery: state.searchQuery,
     filteredGroupId: state.filteredGroupId,
   });
-  
+
   // Map-specific filtering: Use ONLY accessible listings
   const mapFilters = useAppFilters({
     visibleListings: visibleListings,
     searchQuery: state.searchQuery,
     filteredGroupId: state.filteredGroupId,
   });
-  
+
   // Map filters are independent - no sync needed
   // Each view (home vs map) maintains its own filter state
 
@@ -226,7 +236,7 @@ export default function App() {
 
   // Badge counts for bottom nav - ONLY if authenticated
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   // ✅ PHASE 3.5: Trail status management (minimal local state)
   const [trailStatuses, setTrailStatuses] = useState<Record<string, 'pending' | 'in-progress' | 'completed' | 'cancelled'>>({
     'trail-1': 'in-progress',
@@ -234,14 +244,14 @@ export default function App() {
     'trail-3': 'completed',
     'trail-4': 'completed',
   });
-  
+
   // Update unread count periodically - ONLY if authenticated
   useEffect(() => {
     if (!state.isAuthenticated) {
       setUnreadCount(0);
       return;
     }
-    
+
     const updateCount = () => setUnreadCount(getUnreadMessageCount());
     updateCount(); // Initial
     const interval = setInterval(updateCount, 3000); // Every 3s
@@ -249,11 +259,61 @@ export default function App() {
   }, [state.currentView, state.isAuthenticated]); // Re-check when view or auth changes
 
   // Handlers
-  const handleProductClick = (productId: string) => {
+  // Desktop master-detail Account shell (Phase 1 spike: action-center default + statistics)
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const ACCOUNT_SHELL_VIEWS = ['action-center', 'statistics', 'saved-items', 'my-trail', 'help-support', 'groups', 'my-listings', 'settings', 'profile'];
+
+  const handleAccountSelect = (key: string) => {
+    switch (key) {
+      case 'action-center': navigation.navigateToActionCenter(); break;
+      case 'settings': navigation.navigateToSettings(); break;
+      case 'profile': navigation.navigateToProfile(); break;
+      case 'statistics': navigation.navigateToStatistics(); break;
+      case 'saved-items': navigation.navigateToSavedItems(); break;
+      case 'my-listings': navigation.navigateToMyListings(); break;
+      case 'groups': navigation.navigateToGroups(); break;
+      case 'my-trail': navigation.navigateToMyTrail(); break;
+      case 'help-support': navigation.navigateToHelpSupport(); break;
+    }
+  };
+
+  // Owner's listings mapped to the MyListings display shape (shared by mobile branch + desktop shell).
+  const ownerListingsForDisplay = listings
+    .filter(l => l.owner_user_id === currentUser?.id)
+    .map((l: any) => ({
+      id: l.id,
+      title: l.title,
+      type: l.listing_type,
+      offerType: l.offer_mode,
+      price: l.price_amount ? `${l.price_amount} ${l.price_currency || 'USD'}` : 'Free',
+      location: l.location_name || 'Sin ubicación',
+      thumbnail: l.primary_image_url || '',
+      username: currentUser?.username || '',
+      lifecycle: l.status as 'active' | 'paused' | 'draft' | 'expired' | 'archived' | 'sold',
+      visibility: (l.visibility_mode === 'groups_only' ? 'group' : 'public') as 'public' | 'private' | 'group',
+      groupIds: [], // TODO: Fetch from listing_groups table
+      stats: { views: 0, messages: 0, likes: 0 },
+      createdAt: new Date(l.created_at),
+      updatedAt: new Date(l.updated_at),
+      hasUnreadMessages: false,
+      messageType: undefined,
+      lastMessagePreview: undefined,
+      lastMessageFrom: undefined,
+      lastMessageAt: undefined,
+      isReported: false,
+      reportReason: undefined,
+      reportDetails: undefined,
+      reportedBy: undefined,
+      reportedAt: undefined,
+      daysUntilExpiration: undefined,
+      expiresAt: undefined,
+    }));
+
+  const handleProductClick = async (productId: string) => {
     // ✅ CANONICAL: Find and use canonical listing directly
-    const listing = getListingById(productId);
+    const listing = await getListingById(productId);
     if (!listing) return;
-    
+
     startTransition(() => {
       state.setPreviousView(state.currentView); // 🔒 Save origin before navigation
       state.setSelectedProduct(listing);
@@ -264,11 +324,13 @@ export default function App() {
   const handleFilterClick = () => state.setIsFilterOpen(true);
 
   const handleApplyFilters = (newFilters: any) => {
-    filters.handleApplyFilters(newFilters);
+    filters.applyFilters(newFilters);
   };
 
   const handleClearFilters = () => {
-    filters.clearAllFilters(state.setFilteredGroupId, state.setSearchQuery);
+    filters.clearFilters(); // useAppFilters doesn't take arguments for clearFilters
+    state.setFilteredGroupId(null);
+    state.setSearchQuery('');
   };
 
   const handleSaveSearch = (currentFilters: FilterOptions) => {
@@ -296,17 +358,17 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const data = saved ? JSON.parse(saved) : { savedSearches: [], storage: {} };
-      
+
       const savedSearch: SavedSearch = {
         ...newSearch,
         id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         notifyEnabled: false,
       };
-      
+
       data.savedSearches = [savedSearch, ...(data.savedSearches || [])];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      
+
       toast.success('Search saved! Check Settings > Saved Searches');
       state.setIsFilterOpen(false); // Close filter sheet after saving
     } catch (error) {
@@ -316,13 +378,169 @@ export default function App() {
   };
 
   return (
-    <ServiceProvider>
-      <ProfileProvider>
-        <FeaturesProvider>
-          <GlobalActionModalProvider>
-            {/* Toaster for notifications */}
-            <Toaster position="top-center" richColors />
-            {["profile", "settings", "messages"].includes(state.currentView) ? (
+    <APIProvider 
+      apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}
+      libraries={['places']}
+    >
+      <ServiceProvider>
+        <ProfileProvider>
+          <FeaturesProvider>
+            <GlobalActionModalProvider>
+              {/* Toaster for notifications */}
+              <Toaster position="top-center" richColors />
+            {isDesktop && ACCOUNT_SHELL_VIEWS.includes(state.currentView) ? (
+              <AppShell className="ml-0">
+                <AccountShell
+                  sidebar={
+                    <AccountSidebar
+                      activeSection={state.currentView}
+                      onSelect={handleAccountSelect}
+                      onHome={() => navigation.navigateToHome()}
+                      user={{ name: currentUser?.name, plan: currentUser?.plan, avatarUrl: currentUser?.avatarUrl }}
+                      onLogout={() => {
+                        state.setIsAuthenticated(false);
+                        clearUser();
+                        clearSuperAdminSession();
+                        navigation.navigateToHome();
+                        toast.success("Logged out successfully");
+                      }}
+                    />
+                  }
+                >
+                  <Suspense fallback={<LoadingFallback />}>
+                    {state.currentView === "saved-items" ? (
+                      <SavedItemsPage
+                        onBack={() => navigation.navigateToHome()}
+                        onProductClick={handleProductClick}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        embedded
+                      />
+                    ) : state.currentView === "my-trail" ? (
+                      <MyTrailPage
+                        onBack={() => navigation.navigateToHome()}
+                        onNavigateToDetail={(listingId) => {
+                          const canonical = listings.find(l => l.id === listingId);
+                          if (canonical) {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedProduct(canonical);
+                            state.setCurrentView('product-detail');
+                          } else {
+                            toast.info('Listing details coming soon.');
+                          }
+                        }}
+                        onRepublish={(listingId) => {
+                          console.log('Republish requested for listing:', listingId);
+                          toast.info('Trail re-publish integration coming soon.');
+                        }}
+                        embedded
+                      />
+                    ) : state.currentView === "help-support" ? (
+                      <HelpSupportPage onBack={() => navigation.navigateToHome()} embedded />
+                    ) : state.currentView === "groups" ? (
+                      <MyGroupsPage
+                        onBack={() => navigation.navigateToHome()}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        isAuthenticated={state.isAuthenticated}
+                        onAuthRequired={(context) => {
+                          state.setAuthRequiredContext(context);
+                          state.setIsAuthRequiredOpen(true);
+                        }}
+                        onGroupClick={(groupId, userRole) => {
+                          startTransition(() => {
+                            state.setSelectedGroupId(groupId);
+                            state.setSelectedGroupRole(userRole);
+                            state.setCurrentView("group-detail");
+                          });
+                        }}
+                        embedded
+                      />
+                    ) : state.currentView === "my-listings" ? (
+                      <MyListingsPage
+                        onBack={() => navigation.navigateToHome()}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        onNavigateToDetail={handleProductClick}
+                        onEditListing={navigation.navigateToEditListing}
+                        listings={ownerListingsForDisplay}
+                        embedded
+                      />
+                    ) : (state.currentView === "settings" || state.currentView === "profile") ? (
+                      <AppStandaloneRenderer
+                        currentView={state.currentView as "profile" | "settings"}
+                        onNavigateToHome={navigation.navigateToHome}
+                        onNavigateToChat={navigation.navigateToChat}
+                        embedded
+                      />
+                    ) : state.currentView === "statistics" ? (
+                      <StatisticsPage
+                        onBack={() => navigation.navigateToHome()}
+                        user={{
+                          id: mockCurrentUser.id,
+                          name: mockCurrentUser.name,
+                          email: mockCurrentUser.email,
+                          plan: (mockCurrentUser.plan?.charAt(0).toUpperCase() + mockCurrentUser.plan?.slice(1)) as 'Free' | 'Plus' | 'Pro',
+                        }}
+                        embedded
+                      />
+                    ) : (
+                      <ActionCenterPage
+                        onBack={() => navigation.navigateToHome()}
+                        onChatClick={(chatId) => navigation.navigateToChat(chatId)}
+                        onContinueDraft={(draftId) => navigation.navigateToPublish(draftId)}
+                        onViewListing={(listingId) => {
+                          startTransition(() => {
+                            const canonical = listings.find(l => l.id === listingId);
+                            if (canonical) {
+                              state.setSelectedProduct(canonical);
+                              state.setCurrentView("product-detail");
+                            } else {
+                              toast.error('Listing not found');
+                            }
+                          });
+                        }}
+                        onReviewGroupReport={(reportId) => {
+                          startTransition(() => {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedGroupReportId(reportId);
+                            state.setCurrentView("group-report-detail");
+                          });
+                        }}
+                        onReviewPlatformReport={(reportId) => {
+                          startTransition(() => {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedReportId(reportId);
+                            state.setCurrentView("report-detail");
+                          });
+                        }}
+                        onReviewUserIssue={(issueId) => {
+                          startTransition(() => {
+                            state.setPreviousView(state.currentView);
+                            state.setSelectedUserIssueId(issueId);
+                            state.setCurrentView("user-issue-detail");
+                          });
+                        }}
+                        onReviewFlaggedListing={(listingId) => {
+                          startTransition(() => {
+                            const canonical = listings.find(l => l.id === listingId);
+                            if (canonical) {
+                              state.setPreviousView(state.currentView);
+                              state.setSelectedProduct(canonical);
+                              state.setCurrentView("product-detail");
+                            } else {
+                              toast.info("Listing details coming soon.");
+                            }
+                          });
+                        }}
+                        embedded
+                        {...({} as any)}
+                      />
+                    )}
+                  </Suspense>
+                </AccountShell>
+              </AppShell>
+            ) : ["profile", "settings", "messages"].includes(state.currentView) ? (
               <Suspense fallback={<LoadingFallback />}>
                 <AppStandaloneRenderer
                   currentView={state.currentView as "profile" | "settings" | "messages"}
@@ -332,36 +550,38 @@ export default function App() {
               </Suspense>
             ) : state.currentView === "publish" ? (
               <Suspense fallback={<LoadingFallback />}>
-                <PublishFlow 
-                  currentUser={mockCurrentUser}
-                initialData={
-                  state.republishData
-                    ? state.republishData // Re-publish with pre-filled data
-                    : state.preselectedGroupId
-                    ? {
-                        selectedGroups: [state.preselectedGroupId],
-                        lockedGroups: true,
-                      }
-                    : undefined
-                }
-                onClose={() => {
-                  state.setPreselectedGroupId(null); // Clear context
-                  state.setRepublishData(null); // Clear re-publish data
-                  navigation.navigateToHome();
-                }}
-                onPublish={(data) => {
-                  // TODO: Save to backend
-                  state.setPreselectedGroupId(null); // Clear context
-                  state.setRepublishData(null); // Clear re-publish data
-                }}
-              />
+                <PublishFlow
+                  currentUser={currentUser || undefined}
+                  currentUserRole={currentUser?.role === 'user' ? 'member' : (currentUser?.role as any)}
+                  initialData={
+                    state.republishData
+                      ? state.republishData // Re-publish with pre-filled data
+                      : state.preselectedGroupId
+                        ? {
+                          selectedGroups: [state.preselectedGroupId],
+                          lockedGroups: true,
+                        }
+                        : undefined
+                  }
+                  onClose={() => {
+                    state.setPreselectedGroupId(null); // Clear context
+                    state.setRepublishData(null); // Clear re-publish data
+                    navigation.navigateToHome();
+                  }}
+                  onPublish={(data) => {
+                    // TODO: Save to backend
+                    state.setPreselectedGroupId(null); // Clear context
+                    state.setRepublishData(null); // Clear re-publish data
+                  }}
+                />
               </Suspense>
             ) : state.currentView === "edit-listing" ? (
               <Suspense fallback={<LoadingFallback />}>
-                <PublishFlow 
+                <PublishFlow
                   mode="edit"
-                  initialData={mockListingForEdit}
-                  currentUser={mockCurrentUser}
+                  initialData={undefined /* TODO: Pass real listing for edit once ID strategy is unified */}
+                  currentUser={currentUser || undefined}
+                  currentUserRole={currentUser?.role === 'user' ? 'member' : (currentUser?.role as any)}
                   onClose={() => {
                     navigation.navigateToHome();
                   }}
@@ -383,23 +603,23 @@ export default function App() {
                     console.log('🔐 [SignIn] Email:', email);
                     console.log('🔐 [SignIn] Password length:', password?.length || 0);
                     console.log('🔐 [SignIn] Calling verifyCredentials...');
-                    
+
                     // Verify credentials against mock database
                     const user = verifyCredentials(email, password);
-                    
+
                     console.log('🔐 [SignIn] verifyCredentials returned:', user);
-                    
+
                     if (!user) {
                       console.log('❌ [SignIn] Invalid credentials - BLOCKING LOGIN');
                       toast.error("Invalid email or password");
                       return;
                     }
-                    
+
                     console.log('✅ [SignIn] Valid credentials for:', user.name, '- Role:', user.role);
-                    
+
                     // Set authenticated state
                     state.setIsAuthenticated(true);
-                    
+
                     // If SuperAdmin, create SuperAdmin session
                     if (isSuperAdminUser(user)) {
                       console.log('⚡ [SignIn] SuperAdmin detected - creating session...');
@@ -409,7 +629,7 @@ export default function App() {
                         email: user.email,
                         role: 'super_admin',
                       });
-                      
+
                       // Add delay to ensure localStorage is written before navigation
                       setTimeout(() => {
                         console.log('✅ [SignIn] SuperAdmin session created');
@@ -420,16 +640,19 @@ export default function App() {
                     } else {
                       toast.success(`Welcome back, ${user.name}!`);
                     }
-                    
+
                     // Navigate to home
                     navigation.navigateToHome();
                   }}
                   onSignUp={() => navigation.navigateToSignUp()}
-                  onGoogleSignIn={() => {
-                    setLoginMethod('google'); // Ana García - Free, Individual
-                    state.setIsAuthenticated(true);
-                    navigation.navigateToHome();
-                    toast.success("Signed in with Google as Ana García!");
+                  onGoogleSignIn={async () => {
+                    setLoginMethod('google');
+                    if (supabase) {
+                      await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo: window.location.origin }
+                      });
+                    }
                   }}
                   onAppleSignIn={() => {
                     setLoginMethod('apple'); // Carlos Mendoza - Plus, Store
@@ -484,12 +707,12 @@ export default function App() {
                 <AdminLoginPage
                   onSuccess={() => {
                     console.log('🎯 [App] AdminLoginPage onSuccess called');
-                    
+
                     // Add a small delay to ensure localStorage is written
                     setTimeout(() => {
                       const session = getSuperAdminSession();
                       console.log('🎯 [App] session after delay:', session);
-                      
+
                       if (session) {
                         console.log('✅ [App] Valid session found, authenticating...');
                         state.setIsAuthenticated(true);
@@ -621,7 +844,7 @@ export default function App() {
                   onContinueDraft={(draftId) => navigation.navigateToPublish(draftId)}
                   onViewListing={(listingId) => {
                     startTransition(() => {
-                      const canonical = canonicalListings.find(l => l.id === listingId);
+                      const canonical = listings.find(l => l.id === listingId);
                       if (canonical) {
                         state.setSelectedProduct(canonical);
                         state.setCurrentView("product-detail");
@@ -653,7 +876,7 @@ export default function App() {
                   }}
                   onReviewFlaggedListing={(listingId) => {
                     startTransition(() => {
-                      const canonical = canonicalListings.find(l => l.id === listingId);
+                      const canonical = listings.find(l => l.id === listingId);
                       if (canonical) {
                         state.setPreviousView(state.currentView);
                         state.setSelectedProduct(canonical);
@@ -663,6 +886,7 @@ export default function App() {
                       }
                     });
                   }}
+                  {...({} as any) /* Temporary fix for missing props in ActionCenterPageProps */}
                 />
               </Suspense>
             ) : state.currentView === "notifications" ? (
@@ -671,7 +895,7 @@ export default function App() {
                   onBack={() => navigation.navigateToHome()}
                   onChatClick={(chatId) => navigation.navigateToChat(chatId)}
                   onViewProduct={(productId) => {
-                    const canonical = canonicalListings.find(l => l.id === productId);
+                    const canonical = listings.find(l => l.id === productId);
                     if (canonical) {
                       state.setPreviousView(state.currentView);
                       state.setSelectedProduct(canonical);
@@ -694,7 +918,7 @@ export default function App() {
                   onBack={() => navigation.navigateBackFromChat(state.previousView)}
                   onViewProduct={(productId) => {
                     startTransition(() => {
-                      const canonical = canonicalListings.find(l => l.id === productId);
+                      const canonical = listings.find(l => l.id === productId);
                       if (canonical) {
                         state.setPreviousView(state.currentView);
                         state.setSelectedProduct(canonical);
@@ -707,7 +931,7 @@ export default function App() {
                 />
               </Suspense>
             ) : (
-              <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[1280px] mx-auto relative overflow-x-hidden w-full">
+              <AppShell className="ml-0">
                 {state.currentView === "product-detail" && state.selectedProduct ? (
                   <Suspense fallback={<LoadingFallback />}>
                     <ProductDetailPage
@@ -739,7 +963,8 @@ export default function App() {
                         startTransition(() => {
                           if (filterParams?.groupId) {
                             state.setFilteredGroupId(filterParams.groupId);
-                            filters.setActiveFilters({
+                            // filters.setActiveFilters doesn't exist, use applyFilters
+                            filters.applyFilters({
                               ...filters.activeFilters,
                               groupsScope: "specific",
                               specificGroups: [filterParams.groupId],
@@ -754,7 +979,7 @@ export default function App() {
                       allProducts={filters.filteredAndSortedListings || []}
                       onNavigateToProduct={(productId) => {
                         // Navigate to another listing from RelatedProducts
-                        const canonical = canonicalListings.find((l) => l.id === productId);
+                        const canonical = listings.find((l) => l.id === productId);
                         if (canonical) {
                           startTransition(() => {
                             state.setSelectedProduct(canonical);
@@ -769,8 +994,9 @@ export default function App() {
                   <Suspense fallback={<LoadingFallback />}>
                     <GroupDetailPage
                       groupId={state.selectedGroupId}
-                      initialUserRole={state.selectedGroupRole}
-                      allProducts={canonicalListings}
+                      initialUserRole={state.selectedGroupRole as any}
+                      allProducts={listings}
+                      isPlatformAdmin={isSuperAdminUser(currentUser as any)} // Added prop
                       onBack={() => {
                         startTransition(() => {
                           state.setCurrentView("groups");
@@ -781,11 +1007,17 @@ export default function App() {
                       onTabChange={navigation.handleTabChange}
                       onNavigateToProducts={(groupId) => {
                         state.setFilteredGroupId(groupId);
+                        // filters.setActiveFilters doesn't exist, use applyFilters
+                        filters.applyFilters({
+                          ...filters.activeFilters,
+                          groupsScope: "specific",
+                          specificGroups: [groupId],
+                        });
                         navigation.navigateToHome();
                         toast.success(`Viewing products from this group`);
                       }}
                       onProductClick={(productId) => {
-                        const canonical = canonicalListings.find((l) => l.id === productId);
+                        const canonical = listings.find((l) => l.id === productId);
                         if (canonical) {
                           startTransition(() => {
                             state.setPreviousView(state.currentView);
@@ -814,26 +1046,6 @@ export default function App() {
                           state.setCurrentView("chat-conversation");
                         });
                       }}
-                      isPlatformAdmin={true} // ✅ DUAL FLOW T6: Mock platform admin flag
-                    />
-                  </Suspense>
-                ) : state.currentView === "map" ? (
-                  <Suspense fallback={<LoadingFallback />}>
-                    <MapView
-                      products={mapFilters.filteredAndSortedListings || []}
-                      onBack={() => navigation.navigateToHome()}
-                      logo={imgLogo}
-                      notificationCount={9}
-                      onNotificationClick={navigation.navigateToNotifications}
-                      onFilterClick={handleFilterClick}
-                      searchQuery={state.searchQuery}
-                      onSearchChange={state.setSearchQuery}
-                      hasActiveFilters={filters.hasActiveFilters}
-                      activeTab={state.activeTab}
-                      onTabChange={navigation.handleTabChange}
-                      onProductClick={handleProductClick}
-                      filters={mapFilters.activeFilters}
-                      onFiltersChange={mapFilters.setActiveFilters}
                     />
                   </Suspense>
                 ) : state.currentView === "my-listings" ? (
@@ -846,37 +1058,7 @@ export default function App() {
                       onTabChange={navigation.handleTabChange}
                       onNavigateToDetail={handleProductClick}
                       onEditListing={navigation.navigateToEditListing}
-                      listings={canonicalListings
-                        .filter(l => l.owner_user_id === currentUser?.id)
-                        .map(l => ({
-                          id: l.id,
-                          title: l.title,
-                          type: l.listing_type,
-                          offerType: l.offer_mode,
-                          price: l.price_amount ? `${l.price_amount} ${l.price_currency || 'USD'}` : 'Free',
-                          location: '', // TODO: Resolve location via listing_location_id
-                          thumbnail: l.primary_image_url || '',
-                          username: currentUser?.username || '',
-                          lifecycle: l.status as 'active' | 'paused' | 'draft' | 'expired' | 'archived' | 'sold',
-                          visibility: (l.visibility_mode === 'groups_only' ? 'groups' : 'public') as 'public' | 'private' | 'groups',
-                          groupIds: [], // TODO: Fetch from listing_groups table
-                          stats: { views: 0, messages: 0, likes: 0 },
-                          createdAt: new Date(l.created_at),
-                          updatedAt: new Date(l.updated_at),
-                          // Runtime fields - would come from backend in real app
-                          hasUnreadMessages: false,
-                          messageType: undefined,
-                          lastMessagePreview: undefined,
-                          lastMessageFrom: undefined,
-                          lastMessageAt: undefined,
-                          isReported: false,
-                          reportReason: undefined,
-                          reportDetails: undefined,
-                          reportedBy: undefined,
-                          reportedAt: undefined,
-                          daysUntilExpiration: undefined,
-                          expiresAt: undefined,
-                        }))}
+                      listings={ownerListingsForDisplay}
                     />
                   </Suspense>
                 ) : state.currentView === "groups" ? (
@@ -917,7 +1099,7 @@ export default function App() {
                     <MyTrailPage
                       onBack={() => navigation.navigateToHome()}
                       onNavigateToDetail={(listingId) => {
-                        const canonical = canonicalListings.find(l => l.id === listingId);
+                        const canonical = listings.find(l => l.id === listingId);
                         if (canonical) {
                           state.setPreviousView(state.currentView);
                           state.setSelectedProduct(canonical);
@@ -927,15 +1109,10 @@ export default function App() {
                         }
                       }}
                       onRepublish={(listingId) => {
-                        // Get trail listing data
-                        const trailListings = getTrailListings();
-                        const listing = trailListings.find(l => l.id === listingId);
-                        if (listing) {
-                          // Convert to PublishFormData
-                          const publishData = trailListingToPublishFormData(listing);
-                          // Navigate to PublishFlow with pre-filled data
-                          navigation.navigateToPublishWithData(publishData);
-                        }
+                        // TODO: Trail listing re-publish with real data pending backend
+                        // Replace mock trail data logic with empty
+                        console.log('Republish requested for listing:', listingId);
+                        toast.info('Trail re-publish integration coming soon.');
                       }}
                     />
                   </Suspense>
@@ -959,7 +1136,7 @@ export default function App() {
                       onViewListing={(listingId) => {
                         // Navigate to listing detail
                         startTransition(() => {
-                          const canonical = canonicalListings.find(l => l.id === listingId);
+                          const canonical = listings.find(l => l.id === listingId);
                           if (canonical) {
                             state.setSelectedProduct(canonical);
                             state.setCurrentView("product-detail");
@@ -990,7 +1167,7 @@ export default function App() {
                       onViewFlyer={(flyerId) => {
                         // Navigate to event listing detail
                         startTransition(() => {
-                          const canonical = canonicalListings.find(l => l.id === flyerId);
+                          const canonical = listings.find(l => l.id === flyerId);
                           if (canonical) {
                             state.setSelectedProduct(canonical);
                             state.setCurrentView("product-detail");
@@ -1002,7 +1179,7 @@ export default function App() {
                       onViewListing={(listingId) => {
                         // Navigate to listing detail
                         startTransition(() => {
-                          const canonical = canonicalListings.find(l => l.id === listingId);
+                          const canonical = listings.find(l => l.id === listingId);
                           if (canonical) {
                             state.setSelectedProduct(canonical);
                             state.setCurrentView("product-detail");
@@ -1021,41 +1198,50 @@ export default function App() {
                       onCreateEventListing={() => {
                         toast.info('Redirecting to Publish Flow (Event listing)...');
                         // TODO: Open Publish Flow with type=event pre-selected
-                        navigation.navigateToPublishFlow();
+                        navigation.navigateToPublish();
                       }}
                     />
                   </Suspense>
                 ) : (
-                  <>
-                    {/* Status bar removed - PWA/WebView mobile */}
-
-                    <Header
-                      logo={imgLogo}
-                      notificationCount={state.isAuthenticated ? 9 : 0} // Only show if authenticated
-                      onNotificationClick={navigation.navigateToNotifications}
-                      searchValue={state.searchQuery}
-                      onSearchChange={state.setSearchQuery}
-                      searchPlaceholder="Search products..."
-                      onMapViewClick={navigation.navigateToMap}
-                      isMapView={false}
-                    />
-
-                    <SearchBar
-                      onMapViewClick={navigation.navigateToMap}
-                      filters={filters.activeFilters}
-                      onFiltersChange={(newFilters) => {
-                        if (newFilters.groupsScope === "all" && filters.activeFilters.groupsScope !== "all") {
-                          state.setFilteredGroupId(null);
-                        }
-                        filters.applyFilters(newFilters);
-                      }}
-                      onFilterClick={() => state.setIsFilterOpen(true)}
-                      hasActiveFilters={filters.hasActiveFilters}
-                    />
-
-                    {/* Desktop Layout: Sidebar + Content */}
-                    <div className="flex-1 flex overflow-hidden">
-                      {/* Desktop Filter Sidebar - hidden on mobile */}
+                  <DesktopShell
+                    header={
+                      <>
+                        <Header
+                          logo={imgLogo}
+                          notificationCount={state.isAuthenticated ? 9 : 0} // Only show if authenticated
+                          onNotificationClick={navigation.navigateToNotifications}
+                          searchValue={state.searchQuery}
+                          onSearchChange={state.setSearchQuery}
+                          searchPlaceholder="Search products..."
+                          userAvatar={currentUser?.avatarUrl}
+                          onProfileClick={() => {
+                            // Desktop: enter the Account shell (defaults to Action Center).
+                            // Mobile: keep the existing menu sheet.
+                            if (isDesktop) {
+                              navigation.navigateToActionCenter();
+                            } else {
+                              state.setIsMenuOpen(true);
+                            }
+                          }}
+                        />
+                        <div className="lg:hidden">
+                          <SearchBar
+                            onMapViewClick={state.currentView === 'map' ? navigation.navigateToHome : navigation.navigateToMap}
+                            isMapView={state.currentView === 'map'}
+                            filters={filters.activeFilters}
+                            onFiltersChange={(newFilters) => {
+                              if (newFilters.groupsScope === "all" && filters.activeFilters.groupsScope !== "all") {
+                                state.setFilteredGroupId(null);
+                              }
+                              filters.applyFilters(newFilters);
+                            }}
+                            onFilterClick={() => state.setIsFilterOpen(true)}
+                            hasActiveFilters={filters.hasActiveFilters}
+                          />
+                        </div>
+                      </>
+                    }
+                    sidebar={
                       <FilterSidebar
                         className="hidden lg:block"
                         filters={desktopFilters.filters}
@@ -1067,32 +1253,65 @@ export default function App() {
                         onReset={() => {
                           desktopFilters.handleReset();
                           state.setFilteredGroupId(null);
-                          // Reset will update desktopFilters.filters via handleReset
-                          // We need to apply the default filters after reset completes
                           setTimeout(() => {
                             filters.clearFilters();
                           }, 0);
                         }}
                         onApply={() => {
                           filters.applyFilters(desktopFilters.filters);
-                          // Sync: When filters are applied, update the desktop sidebar's internal state
-                          // This ensures the sidebar reflects the currently active filters
                         }}
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        unreadMessages={unreadCount}
+                        onMapViewClick={state.currentView === 'map' ? navigation.navigateToHome : navigation.navigateToMap}
+                        isMapView={state.currentView === "map"}
                       />
-
-                      {/* Main Content Area */}
-                      <main className="flex-1 p-2 pb-20 lg:p-4 lg:pb-4 overflow-auto">
-                      {state.isLoading ? (
-                        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4">
-                          {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i}>
-                              <ProductCardSkeleton />
-                            </div>
-                          ))}
+                    }
+                    bottomNav={
+                      <BottomNav
+                        activeTab={state.activeTab}
+                        onTabChange={navigation.handleTabChange}
+                        badges={{ messages: unreadCount || undefined }}
+                      />
+                    }
+                  >
+                    <DashboardLayout layoutMode={state.currentView === "map" ? "fluid" : "constrained"}>
+                      {state.isLoading || isDataLoading ? (
+                        <div className="max-w-[820px] w-full mx-auto lg:mx-0 p-2 lg:p-0">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4">
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                              <div key={i}>
+                                <ProductCardSkeleton />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : state.currentView === "map" ? (
+                        <div className="w-full flex-1 flex flex-col min-h-[600px] pb-4">
+                          <Suspense fallback={<LoadingFallback />}>
+                            <MapView
+                              products={mapFilters.filteredAndSortedListings || []}
+                              onBack={() => navigation.navigateToHome()}
+                              logo={imgLogo}
+                              notificationCount={state.isAuthenticated ? 9 : 0}
+                              onNotificationClick={navigation.navigateToNotifications}
+                              userAvatar={currentUser?.avatarUrl}
+                              onProfileClick={() => state.setIsMenuOpen(true)}
+                              onFilterClick={handleFilterClick}
+                              searchQuery={state.searchQuery}
+                              onSearchChange={state.setSearchQuery}
+                              hasActiveFilters={filters.hasActiveFilters}
+                              activeTab={state.activeTab}
+                              onTabChange={navigation.handleTabChange}
+                              onProductClick={handleProductClick}
+                              filters={mapFilters.activeFilters}
+                              onFiltersChange={mapFilters.applyFilters}
+                            />
+                          </Suspense>
                         </div>
                       ) : (
-                        <>
-                          <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
+                        <div className="w-full p-2 lg:p-0">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4 animate-in fade-in duration-500">
                             {(filters.filteredAndSortedListings || []).map((listing, index) => (
                               <div
                                 key={listing.id}
@@ -1103,11 +1322,12 @@ export default function App() {
                                   id={listing.id}
                                   image={listing.primary_image_url || ''}
                                   title={listing.title}
-                                  price={listing.price_amount ? `${listing.price_amount} ${listing.price_currency || 'USD'}` : undefined}
+                                  price={listing.price_amount ? formatPrice(listing.price_amount, listing.price_currency || 'USD') : undefined}
                                   condition={listing.condition}
                                   visibility={listing.visibility_mode === 'groups_only' ? 'group' : 'public'}
-                                  location={undefined} // TODO: Resolve via listing_location_id
-                                  type={listing.listing_type === 'product' ? listing.offer_mode : listing.listing_type}
+                                  location={listing.location_name} // TODO: Resolve via listing_location_id
+                                  ownerName={getSellerName(listing.owner_user_id, listing.owner_user)}
+                                  type={mapCanonicalToLegacyType(listing.listing_type, listing.offer_mode)}
                                   eventDate={listing.start_date}
                                   eventEndDate={listing.end_date}
                                   eventTime={listing.event_time_text}
@@ -1121,7 +1341,7 @@ export default function App() {
                             ))}
                           </div>
 
-                          {(filters.filteredAndSortedListings?.length || 0) === 0 && (
+                          {!state.isLoading && !isDataLoading && (filters.filteredAndSortedListings?.length || 0) === 0 && (
                             <motion.div
                               initial={{ opacity: 0, scale: 0.9 }}
                               animate={{ opacity: 1, scale: 1 }}
@@ -1131,17 +1351,17 @@ export default function App() {
                               <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                                 <SearchX className="w-12 h-12 text-muted-foreground" />
                               </div>
-                              
+
                               <h3 className="text-xl font-semibold text-foreground mb-2">
                                 No products found
                               </h3>
-                              
+
                               <p className="text-sm text-muted-foreground text-center mb-6">
                                 Try adjusting your filters or search terms
                               </p>
-                              
+
                               {filters.hasActiveFilters && (
-                                <motion.button 
+                                <motion.button
                                   onClick={handleClearFilters}
                                   className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:shadow-lg hover:shadow-primary/30 transition-all"
                                   whileHover={{ scale: 1.05 }}
@@ -1152,28 +1372,21 @@ export default function App() {
                               )}
                             </motion.div>
                           )}
-                        </>
+                        </div>
                       )}
-                      </main>
-                    </div>
-
-                    <BottomNav 
-                      activeTab={state.activeTab} 
-                      onTabChange={navigation.handleTabChange} 
-                      badges={{ messages: unreadCount || undefined }} 
-                    />
-                  </>
+                    </DashboardLayout>
+                  </DesktopShell>
                 )}
 
                 <Suspense fallback={<LoadingFallback />}>
                   <ProductModal
-                    product={state.selectedProduct}
+                    product={state.selectedProduct as any}
                     isOpen={state.isModalOpen}
                     onClose={() => state.setIsModalOpen(false)}
                     productImage={state.selectedProduct?.primary_image_url || imgProductImage}
                     onNavigateToGroup={(groupId, groupName) => {
                       state.setFilteredGroupId(groupId);
-                      filters.setActiveFilters({
+                      filters.applyFilters({
                         ...filters.activeFilters,
                         groupsScope: "specific",
                         specificGroups: [groupId],
@@ -1291,20 +1504,20 @@ export default function App() {
                     product={{
                       id: state.selectedProduct.id,
                       title: state.selectedProduct.title,
-                      price: state.selectedProduct.price_amount && state.selectedProduct.price_currency 
+                      price: state.selectedProduct.price_amount && state.selectedProduct.price_currency
                         ? `${state.selectedProduct.price_amount} ${state.selectedProduct.price_currency}`
                         : 'Price not available',
-                      location: 'Location not available', // TODO: Resolve from listing_location_id
+                      location: state.selectedProduct.location_name || 'Sin ubicación',
                       image: state.selectedProduct.primary_image_url || '',
                       rating: undefined, // Not in canonical model
-                      type: state.selectedProduct.listing_type === 'product' 
-                        ? state.selectedProduct.offer_mode 
+                      type: state.selectedProduct.listing_type === 'product'
+                        ? state.selectedProduct.offer_mode
                         : state.selectedProduct.listing_type,
                     }}
                     isOwner={state.selectedProduct.owner_user_id === mockCurrentUser.id}
                     username={mockCurrentUser.username || 'user123'}
-                    sellerName={undefined} // TODO: Resolve from owner_user_id
-                    sellerAvatar={undefined} // TODO: Resolve from owner_user_id
+                    sellerName={getSellerName(state.selectedProduct.owner_user_id, state.selectedProduct.owner_user)}
+                    sellerAvatar={state.selectedProduct.owner_user?.avatarUrl || state.selectedProduct.owner_user?.avatar_url}
                   />
                 )}
 
@@ -1338,13 +1551,13 @@ export default function App() {
                         // ✅ PHASE 3.5: Navigate to ProductDetailPage using canonical pattern
                         // Map trail-1 to existing product (Laptop Stand = uer-1)
                         const productId = 'uer-1'; // Mock: Map trail transaction to actual product
-                        const canonical = canonicalListings.find((l) => l.id === productId);
-                        
+                        const canonical = listings.find((l) => l.id === productId);
+
                         if (!canonical) {
                           toast.error('Listing not found');
                           return;
                         }
-                        
+
                         startTransition(() => {
                           state.setPreviousView(state.currentView);
                           state.setSelectedProduct(canonical);
@@ -1380,20 +1593,21 @@ export default function App() {
                     campaignId={state.selectedCampaignId || undefined}
                   />
                 </Suspense>
-              </div>
+              </AppShell>
             )}
-            
+
             {/* Global Report Sheet */}
             <ReportSheet
               open={reportSheet.isOpen}
               onOpenChange={reportSheet.close}
             />
-            
+
             {/* Developer Tools - Only in development */}
             <DevTools />
           </GlobalActionModalProvider>
         </FeaturesProvider>
       </ProfileProvider>
     </ServiceProvider>
+    </APIProvider>
   );
 }

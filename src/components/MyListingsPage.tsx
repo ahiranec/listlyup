@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { isExpiringSoon, hasLowEngagement, shareContent } from "../utils/helpers";
 import type { Group, EventType } from "../types";
 import {
@@ -19,6 +19,7 @@ import { ShareToGroupSheet } from "./groups/ShareToGroupSheet";
 import { BottomNav } from "./bottom-nav";
 import { ConfirmActionDialog } from "./action-center/ConfirmActionDialog";
 import { useGlobalActionModal } from "./global-action-modal"; // ✅ Phase 5.1: GAM for confirmations
+import { StandardPageLayout } from "./layout/StandardPageLayout";
 
 interface MyListingsPageProps {
   onBack: () => void;
@@ -29,6 +30,7 @@ interface MyListingsPageProps {
   onTabChange?: (tab: string) => void;
   onNavigateToDetail?: (listingId: string) => void;
   onEditListing?: (listingId: string) => void; // NEW: Edit listing handler
+  embedded?: boolean;
 }
 
 // Mock event types
@@ -62,7 +64,7 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "active",
     visibility: "public",
-    stats: { views: 1234, messages: 45, favorites: 89 },
+    stats: { views: 1234, messages: 45, favorites: 89, likes: 10 },
     createdAt: new Date("2024-11-01"),
     updatedAt: new Date("2024-11-10"),
   },
@@ -75,7 +77,7 @@ const mockListings: MyListing[] = [
     username: "yogainstructor",
     lifecycle: "active",
     visibility: "public",
-    stats: { views: 567, messages: 23, favorites: 34 },
+    stats: { views: 567, messages: 23, favorites: 34, likes: 5 },
     createdAt: new Date("2024-10-28"),
     updatedAt: new Date("2024-11-09"),
   },
@@ -89,7 +91,7 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "draft",
     visibility: "private",
-    stats: { views: 0, messages: 0, favorites: 0 },
+    stats: { views: 0, messages: 0, favorites: 0, likes: 0 },
     createdAt: new Date("2024-11-10"),
     updatedAt: new Date("2024-11-10"),
   },
@@ -101,10 +103,10 @@ const mockListings: MyListing[] = [
     location: "Valparaíso",
     username: "eventplanner",
     lifecycle: "active",
-    visibility: "groups",
+    visibility: "group",
     groupIds: ["g2", "g3"], // Tech Lovers + Deportes Viña
     eventTypeId: "black-friday", // Black Friday event
-    stats: { views: 890, messages: 67, favorites: 123 },
+    stats: { views: 890, messages: 67, favorites: 123, likes: 45 },
     createdAt: new Date("2024-10-25"),
     updatedAt: new Date("2024-11-08"),
   },
@@ -117,7 +119,7 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "paused",
     visibility: "public",
-    stats: { views: 345, messages: 12, favorites: 18 },
+    stats: { views: 345, messages: 12, favorites: 18, likes: 2 },
     createdAt: new Date("2024-10-20"),
     updatedAt: new Date("2024-11-05"),
   },
@@ -131,7 +133,7 @@ const mockListings: MyListing[] = [
     username: "antiqueseller",
     lifecycle: "active",
     visibility: "public",
-    stats: { views: 234, messages: 5, favorites: 12 },
+    stats: { views: 234, messages: 5, favorites: 12, likes: 3 },
     createdAt: new Date("2024-09-15"),
     updatedAt: new Date("2024-10-15"),
   },
@@ -143,9 +145,9 @@ const mockListings: MyListing[] = [
     location: "Valparaíso",
     username: "tourguide",
     lifecycle: "active",
-    visibility: "groups",
+    visibility: "group",
     groupIds: ["g1", "g5"], // Vecinos Valparaíso + Familia & Amigos
-    stats: { views: 678, messages: 34, favorites: 56 },
+    stats: { views: 678, messages: 34, favorites: 56, likes: 12 },
     createdAt: new Date("2024-10-30"),
     updatedAt: new Date("2024-11-11"),
   },
@@ -159,13 +161,13 @@ const mockListings: MyListing[] = [
     username: "techseller",
     lifecycle: "expired",
     visibility: "public",
-    stats: { views: 456, messages: 8, favorites: 15 },
+    stats: { views: 456, messages: 8, favorites: 15, likes: 4 },
     createdAt: new Date("2024-08-15"),
     updatedAt: new Date("2024-09-15"),
   },
 ];
 
-export function MyListingsPage({ onBack, listings = mockListings, groups = mockGroups, eventTypes = mockEventTypes, activeTab = "all", onTabChange, onNavigateToDetail, onEditListing }: MyListingsPageProps) {
+export function MyListingsPage({ onBack, listings = mockListings, groups = mockGroups, eventTypes = mockEventTypes, activeTab = "all", onTabChange, onNavigateToDetail, onEditListing, embedded }: MyListingsPageProps) {
   // ✅ Phase 5.1: Global Action Modal for confirmations
   const { dispatch } = useGlobalActionModal();
   
@@ -180,7 +182,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
   // ✅ Phase 5.1: Confirm Dialog State removed - now handled by GAM
 
   // Advanced filters state
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<any>({
     status: new Set(),
     type: new Set(),
     visibility: new Set(),
@@ -221,9 +223,20 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
     return (listing as any).isReported === true;
   };
 
-  // Helper: Check if listing is expiring (within 7 days)
+  // Helper: Check if listing is expiring (unified with lifecycle logic)
   const isListingExpiring = (listing: MyListing) => {
-    // Check if listing has daysUntilExpiration field and it's <= 7
+    const stage = (listing as any).lifecycle_stage;
+    if (stage === 'expiring_soon') return true;
+    if (stage === 'expired') return false;
+
+    const now = new Date();
+    const expiringSoonAt = (listing as any).expiring_soon_at ? new Date((listing as any).expiring_soon_at) : null;
+    const expiresAt = (listing as any).expires_at ? new Date((listing as any).expires_at) : null;
+
+    // ⏰ Expiring Soon: now >= expiringSoonAt AND now < expiresAt
+    if (expiringSoonAt && (now >= expiringSoonAt) && (!expiresAt || now < expiresAt)) return true;
+    
+    // Legacy fallback
     const days = (listing as any).daysUntilExpiration;
     return typeof days === 'number' && days <= 7;
   };
@@ -350,7 +363,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
       visibility: {
         "public": "🌍 Public",
         "private": "🔒 Private",
-        "groups": "👥 Groups",
+        "group": "👥 Groups",
       },
     };
 
@@ -579,7 +592,7 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
       context: {
         listingId: listing.id,
         listingTitle: listing.title,
-        listingImage: listing.image,
+        listingImage: listing.thumbnail || '',
         productId: listing.id,
       },
       onConfirm: () => {
@@ -618,108 +631,82 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
   }), [listings]);
 
   return (
-    <div className="flex flex-col h-full bg-background max-w-[480px] lg:max-w-[1024px] mx-auto">
-      {/* Status bar removed - PWA/WebView mobile */}
-      
-      {/* Header with Search and Tabs */}
-      <MyListingsHeader
-        onBack={onBack}
-        counts={counts}
-        selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
-      />
+    <StandardPageLayout
+      header={
+        <MyListingsHeader
+          onBack={onBack}
+          counts={counts}
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+          embedded={embedded}
+        />
+      }
+      maxWidth="lg"
+      className="bg-background"
+      contentClassName="p-0 !max-w-[640px]"
+    >
+      <div className="flex flex-col min-h-full">
+        {/* Search and Filter Bar */}
+        <SearchAndFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeFilterCount={activeFilterCount}
+          onOpenFilterSheet={() => setIsFilterSheetOpen(true)}
+        />
 
-      {/* Search and Filter Bar */}
-      <SearchAndFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeFilterCount={activeFilterCount}
-        onOpenFilterSheet={() => setIsFilterSheetOpen(true)}
-      />
-
-      {/* Filter Chips */}
-      {filterChips.length > 0 && (
-        <div className="px-4 py-2 bg-muted/30 border-b flex-shrink-0">
-          <div className="flex flex-wrap gap-2">
-            {filterChips.map((chip) => (
-              <button
-                key={chip.key}
-                onClick={chip.onRemove}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs hover:bg-primary/20 transition-colors"
-              >
-                <span>{chip.label}</span>
-                <span className="text-primary/60">×</span>
-              </button>
-            ))}
-            <button
-              onClick={clearAllFilters}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-destructive/10 text-destructive rounded-full text-xs hover:bg-destructive/20 transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Actions Toolbar */}
-      <BulkActionsToolbar
-        isVisible={isSelectionMode}
-        selectedCount={selectedIds.size}
-        onDeselectAll={deselectAll}
-        onBulkPause={handleBulkPause}
-        onBulkArchive={handleBulkArchive}
-        onBulkDelete={handleBulkDelete}
-      />
-
-      {/* Listings List */}
-      <div className="flex-1 overflow-auto">
-        {filteredListings.length === 0 ? (
-          <EmptyState searchQuery={searchQuery} />
-        ) : (
-          <>
-            {/* Mobile: Vertical List */}
-            <div className="divide-y divide-border lg:hidden">
-              {/* Select All Row */}
-              <SelectAllRow
-                totalCount={filteredListings.length}
-                isAllSelected={selectedIds.size === filteredListings.length}
-                onSelectAll={selectAll}
-                onDeselectAll={deselectAll}
-              />
-
-              {/* Listing Rows */}
-              {filteredListings.map((listing, index) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  index={index}
-                  isSelected={selectedIds.has(listing.id)}
-                  onToggleSelection={toggleSelection}
-                  onNavigateToDetail={onNavigateToDetail}
-                  onEdit={onEditListing}
-                  activeTab={selectedTab}
-                  onActionComplete={() => {
-                    // Callback cuando se completa una acción (ej: después de marcar como sold)
-                    // Podríamos actualizar la lista aquí si fuera necesario
-                  }}
-                />
+        {/* Filter Chips */}
+        {filterChips.length > 0 && (
+          <div className="px-4 py-2 bg-muted/30 border-b flex-shrink-0">
+            <div className="flex flex-wrap gap-2">
+              {filterChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  onClick={chip.onRemove}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs hover:bg-primary/20 transition-colors"
+                >
+                  <span>{chip.label}</span>
+                  <span className="text-primary/60">×</span>
+                </button>
               ))}
+              <button
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-destructive/10 text-destructive rounded-full text-xs hover:bg-destructive/20 transition-colors"
+              >
+                Clear All
+              </button>
             </div>
+          </div>
+        )}
 
-            {/* Desktop: Grid Layout */}
-            <div className="hidden lg:block p-4">
-              {/* Select All Row */}
-              <div className="mb-4">
+        {/* Bulk Actions Toolbar */}
+        <BulkActionsToolbar
+          isVisible={isSelectionMode}
+          selectedCount={selectedIds.size}
+          onDeselectAll={deselectAll}
+          onBulkPause={handleBulkPause}
+          onBulkArchive={handleBulkArchive}
+          onBulkDelete={handleBulkDelete}
+        />
+
+        {/* Listings List */}
+        <div className="flex-1">
+          {filteredListings.length === 0 ? (
+            <div className="py-12">
+              <EmptyState searchQuery={searchQuery} />
+            </div>
+          ) : (
+            <>
+              {/* Mobile: Vertical List */}
+              <div className="divide-y divide-border lg:hidden">
+                {/* Select All Row */}
                 <SelectAllRow
                   totalCount={filteredListings.length}
                   isAllSelected={selectedIds.size === filteredListings.length}
                   onSelectAll={selectAll}
                   onDeselectAll={deselectAll}
                 />
-              </div>
 
-              {/* Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {/* Listing Rows */}
                 {filteredListings.map((listing, index) => (
                   <ListingCard
                     key={listing.id}
@@ -732,52 +719,84 @@ export function MyListingsPage({ onBack, listings = mockListings, groups = mockG
                     activeTab={selectedTab}
                     onActionComplete={() => {
                       // Callback cuando se completa una acción (ej: después de marcar como sold)
-                      // Podríamos actualizar la lista aquí si fuera necesario
                     }}
                   />
                 ))}
               </div>
-            </div>
-          </>
+
+              {/* Desktop: Grid Layout */}
+              <div className="hidden lg:block p-4">
+                {/* Select All Row */}
+                <div className="mb-4">
+                  <SelectAllRow
+                    totalCount={filteredListings.length}
+                    isAllSelected={selectedIds.size === filteredListings.length}
+                    onSelectAll={selectAll}
+                    onDeselectAll={deselectAll}
+                  />
+                </div>
+
+                {/* Grid */}
+                <div className="grid grid-cols-1 gap-4">
+                  {filteredListings.map((listing, index) => (
+                    <div
+                      key={listing.id}
+                      className={`h-full border rounded-xl shadow-sm overflow-hidden bg-card hover:bg-muted/50 transition-colors [&>div]:border-none ${
+                        selectedIds.has(listing.id) ? 'border-blue-200 ring-1 ring-blue-100' : 'border-border'
+                      }`}
+                    >
+                      <ListingCard
+                        listing={listing}
+                        index={index}
+                        isSelected={selectedIds.has(listing.id)}
+                        onToggleSelection={toggleSelection}
+                        onNavigateToDetail={onNavigateToDetail}
+                        onEdit={onEditListing}
+                        activeTab={selectedTab}
+                        onActionComplete={() => {
+                          // Callback cuando se completa una acción
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Filter Sheet */}
+        <MyListingsFilterSheet
+          open={isFilterSheetOpen}
+          onOpenChange={setIsFilterSheetOpen}
+          filters={filters}
+          groups={groups}
+          activeFilterCount={activeFilterCount}
+          onStatusChange={(status) => toggleFilter("status", status)}
+          onHasMessagesChange={(val) => setFilters(prev => ({ ...prev, hasMessages: val }))}
+          onIsReportedChange={(val) => setFilters(prev => ({ ...prev, isReported: val }))}
+          onIsExpiringSoonChange={(val) => setFilters(prev => ({ ...prev, isExpiringSoon: val }))}
+          onTypeChange={(type) => toggleFilter("type", type)}
+          onVisibilityChange={(visibility) => toggleFilter("visibility", visibility)}
+          onGroupsScopeChange={(scope) => setFilters(prev => ({ ...prev, groupsScope: scope }))}
+          onGroupToggle={toggleGroupFilter}
+          onHasDiscountChange={(val) => setFilters(prev => ({ ...prev, discounted: val }))}
+          onLowViewsChange={(val) => setFilters(prev => ({ ...prev, lowEngagement: val }))}
+          onHighViewsChange={(val) => setFilters(prev => ({ ...prev, highEngagement: val }))}
+          onClearAll={clearAllFilters}
+        />
+
+        {/* Share to Group Sheet */}
+        {listingToShare && (
+          <ShareToGroupSheet
+            open={isShareToGroupSheetOpen}
+            onOpenChange={setIsShareToGroupSheetOpen}
+            productTitle={listingToShare.title}
+            productId={listingToShare.id}
+          />
         )}
       </div>
-
-      {/* Filter Sheet */}
-      <MyListingsFilterSheet
-        open={isFilterSheetOpen}
-        onOpenChange={setIsFilterSheetOpen}
-        filters={filters}
-        groups={groups}
-        activeFilterCount={activeFilterCount}
-        onStatusChange={(status) => toggleFilter("status", status)}
-        onHasMessagesChange={(val) => setFilters(prev => ({ ...prev, hasMessages: val }))}
-        onIsReportedChange={(val) => setFilters(prev => ({ ...prev, isReported: val }))}
-        onIsExpiringSoonChange={(val) => setFilters(prev => ({ ...prev, isExpiringSoon: val }))}
-        onTypeChange={(type) => toggleFilter("type", type)}
-        onVisibilityChange={(visibility) => toggleFilter("visibility", visibility)}
-        onGroupsScopeChange={(scope) => setFilters(prev => ({ ...prev, groupsScope: scope }))}
-        onGroupToggle={toggleGroupFilter}
-        onHasDiscountChange={(val) => setFilters(prev => ({ ...prev, discounted: val }))}
-        onLowViewsChange={(val) => setFilters(prev => ({ ...prev, lowEngagement: val }))}
-        onHighViewsChange={(val) => setFilters(prev => ({ ...prev, highEngagement: val }))}
-        onClearAll={clearAllFilters}
-      />
-
-      {/* Share to Group Sheet */}
-      {listingToShare && (
-        <ShareToGroupSheet
-          open={isShareToGroupSheetOpen}
-          onOpenChange={setIsShareToGroupSheetOpen}
-          productTitle={listingToShare.title}
-          productId={listingToShare.id}
-        />
-      )}
-
-      {/* Bottom Navigation */}
-      <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
-
-      {/* ✅ Phase 5.1: Confirm Dialog removed - now handled by GAM Provider */}
-    </div>
+    </StandardPageLayout>
   );
 }
 

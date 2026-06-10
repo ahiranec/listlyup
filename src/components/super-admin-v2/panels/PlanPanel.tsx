@@ -16,8 +16,9 @@ interface Plan {
 }
 
 interface PlanPanelProps {
-  plan: Plan;
+  plan: any;
   onClose: () => void;
+  onToggleStatus?: () => void;
 }
 
 export function PlanPanel({ plan, onClose }: PlanPanelProps) {

@@ -16,7 +16,7 @@
 
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { getChatConversation, formatMessageTime, groupMessagesByDay, addMessageToChat, markChatAsRead, type ChatMessage } from '../data/chatMessages';
 import { MarkAsSoldSheet } from './sheets/MarkAsSoldSheet';
 import { DealConfirmedDialog } from './DealConfirmedDialog';
@@ -208,7 +208,7 @@ export function ChatConversationPage({ chatId, onBack, isOwner = false, onViewPr
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto">
+    <div className="h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

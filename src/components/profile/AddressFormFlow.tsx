@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useProfile } from '../../contexts/ProfileContext';
 import { Address } from './types';
 import { validateAddressLabel } from './utils/validation';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface AddressFormFlowProps {
   addressId?: string;
@@ -92,7 +92,7 @@ export function AddressFormFlow({ addressId, onBack }: AddressFormFlowProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

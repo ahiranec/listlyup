@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { defaultFilters } from '../components/filters/constants';
 import type { FilterOptions } from '../components/filters/types';
 import type { CanonicalListing } from '../types/canonical';

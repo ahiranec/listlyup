@@ -13,19 +13,19 @@
 
 export type ListingType = 'product' | 'service' | 'event';
 
-export type OfferMode = 
-  | 'sell' 
-  | 'trade' 
-  | 'giveaway' 
-  | 'sell_or_trade' 
-  | 'for_sale' 
-  | 'for_rent' 
-  | 'free' 
+export type OfferMode =
+  | 'sell'
+  | 'trade'
+  | 'giveaway'
+  | 'sell_or_trade'
+  | 'for_sale'
+  | 'for_rent'
+  | 'free'
   | 'paid';
 
 export type VisibilityMode = 'public' | 'groups_only';
 
-export type ListingStatus = 'active' | 'paused' | 'sold';
+export type ListingStatus = 'active' | 'paused' | 'sold' | 'pending' | 'draft' | 'expired' | 'archived';
 
 export type ContactMethod = 'in_app_chat' | 'whatsapp' | 'website' | 'social_media';
 
@@ -39,6 +39,12 @@ export type ProductCondition = 'new' | 'like-new' | 'good' | 'fair' | 'for-parts
 
 export type TicketType = 'free' | 'paid';
 
+export interface ListingMedia {
+  url: string;
+  sort_order: number;
+  media_type: 'image' | 'video';
+}
+
 /**
  * Canonical Listing Interface
  * Aligned with backend schema
@@ -47,56 +53,67 @@ export interface CanonicalListing {
   // Core Identity
   id: string;
   owner_user_id: string;
-  
+  owner_user?: any; // To be refined or kept as any for flexibility if CurrentUser is in index.ts
+
   // Classification
   listing_type: ListingType;
   offer_mode: OfferMode;
-  
+
   // Basic Info
   title: string;
   description: string;
   category: string;
   subcategory?: string;
   tags: string[];
-  
+
   // Media
   primary_image_url: string;
-  
+  media?: ListingMedia[];
+
   // Pricing
   price_amount?: number;
   price_currency?: string;
   condition?: ProductCondition;
   pricing_model?: PricingModel;
-  
+
   // Location
   listing_location_id: string; // Reference to locations table
-  
+  location_name?: string;
+  latitude?: number;
+  longitude?: number;
   // Visibility
   visibility_mode: VisibilityMode;
-  
+
   // Contact
   contact_methods: ContactMethod[];
   contact_whatsapp_phone?: string;
   contact_website_url?: string;
   contact_social_url?: string;
-  
+
   // Access
   access_mode: AccessMode[];
-  
+
   // Event-Specific
   start_date?: string;
   end_date?: string;
   event_time_text?: string;
   event_duration_type?: EventDurationType;
   ticket_type?: TicketType;
-  
+
   // Service-Specific
   business_hours?: string;
-  
+
   // Lifecycle
   status: ListingStatus;
   created_at: string;
   updated_at: string;
+
+  // Extended Lifecycle
+  refreshed_at?: string | null;
+  expiring_soon_at?: string | null;
+  expires_at?: string | null;
+  refresh_count?: number | null;
+  lifecycle_stage?: 'active' | 'expiring_soon' | 'expired';
 }
 
 // ============================================================================
@@ -115,7 +132,7 @@ export interface CanonicalUser {
   bio?: string;
   phone?: string;
   profile_location_id: string;
-  
+
   // Publishing Defaults
   default_contact_method: ContactMethod;
   default_whatsapp_phone?: string;
@@ -124,7 +141,7 @@ export interface CanonicalUser {
   default_access_mode: AccessMode[];
   default_visibility: VisibilityMode;
   default_location_id: string;
-  
+
   // Localization
   language: string;
   region: string;
@@ -238,7 +255,7 @@ export function mapLegacyTypeToCanonical(legacyType: string): {
     'service': { listing_type: 'service', offer_mode: 'for_sale' },
     'event': { listing_type: 'event', offer_mode: 'free' }, // Default to free, adjust if paid
   };
-  
+
   return mapping[legacyType] || { listing_type: 'product', offer_mode: 'sell' };
 }
 
@@ -246,30 +263,33 @@ export function mapLegacyTypeToCanonical(legacyType: string): {
  * Maps canonical listing_type + offer_mode back to legacy type
  * (for backward compatibility during transition)
  */
-export function mapCanonicalToLegacyType(listing_type: ListingType, offer_mode: OfferMode): string {
+export function mapCanonicalToLegacyType(
+  listing_type: ListingType, 
+  offer_mode: OfferMode
+): "sale" | "trade" | "free" | "sale_or_trade" | "rent" | "service" | "event" {
   if (listing_type === 'service') return 'service';
   if (listing_type === 'event') return 'event';
-  
+
   // Product types
-  const modeMap: Record<string, string> = {
+  const modeMap: Record<string, "sale" | "trade" | "free" | "sale_or_trade" | "rent"> = {
     'sell': 'sale',
     'trade': 'trade',
     'giveaway': 'free',
     'sell_or_trade': 'sale_or_trade',
     'for_rent': 'rent',
   };
-  
+
   return modeMap[offer_mode] || 'sale';
 }
 
 /**
- * Maps legacy contactModes to canonical contact_methods
+ * Maps legacy contact_methods to canonical contact_methods
  */
-export function mapLegacyContactModes(legacyModes?: string[]): ContactMethod[] {
+export function mapLegacycontact_methods(legacyModes?: string[]): ContactMethod[] {
   if (!legacyModes) return ['in_app_chat'];
-  
+
   return legacyModes
-    .map(mode => {
+    .map((mode): ContactMethod | null => {
       if (mode === 'chat') return 'in_app_chat';
       if (mode === 'whatsapp') return 'whatsapp';
       return null;
@@ -278,7 +298,7 @@ export function mapLegacyContactModes(legacyModes?: string[]): ContactMethod[] {
 }
 
 /**
- * Maps canonical contact_methods back to legacy contactModes
+ * Maps canonical contact_methods back to legacy contact_methods
  */
 export function mapCanonicalContactToLegacy(canonical: ContactMethod[]): string[] {
   return canonical.map(method => {
@@ -304,11 +324,11 @@ export function mapCanonicalVisibilityToLegacy(canonical: VisibilityMode): strin
 }
 
 /**
- * Maps legacy deliveryModes to canonical access_mode
+ * Maps legacy access_mode to canonical access_mode
  */
 export function mapLegacyDeliveryToAccess(legacyDelivery?: string[]): AccessMode[] {
   if (!legacyDelivery) return ['pickup'];
-  
+
   return legacyDelivery
     .map(mode => {
       if (mode === 'shipping') return 'delivery'; // shipping → delivery
@@ -322,7 +342,7 @@ export function mapLegacyDeliveryToAccess(legacyDelivery?: string[]): AccessMode
 }
 
 /**
- * Maps canonical access_mode back to legacy deliveryModes
+ * Maps canonical access_mode back to legacy access_mode
  */
 export function mapCanonicalAccessToLegacy(canonical: AccessMode[]): string[] {
   return canonical; // Values align except shipping was removed

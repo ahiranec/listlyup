@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
 import { Edit, Pause, Play, Trash2, Share2, Copy, X } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { ConfirmActionDialog } from '../action-center/ConfirmActionDialog';
 
 interface CampaignSettingsSheetProps {

@@ -9,6 +9,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { useMapsService } from '../../lib/providers/ServiceProvider';
+import { useProfile } from '../../contexts/ProfileContext';
 import type { Location, GeocodingResult } from '../../lib/services/types';
 import type { CurrentUser } from '../../types';
 import type { ListingType } from './types';
@@ -35,9 +36,10 @@ export function LocationStepV2({
   onBack,
 }: LocationStepV2Props) {
   const mapsService = useMapsService();
+  const { profile } = useProfile();
   
   // State
-  const hasProfileLocation = currentUser?.location?.city && currentUser?.location?.region;
+  const hasProfileLocation = profile.addresses.length > 0;
   const [source, setSource] = useState<LocationSource>(hasProfileLocation ? 'profile' : 'gps');
   const [localLocation, setLocalLocation] = useState<Location | null>(location);
   const [localPrecision, setLocalPrecision] = useState(locationPrecision);
@@ -66,6 +68,21 @@ export function LocationStepV2({
     }
   }, [listingType, currentUser?.accountType]);
   
+  // Debounced search
+  useEffect(() => {
+    // Only search if we are in search tab and have enough characters
+    if (source !== 'search' || !searchQuery.trim() || searchQuery.length < 3) {
+      if (searchQuery.length === 0) setSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 600); // 600ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, source]);
+  
   // Sync with parent
   useEffect(() => {
     onDataChange({
@@ -76,17 +93,58 @@ export function LocationStepV2({
   
   // Auto-set profile location when profile source is selected
   useEffect(() => {
-    if (source === 'profile' && currentUser?.location && !localLocation) {
-      setLocalLocation({
-        latitude: -33.0458, // Mock Viña del Mar
-        longitude: -71.6197,
-        address: `${currentUser.location.city}, ${currentUser.location.region}`,
-        city: currentUser.location.city,
-        region: currentUser.location.region,
-        country: currentUser.location.country || 'Chile',
-      });
-    }
-  }, [source, currentUser?.location]);
+    const setProfileLocation = async () => {
+      if (source === 'profile' && hasProfileLocation && !localLocation) {
+        setIsLoading(true);
+        
+        // Buscar primero la dirección por defecto, si no la primera
+        const addressToUse = profile.addresses.find(a => a.isDefaultForPublishing) || profile.addresses[0];
+        
+        if (addressToUse) {
+          // Si ya tiene coordenadas, cargar directamente (no geocodificar de nuevo)
+          const hasCoords = addressToUse.coordinates && 
+                           addressToUse.coordinates.latitude !== 0 && 
+                           addressToUse.coordinates.longitude !== 0;
+
+          if (hasCoords) {
+            setLocalLocation({
+              latitude: addressToUse.coordinates.latitude,
+              longitude: addressToUse.coordinates.longitude,
+              address: addressToUse.formattedAddress,
+              city: addressToUse.city,
+              region: addressToUse.region,
+              country: addressToUse.country,
+              placeId: addressToUse.placeId,
+            });
+            setIsLoading(false);
+          } else {
+            // Si no tiene coordenadas, intentar geocodificar el texto
+            const addressText = addressToUse.formattedAddress;
+            const result = await mapsService.geocode(addressText);
+            
+            if (result.success && result.data) {
+              setLocalLocation(result.data.location);
+            } else {
+              // Fallback
+              setLocalLocation({
+                latitude: null,
+                longitude: null,
+                address: addressToUse.formattedAddress,
+                city: addressToUse.city,
+                region: addressToUse.region,
+                country: addressToUse.country,
+              });
+            }
+            setIsLoading(false);
+          }
+        } else {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    setProfileLocation();
+  }, [source, hasProfileLocation, profile.addresses, mapsService]);
   
   const handleSourceChange = (newSource: LocationSource) => {
     setSource(newSource);
@@ -95,15 +153,9 @@ export function LocationStepV2({
     setSearchQuery('');
     
     // Auto-trigger actions
-    if (newSource === 'profile' && currentUser?.location) {
-      setLocalLocation({
-        latitude: -33.0458,
-        longitude: -71.6197,
-        address: `${currentUser.location.city}, ${currentUser.location.region}`,
-        city: currentUser.location.city,
-        region: currentUser.location.region,
-        country: currentUser.location.country || 'Chile',
-      });
+    if (newSource === 'profile' && hasProfileLocation) {
+      // Logic handled by useEffect above
+      setLocalLocation(null); // Reset to trigger effect properly
     } else if (newSource === 'gps') {
       handleGetGPS();
     }
@@ -119,7 +171,7 @@ export function LocationStepV2({
       setLocalLocation(result.data);
       
       if (result.fallbackUsed) {
-        setError('Using demo location. Enable Maps in Settings for real GPS.');
+        setError('🌐 Running in Demo Mode. Results are simulated.');
       }
     } else {
       setError(result.error || 'Could not get location');
@@ -149,8 +201,23 @@ export function LocationStepV2({
     setIsLoading(false);
   };
   
-  const handleSelectResult = (result: GeocodingResult) => {
-    setLocalLocation(result.location);
+  const handleSelectResult = async (result: GeocodingResult) => {
+    // If we don't have coordinates (light result), fetch details
+    if (result.placeId && (result.location.latitude === null || result.location.latitude === undefined)) {
+      setIsLoading(true);
+      setError(null);
+      
+      const detailsResult = await mapsService.getPlaceDetails(result.placeId);
+      
+      if (detailsResult.success && detailsResult.data) {
+        setLocalLocation(detailsResult.data.location);
+      } else {
+        setError(detailsResult.error || 'Failed to get location details');
+      }
+      setIsLoading(false);
+    } else {
+      setLocalLocation(result.location);
+    }
     setSearchResults([]);
   };
   
@@ -189,23 +256,28 @@ export function LocationStepV2({
           {/* Tab Content: PROFILE */}
           <TabsContent value="profile" className="mt-3">
             {hasProfileLocation ? (
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">
-                    ✓ Using profile location
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-gray-900">
-                  {currentUser?.location?.city}, {currentUser?.location?.region}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {currentUser?.location?.country || 'Chile'}
-                </p>
-              </div>
+              (() => {
+                const addressToUse = profile.addresses.find(a => a.isDefaultForPublishing) || profile.addresses[0];
+                return (
+                  <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">
+                        ✓ Using address: {addressToUse.label}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {addressToUse.formattedAddress}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {[addressToUse.city, addressToUse.region, addressToUse.country].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                );
+              })()
             ) : (
               <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <p className="text-sm text-muted-foreground">
-                  No profile location set. Go to your profile settings to add one.
+                  No profile addresses saved. Go to your profile settings to add one.
                 </p>
               </div>
             )}
@@ -298,10 +370,14 @@ export function LocationStepV2({
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 mb-1">Selected Location</p>
                 <p className="text-sm text-gray-700 mb-1">
-                  {localLocation.address || `${localLocation.city}, ${localLocation.region}`}
+                  {localLocation.address || 
+                   [localLocation.city, localLocation.region].filter(Boolean).join(", ") || 
+                   "Ubicación sin dirección"}
                 </p>
-                <p className="text-xs text-gray-500 font-mono">
-                  {localLocation.latitude.toFixed(4)}, {localLocation.longitude.toFixed(4)}
+                <p className="text-xs text-muted-foreground font-mono bg-white/50 px-2 py-1 rounded inline-block">
+                  {localLocation.latitude !== null && localLocation.latitude !== undefined && localLocation.longitude !== null && localLocation.longitude !== undefined
+                    ? `📍 ${Number(localLocation.latitude).toFixed(4)}, ${Number(localLocation.longitude).toFixed(4)}`
+                    : '🏢 Text-only location (No GPS)'}
                 </p>
               </div>
             </div>

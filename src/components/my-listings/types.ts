@@ -10,6 +10,7 @@ import type {
 
 export interface MyListing {
   id: string;
+  userId?: string; // Added userId
   title: string;
   type: ListingType;
   offerType?: OfferType;
@@ -86,7 +87,7 @@ export const lifecycleConfig: Record<ListingLifecycle, LifecycleConfig> = {
 // MVP-ALIGNED: Only Public and Groups for My Listings
 export const visibilityConfig: Record<ListingVisibility, VisibilityConfig> = {
   public: { icon: "🌍", label: "Public" },
-  groups: { icon: "👥", label: "Groups" },
+  group: { icon: "👥", label: "Groups" },
   private: { icon: "🔒", label: "Private" }, // Keep for backward compatibility but not shown in filters
 };
 

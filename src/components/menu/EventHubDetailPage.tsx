@@ -15,7 +15,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
 import { motion } from 'motion/react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { EventHubSettingsSheet } from '../events/EventHubSettingsSheet';
 import { RequestCard } from '../shared/RequestCard';
 import { ConfirmActionDialog } from '../action-center/ConfirmActionDialog';
@@ -255,7 +255,7 @@ export function EventHubDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[1024px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

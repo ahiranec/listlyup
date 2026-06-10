@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
+import { ResponsiveModal } from '../shared/ResponsiveModal';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -120,17 +120,30 @@ export function ActionQuickSheet({
     }
   };
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-w-[480px] mx-auto">
-        <SheetHeader className="mb-4">
-          <SheetTitle>{action.quickSheetTitle || action.label}</SheetTitle>
-          <SheetDescription>
-            {action.confirmDescription || `Fill in the details to ${action.label.toLowerCase()}`}
-          </SheetDescription>
-        </SheetHeader>
+  const sheetTitle = action.quickSheetTitle || action.label;
+  const sheetDescription =
+    action.confirmDescription || `Fill in the details to ${action.label.toLowerCase()}`;
 
-        <div className="space-y-4">
+  return (
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={sheetTitle}
+      description={sheetDescription}
+      desktopMaxWidth="max-w-md"
+      mobileHeight="h-[70vh]"
+    >
+      {/* Mobile: fill the sheet (header top, fields scroll, footer pinned bottom).
+          Desktop (lg): natural compact height inside the centered dialog. */}
+      <div className="flex flex-col flex-1 min-h-0 lg:flex-none p-6">
+        {/* Header */}
+        <div className="mb-5 space-y-1">
+          <h2 className="text-lg font-semibold leading-snug">{sheetTitle}</h2>
+          <p className="text-sm text-muted-foreground">{sheetDescription}</p>
+        </div>
+
+        {/* Fields */}
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
               <Label htmlFor={field.name}>
@@ -140,21 +153,22 @@ export function ActionQuickSheet({
               {renderField(field)}
             </div>
           ))}
-
-          <div className="flex gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} className="flex-1">
-              {action.confirmLabel || action.label}
-            </Button>
-          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        {/* Footer */}
+        <div className="flex gap-2 pt-6">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} className="flex-1">
+            {action.confirmLabel || action.label}
+          </Button>
+        </div>
+      </div>
+    </ResponsiveModal>
   );
 }

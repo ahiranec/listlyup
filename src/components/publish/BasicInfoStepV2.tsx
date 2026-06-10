@@ -626,31 +626,15 @@ export function BasicInfoStepV2(props: BasicInfoStepV2Props) {
                 </div>
               )}
               
-              {/* Time - Start and End */}
+              {/* Event Schedule (Free-text replacement for rigid time pickers) */}
               <div className="space-y-1.5">
-                <Label>Time *</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Input
-                      id="event-time"
-                      type="time"
-                      placeholder="Start"
-                      value={props.eventTime || ''}
-                      onChange={(e) => props.onDataChange({ ...props, eventTime: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Start</p>
-                  </div>
-                  <div>
-                    <Input
-                      id="event-end-time"
-                      type="time"
-                      placeholder="End"
-                      value={props.eventEndTime || ''}
-                      onChange={(e) => props.onDataChange({ ...props, eventEndTime: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">End</p>
-                  </div>
-                </div>
+                <Label htmlFor="event-schedule">Event Schedule (Optional)</Label>
+                <Input
+                  id="event-schedule"
+                  placeholder="e.g., Friday 7:00 PM - 11:00 PM, Saturday 11:00 AM - 8:00 PM"
+                  value={props.eventTime || ''}
+                  onChange={(e) => props.onDataChange({ ...props, eventTime: e.target.value })}
+                />
               </div>
               
               {/* Event Category */}

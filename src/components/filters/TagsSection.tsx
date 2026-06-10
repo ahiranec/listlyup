@@ -48,7 +48,7 @@ export function TagsSection({ filters, isOpen, onToggle, onUpdate }: TagsSection
 
   return (
     <FilterSection
-      title="Tags / Hashtags"
+      title="Hashtags"
       icon={Hash}
       isOpen={isOpen}
       onToggle={onToggle}
@@ -58,7 +58,7 @@ export function TagsSection({ filters, isOpen, onToggle, onUpdate }: TagsSection
       <div className="space-y-4">
         {/* Include Tags */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-2 block">Include Tags:</Label>
+          <Label className="text-xs text-muted-foreground mb-2 block">Include Hashtags:</Label>
           <div className="flex gap-2">
             <Input
               placeholder="Add tag..."
@@ -88,7 +88,7 @@ export function TagsSection({ filters, isOpen, onToggle, onUpdate }: TagsSection
 
         {/* Exclude Tags */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-2 block">Exclude Tags:</Label>
+          <Label className="text-xs text-muted-foreground mb-2 block">Exclude Hashtags:</Label>
           <div className="flex gap-2">
             <Input
               placeholder="Add tag to exclude..."

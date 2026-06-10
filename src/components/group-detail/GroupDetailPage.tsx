@@ -17,7 +17,7 @@
  */
 
 import { useState, startTransition } from "react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { GroupHeader } from "./GroupHeader";
 import { GroupHero } from "./GroupHero";
 import { GroupInfoSection } from "./GroupInfoSection";
@@ -53,6 +53,7 @@ interface GroupDetailPageProps {
   onPublishToGroup?: (groupId: string) => void; // ✅ NEW: Open PublishFlow with pre-selected group
   allProducts?: CanonicalListing[]; // ✅ CANONICAL: Receive canonical listings for filtering
   onNavigateToChat?: (chatId: string) => void; // ✅ DUAL FLOW: Navigate to moderation chat
+  isPlatformAdmin?: boolean; // ✅ NEW: Phase 4B - Platform admin flag for advanced moderation
 }
 
 // Mock data (en producción vendría del backend)
@@ -349,6 +350,7 @@ export function GroupDetailPage({
   onPublishToGroup,
   allProducts = [], // ✅ CANONICAL: Default empty array
   onNavigateToChat, // ✅ DUAL FLOW: Chat navigation handler
+  isPlatformAdmin = false, // ✅ PHASE 4B: Platform admin flag
 }: GroupDetailPageProps) {
   // ✅ Phase 5.1: Global Action Modal for confirmations
   const { dispatch } = useGlobalActionModal();
@@ -531,7 +533,7 @@ export function GroupDetailPage({
   };
 
   const handleViewAllProducts = () => {
-    setMemberTab("products");
+    setMemberTab("listings");
     if (onNavigateToProducts) {
       onNavigateToProducts(groupId);
     }
@@ -547,7 +549,7 @@ export function GroupDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-[480px] lg:max-w-[1280px] mx-auto">
+    <div className="min-h-screen bg-background max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Header */}
       <GroupHeader
         groupName={group.name}
@@ -615,7 +617,7 @@ export function GroupDetailPage({
         open={isMemberActionsOpen}
         onOpenChange={setIsMemberActionsOpen}
         member={selectedMember}
-        currentUserRole={userRole}
+        currentUserRole={["member", "moderator", "admin"].includes(userRole) ? (userRole as any) : undefined}
         userAdminGroups={userAdminGroups}
         onViewProfile={(memberId) => {
           toast.info(`Viewing profile of member ${memberId} - to be implemented`);

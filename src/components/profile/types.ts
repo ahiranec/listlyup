@@ -11,6 +11,10 @@ export interface Address {
   label: string; // "Casa", "Oficina", "Warehouse", etc.
   type: 'house' | 'building' | 'warehouse' | 'other';
   formattedAddress: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  placeId?: string;
   coordinates: {
     latitude: number;
     longitude: number;

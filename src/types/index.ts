@@ -246,7 +246,7 @@ export interface Product {
   rating?: number;
   groupIds?: string[];
   ownerId?: string;
-  contactModes?: ('chat' | 'phone' | 'whatsapp')[];
+  contact_methods?: ('chat' | 'phone' | 'whatsapp')[];
   phoneNumber?: string;
   description?: string;
   eventDate?: string;

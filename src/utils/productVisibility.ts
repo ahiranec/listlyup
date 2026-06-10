@@ -6,6 +6,8 @@
 
 import type { CanonicalListing } from "../types/canonical";
 import type { CurrentUser } from "../types";
+import type { Product } from "../data/products";
+import { productToCanonical } from "./canonicalAdapters";
 
 /**
  * Determines if a user can view a specific listing based on visibility rules
@@ -62,6 +64,16 @@ export function canUserViewCanonicalListing(
 
   // Default: listing is not visible
   return false;
+}
+
+/**
+ * Legacy adapter for components still using Product type
+ */
+export function canUserViewProduct(
+  product: Product,
+  currentUser: CurrentUser | null
+): boolean {
+  return canUserViewCanonicalListing(productToCanonical(product), currentUser, 'detail');
 }
 
 /**

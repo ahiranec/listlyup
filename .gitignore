@@ -1,1 +1,16 @@
 node_modules
+.env.local
+build/
+dist/
+
+# Temporary audit / scratch artifacts (local only)
+scratch/
+scripts/
+scratch-*.mjs
+scratch-*.ts
+audit*.json
+audit*.mjs
+fetch-*.mjs
+list-tables.mjs
+diff*.txt
+check*.txt

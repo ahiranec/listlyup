@@ -8,6 +8,7 @@ import { Edit, MapPin, Package, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import type { PublishFormData } from './types';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface PreviewStepV2Props {
   mode?: 'create' | 'edit';
@@ -89,7 +90,7 @@ export function PreviewStepV2({
               </h3>
               {formData.price && (
                 <p className="text-xl font-bold text-primary mt-1">
-                  ${formData.price}
+                  {formatPrice(formData.price, formData.currency)}
                 </p>
               )}
             </div>
@@ -124,30 +125,35 @@ export function PreviewStepV2({
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  {formData.location.city}, {formData.location.region}
+                  {formData.location.address || 
+                   [formData.location.city, formData.location.region].filter(Boolean).join(", ") || 
+                   (formData.location.latitude && formData.location.longitude 
+                     ? `Coordenadas (${Number(formData.location.latitude).toFixed(4)}, ${Number(formData.location.longitude).toFixed(4)})` 
+                     : "Sin ubicación")}
                 </span>
               </div>
             )}
             
             {/* Delivery & Contact */}
             <div className="space-y-2">
-              {formData.deliveryModes.length > 0 && (
+              {formData.access_mode && formData.access_mode.length > 0 && (
                 <div className="flex items-center gap-2 text-sm">
                   <Package className="w-4 h-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    {formData.deliveryModes.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(', ')}
+                    {formData.access_mode.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(', ')}
                   </span>
                 </div>
               )}
               
-              {formData.contactModes.length > 0 && (
+              {formData.contact_methods && formData.contact_methods.length > 0 && (
                 <div className="flex items-center gap-2 text-sm">
                   <MessageCircle className="w-4 h-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    {formData.contactModes.map(m => {
-                      if (m === 'chat') return 'In-app messages';
-                      if (m === 'phone') return 'Phone';
+                    {formData.contact_methods.map(m => {
+                      if (m === 'in_app_chat') return 'In-app messages';
                       if (m === 'whatsapp') return 'WhatsApp';
+                      if (m === 'website') return 'Website';
+                      if (m === 'social_media') return 'Social Media';
                       return m;
                     }).join(', ')}
                   </span>

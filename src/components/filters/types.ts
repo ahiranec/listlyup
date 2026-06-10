@@ -36,7 +36,7 @@ export interface FilterOptions {
   sellerType: "all" | "individual" | "store";
   specificSeller: string;
   
-  // Access Mode (CANONICAL - replaces deliveryModes)
+  // Access Mode (CANONICAL - replaces access_mode)
   access_mode: AccessMode[];
   
   // Contact (CANONICAL)

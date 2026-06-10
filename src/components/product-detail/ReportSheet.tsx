@@ -1,5 +1,5 @@
 import { Flag, AlertCircle, X, Shield, Repeat, DollarSign, User, Package, CheckCircle2, ChevronLeft } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../ui/sheet";
+import { ResponsiveModal } from "../shared/ResponsiveModal";
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
@@ -113,18 +113,16 @@ export function ReportSheet({ open, onOpenChange }: ReportSheetProps) {
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[90vh] p-0">
-          {/* Accessibility Header - Hidden */}
-          <SheetHeader className="sr-only">
-            <SheetTitle>Report Listing</SheetTitle>
-            <SheetDescription>
-              Help us keep the community safe by reporting any issues with this listing
-            </SheetDescription>
-          </SheetHeader>
-
+      <ResponsiveModal
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Report Listing"
+        description="Help us keep the community safe by reporting any issues with this listing"
+        desktopMaxWidth="max-w-md"
+        mobileHeight="h-[90vh]"
+      >
           {/* Header con back button */}
-          <div className="sticky top-0 bg-white border-b z-10">
+          <div className="flex-none bg-white border-b z-10">
             <div className="flex items-center h-14 px-4">
               <button
                 onClick={handleCancel}
@@ -150,7 +148,7 @@ export function ReportSheet({ open, onOpenChange }: ReportSheetProps) {
             </div>
           </div>
           
-          <ScrollArea className="h-[calc(90vh-240px)]">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="px-4 py-4 space-y-3">
               {/* Report Options */}
               {REPORT_OPTIONS.map((option) => {
@@ -215,7 +213,7 @@ export function ReportSheet({ open, onOpenChange }: ReportSheetProps) {
           </ScrollArea>
 
           {/* Footer - Sticky Bottom */}
-          <div className="sticky bottom-0 bg-white border-t p-4 space-y-2">
+          <div className="flex-none bg-white border-t p-4 space-y-2">
             <button
               onClick={handleSubmit}
               disabled={!isValid}
@@ -235,8 +233,7 @@ export function ReportSheet({ open, onOpenChange }: ReportSheetProps) {
               Cancel
             </button>
           </div>
-        </SheetContent>
-      </Sheet>
+      </ResponsiveModal>
 
       {/* Confirmation Modal */}
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>

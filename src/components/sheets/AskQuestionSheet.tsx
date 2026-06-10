@@ -15,11 +15,11 @@
 
 import { useState } from 'react';
 import { HelpCircle, Send, AlertCircle, Sparkles } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
+import { ResponsiveModal } from '../shared/ResponsiveModal';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Separator } from '../ui/separator';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 
 interface AskQuestionSheetProps {
@@ -99,24 +99,27 @@ export function AskQuestionSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent 
-        side="bottom" 
-        className="h-[85vh] max-w-[480px] mx-auto p-0 flex flex-col"
-      >
+    <ResponsiveModal
+      open={open}
+      onOpenChange={handleClose}
+      title="Ask a Public Question"
+      description="Your question will be visible to everyone viewing this listing"
+      desktopMaxWidth="max-w-md"
+      mobileHeight="h-[85vh]"
+    >
         {/* Header */}
-        <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0">
+        <div className="px-4 pt-4 pb-3 border-b flex-none">
           <div className="flex items-center gap-2 mb-1">
             <HelpCircle className="w-5 h-5 text-primary" />
-            <SheetTitle>Ask a Public Question</SheetTitle>
+            <h2 className="font-semibold">Ask a Public Question</h2>
           </div>
-          <SheetDescription className="text-left">
+          <p className="text-sm text-muted-foreground text-left">
             Your question will be visible to everyone viewing this listing
-          </SheetDescription>
-        </SheetHeader>
+          </p>
+        </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
           {/* Product Preview - Compact like ReplySheet */}
           <div className="rounded-lg border bg-card p-3">
             <p className="text-xs text-muted-foreground mb-2">About listing:</p>
@@ -232,7 +235,6 @@ export function AskQuestionSheet({
             Cancel
           </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveModal>
   );
 }

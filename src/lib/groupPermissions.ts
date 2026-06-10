@@ -10,7 +10,7 @@
  * - Usados en: Publish Flow, Invite Actions, Moderation Menus
  */
 
-export type UserRole = "member" | "moderator" | "admin" | "visitor" | "pending";
+export type UserRole = "member" | "moderator" | "admin" | "visitor" | "pending" | "super_admin";
 export type PermissionLevel = "members" | "moderators" | "admins";
 
 export interface GroupPermissions {
@@ -40,6 +40,11 @@ export interface Group {
  * Determina si un usuario puede publicar listings en el grupo
  */
 export function canPost(userRole: UserRole, group: Group): boolean {
+  // Super Admin bypass
+  if (userRole === "super_admin") {
+    return true;
+  }
+
   // Visitors y pending nunca pueden postear
   if (userRole === "visitor" || userRole === "pending") {
     return false;

@@ -11,7 +11,7 @@ export default function AboutPage({ onBack }: AboutPageProps) {
   const BUILD_NUMBER = '2025.01';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
       
       <header className="sticky top-0 z-50 bg-background border-b border-border">

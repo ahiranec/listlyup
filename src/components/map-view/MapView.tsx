@@ -4,20 +4,16 @@
  * Shows geolocated products between Valparaíso and Zapallar
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Header } from '../header';
 import { SearchBar } from '../search-bar';
 import { BottomNav } from '../bottom-nav';
-import { MapBackground } from './MapBackground';
-import { MapControls } from './MapControls';
-import { MapLabels } from './MapLabels';
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
 import { MapPinsLayer } from './MapPinsLayer';
 import { MapBottomCarousel } from './MapBottomCarousel';
 import type { CanonicalListing } from '../../types/canonical';
 import type { FilterOptions } from '../filter-sheet';
 import { useAppState } from '../../hooks/useAppState';
-import { PIN_POSITIONS } from './pinPositions';
-
 interface MapViewProps {
   products: CanonicalListing[];
   onBack: () => void;
@@ -25,6 +21,7 @@ interface MapViewProps {
   notificationCount?: number;
   onNotificationClick?: () => void;
   onProfileClick?: () => void;
+  userAvatar?: string;
   onFilterClick?: () => void;
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
@@ -43,6 +40,7 @@ export function MapView({
   notificationCount,
   onNotificationClick,
   onProfileClick,
+  userAvatar,
   onFilterClick,
   searchQuery = "",
   onSearchChange,
@@ -53,42 +51,28 @@ export function MapView({
   filters,
   onFiltersChange,
 }: MapViewProps) {
-  // Filtrar productos: SOLO los que tienen pin en el mapa
-  // El mapa solo muestra 12-15 productos geolocalizados de PIN_POSITIONS
-  const visibleProducts = products.filter(product => 
-    PIN_POSITIONS.some(pin => pin.id === product.id)
-  );
+  const [bounds, setBounds] = useState<any>(null);
+
+  // Filtrar productos: SOLO los que tienen coordenadas válidas y están dentro del viewport
+  const visibleProducts = products.filter(product => {
+    if (product.latitude == null || product.longitude == null) return false;
+    if (!bounds) return true; // Carga inicial
+    return (
+      product.latitude <= bounds.north &&
+      product.latitude >= bounds.south &&
+      product.longitude <= bounds.east &&
+      product.longitude >= bounds.west
+    );
+  });
   
-  // Calcular el producto inicial más cercano al centro del mapa (50%, 50%)
+  const handleBoundsChanged = (e: any) => {
+    setBounds(e.detail.bounds);
+  };
+  
+  // Producto inicial
   const getInitialProductId = () => {
     if (visibleProducts.length === 0) return null;
-    
-    const MAP_CENTER_X = 50; // 50% left
-    const MAP_CENTER_Y = 50; // 50% top
-    
-    let closestProduct: CanonicalListing | null = null;
-    let closestDistance = Infinity;
-    
-    visibleProducts.forEach(product => {
-      const pin = PIN_POSITIONS.find(p => p.id === product.id);
-      if (!pin) return;
-      
-      const pinX = parseFloat(pin.left);
-      const pinY = parseFloat(pin.top);
-      
-      // Calcular distancia euclidiana al centro
-      const distance = Math.sqrt(
-        Math.pow(pinX - MAP_CENTER_X, 2) + 
-        Math.pow(pinY - MAP_CENTER_Y, 2)
-      );
-      
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestProduct = product;
-      }
-    });
-    
-    return closestProduct?.id || visibleProducts[0].id;
+    return visibleProducts[0].id;
   };
   
   // Estado para el producto activo (sincronización pin ↔ carousel)
@@ -96,16 +80,28 @@ export function MapView({
     getInitialProductId()
   );
   
+  // Agrupar elementos con exactamente la misma lat/lng
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, CanonicalListing[]> = {};
+    visibleProducts.forEach(p => {
+      const key = `${p.latitude},${p.longitude}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    });
+    return Object.entries(groups).map(([key, prods]) => ({
+      key,
+      lat: prods[0].latitude!,
+      lng: prods[0].longitude!,
+      products: prods
+    }));
+  }, [visibleProducts]);
+
+  // Obtener grupo activo actual basado en el ID
+  const activeProduct = visibleProducts.find(p => p.id === activeProductId);
+  const activeGroupKey = activeProduct ? `${activeProduct.latitude},${activeProduct.longitude}` : null;
+  
   // Obtener estado de autenticación
   const { isAuthenticated } = useAppState();
-
-  const handleZoomIn = () => {
-    // Future: Implement zoom functionality
-  };
-
-  const handleZoomOut = () => {
-    // Future: Implement zoom functionality
-  };
 
   const handlePinClick = (productId: string) => {
     setActiveProductId(productId);
@@ -115,70 +111,53 @@ export function MapView({
     setActiveProductId(productId);
   };
 
+  // Subcomponente ligero para mover la cámara cuando cambia el pin activo
+  const MapCameraHandler = () => {
+    const map = useMap("DEMO_MAP_ID");
+    
+    useEffect(() => {
+      if (map && activeProductId) {
+        const p = products.find(x => x.id === activeProductId);
+        if (p && p.latitude && p.longitude) {
+          map.panTo({ lat: p.latitude, lng: p.longitude });
+        }
+      }
+    }, [map, activeProductId]);
+    
+    return null;
+  };
+
   return (
-    <div className="h-screen flex flex-col bg-white">
-      {/* Header */}
-      <div className="flex-shrink-0">
-        <Header
-          logo={logo}
-          notificationCount={notificationCount}
-          onNotificationClick={onNotificationClick}
-          searchValue={searchQuery}
-          onSearchChange={onSearchChange}
-          searchPlaceholder="Search on map..."
-          onMapViewClick={onBack}
-          isMapView={true}
-        />
-      </div>
-
-      {/* Search Bar con botón para volver a Home */}
-      <div className="flex-shrink-0">
-        <SearchBar
-          filters={filters}
-          onFiltersChange={onFiltersChange}
-          onFilterClick={onFilterClick}
-          onMapViewClick={onBack}
-          hasActiveFilters={hasActiveFilters}
-          isMapView={true}
-        />
-      </div>
-
-      {/* Map Container - Simula Google Maps */}
-      <div className="flex-1 relative bg-white flex flex-col">
-        <div className="flex-1 relative overflow-hidden">
-          <MapBackground />
-          
-          <MapControls 
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-          />
-          
-          <MapLabels 
-            locationName="Valparaíso - Zapallar"
-            mapType="satellite"
-          />
-          
+    <div className="flex-1 w-full relative bg-white flex flex-col rounded-xl overflow-hidden shadow-sm h-full">
+      <div className="flex-1 relative overflow-hidden">
+        <Map
+          mapId="DEMO_MAP_ID"
+          defaultZoom={11}
+          defaultCenter={{ lat: -33.0456, lng: -71.6212 }} // Valparaíso as default
+          disableDefaultUI={true}
+          zoomControl={true}
+          onBoundsChanged={handleBoundsChanged}
+          onClick={() => setActiveProductId(null)}
+        >
+          <MapCameraHandler />
           <MapPinsLayer
-            visibleProducts={visibleProducts}
-            activeProductId={activeProductId}
+            groupedProducts={groupedProducts}
+            activeGroupKey={activeGroupKey}
             onPinClick={handlePinClick}
             isAuthenticated={isAuthenticated}
           />
-        </div>
-
-        {/* Bottom Carousel (MVP canonical requirement) */}
-        <div className="flex-shrink-0 mb-16">
-          <MapBottomCarousel
-            products={visibleProducts}
-            activeProductId={activeProductId}
-            onProductChange={handleProductChange}
-            onProductClick={onProductClick}
-          />
-        </div>
+        </Map>
       </div>
 
-      {/* Bottom Navigation */}
-      <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
+      {/* Bottom Carousel (MVP canonical requirement) */}
+      <div className="flex-shrink-0 z-10 relative bg-background/50 backdrop-blur-sm border-t border-border">
+        <MapBottomCarousel
+          products={visibleProducts}
+          activeProductId={activeProductId}
+          onProductChange={handleProductChange}
+          onProductClick={onProductClick}
+        />
+      </div>
     </div>
   );
 }

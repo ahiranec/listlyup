@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { ImagePlus, Globe, Link2, ShieldCheck } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "../ui/sheet";
+import { ResponsiveModal } from "../shared/ResponsiveModal";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { cn } from "../ui/utils";
 
 interface CreateGroupSheetProps {
@@ -86,17 +86,23 @@ export function CreateGroupSheet({ open, onOpenChange, onComplete }: CreateGroup
   ];
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] flex flex-col p-0 rounded-t-xl">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b">
-          <SheetTitle>Create New Group</SheetTitle>
-          <SheetDescription>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create New Group"
+      description="Create a group to connect with people in your community"
+      desktopMaxWidth="max-w-lg"
+      mobileHeight="h-[85vh]"
+    >
+        <div className="px-6 pt-6 pb-4 border-b flex-none">
+          <h2 className="font-semibold">Create New Group</h2>
+          <p className="text-sm text-muted-foreground">
             Create a group to connect with people in your community
-          </SheetDescription>
-        </SheetHeader>
+          </p>
+        </div>
 
         {/* Form */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           <div className="space-y-6">
             {/* Avatar */}
             <div className="flex flex-col items-center gap-3">
@@ -236,7 +242,7 @@ export function CreateGroupSheet({ open, onOpenChange, onComplete }: CreateGroup
           </div>
         </div>
 
-        <SheetFooter className="sticky bottom-0 pt-4 pb-6 px-6 border-t bg-background">
+        <div className="flex-none pt-4 pb-6 px-6 border-t bg-background">
           <div className="flex gap-3 w-full">
             <Button
               variant="outline"
@@ -252,8 +258,7 @@ export function CreateGroupSheet({ open, onOpenChange, onComplete }: CreateGroup
               Create Group
             </Button>
           </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </div>
+    </ResponsiveModal>
   );
 }

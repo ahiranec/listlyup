@@ -1,12 +1,12 @@
 import { startTransition } from 'react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import type { NavigationTab, ViewType } from '../types';
 import type { AuthRequiredContext } from '../components/AuthRequiredSheet';
 import type { PublishFormData } from '../components/publish/types';
 
 interface UseAppNavigationProps {
   setActiveTab: (tab: NavigationTab) => void;
-  setCurrentView: (view: string) => void;
+  setCurrentView: (view: ViewType) => void;
   setIsMenuOpen: (open: boolean) => void;
   setActiveChatId?: (chatId: string) => void;
   setPreviousView?: (view: ViewType) => void; // NEW: Track navigation history

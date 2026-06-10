@@ -6,12 +6,13 @@
 
 import { MapPin, User, Star, ShoppingBag, Repeat, Gift, Folder, Tag } from "lucide-react";
 import type { CanonicalListing } from "../../types/canonical";
-import type { ExtendedProduct } from "./types";
 import { ProductGroupsInfo } from "./ProductGroupsInfo";
+
+import { FALLBACK_SELLER_NAME } from "../../utils/sellerHelpers";
 
 interface ProductMetadataCompactProps {
   product: CanonicalListing;
-  extendedProduct: ExtendedProduct;
+  sellerName: string;
   isOwner?: boolean;
   listingStatus: {
     status: string;
@@ -27,7 +28,7 @@ interface ProductMetadataCompactProps {
 
 export function ProductMetadataCompact({
   product,
-  extendedProduct,
+  sellerName,
   isOwner = false,
   listingStatus,
   timeAgo,
@@ -72,11 +73,10 @@ export function ProductMetadataCompact({
           <>
             <span className="flex items-center gap-1">
               <span
-                className={`w-2 h-2 rounded-full ${
-                  listingStatus.color === "blue"
+                className={`w-2 h-2 rounded-full ${listingStatus.color === "blue"
                     ? "bg-blue-500"
                     : "bg-green-500"
-                }`}
+                  }`}
               />
               {listingStatus.label}
             </span>
@@ -94,7 +94,7 @@ export function ProductMetadataCompact({
       >
         <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-foreground" />
         <span className="text-primary hover:underline">
-          Location not available
+          {product.location_name || "Sin ubicación"}
         </span>
       </button>
 
@@ -105,7 +105,7 @@ export function ProductMetadataCompact({
           onClick={onSellerClick}
           className="touch-target text-primary hover:underline"
         >
-          {extendedProduct.seller?.name || "Unknown"}
+          {sellerName || FALLBACK_SELLER_NAME}
         </button>
         {/* ❌ MVP: Seller rating removed - no rating system in MVP */}
       </div>
@@ -113,30 +113,36 @@ export function ProductMetadataCompact({
       {/* ❌ MVP: Product Rating removed - no rating system in MVP */}
 
       {/* Línea 5: Visibility (Public/Groups) - Solo si es relevante mostrar */}
-      {product.visibility === "groups" && (
-        <ProductGroupsInfo product={product} onGroupClick={onGroupClick} />
+      {(product as any).visibility === "groups" && (
+        <ProductGroupsInfo product={product as any} onGroupClick={onGroupClick} />
       )}
 
       {/* Línea 6: Category + Subcategory */}
-      {extendedProduct.category && (
+      {(product.category || product.subcategory) && (
         <div className="flex items-center gap-1.5 text-xs">
           <Folder className="w-3.5 h-3.5 flex-shrink-0 text-foreground" />
-          <button className="touch-target text-primary hover:underline">
-            {extendedProduct.category.main}
-          </button>
-          <span className="text-muted-foreground"> › </span>
-          <button className="touch-target text-primary hover:underline">
-            {extendedProduct.category.sub}
-          </button>
+          {product.category && (
+            <button className="touch-target text-primary hover:underline">
+              {product.category}
+            </button>
+          )}
+          {product.category && product.subcategory && (
+            <span className="text-muted-foreground"> › </span>
+          )}
+          {product.subcategory && (
+            <button className="touch-target text-primary hover:underline">
+              {product.subcategory}
+            </button>
+          )}
         </div>
       )}
 
       {/* Línea 7: Tags */}
-      {extendedProduct.tags && extendedProduct.tags.length > 0 && (
+      {product.tags && product.tags.length > 0 && (
         <div className="flex items-center gap-1.5 text-xs">
           <Tag className="w-3.5 h-3.5 flex-shrink-0 text-foreground" />
           <div className="flex flex-wrap gap-1.5">
-            {extendedProduct.tags.map((tag, i) => (
+            {product.tags.map((tag, i) => (
               <button
                 key={i}
                 className="touch-target text-primary hover:underline"

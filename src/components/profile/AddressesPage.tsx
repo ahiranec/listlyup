@@ -20,7 +20,7 @@ import {
 } from '../ui/alert-dialog';
 import { useProfile } from '../../contexts/ProfileContext';
 import { ProfileNavigation } from './types';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface AddressesPageProps {
   onBack: () => void;
@@ -66,7 +66,7 @@ export function AddressesPage({ onBack, onNavigate }: AddressesPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-[480px] mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}

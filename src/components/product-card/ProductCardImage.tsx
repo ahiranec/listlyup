@@ -27,7 +27,7 @@ export function ProductCardImage({
   onSaveClick
 }: ProductCardImageProps) {
   return (
-    <div className="relative h-[180px] sm:h-[220px] bg-muted overflow-hidden" data-field="listing-image">
+    <div className="relative aspect-[4/5] bg-muted overflow-hidden" data-field="listing-image">
       <img
         src={image}
         alt={title}

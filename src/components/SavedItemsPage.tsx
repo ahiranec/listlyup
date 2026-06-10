@@ -7,7 +7,7 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Heart, Search, Trash2, ArrowLeft, SlidersHorizontal } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { BottomNav } from './bottom-nav';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -18,6 +18,7 @@ interface SavedItemsPageProps {
   onProductClick: (productId: string) => void;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  embedded?: boolean;
 }
 
 export function SavedItemsPage({
@@ -25,6 +26,7 @@ export function SavedItemsPage({
   onProductClick,
   activeTab = 'home',
   onTabChange = () => {},
+  embedded,
 }: SavedItemsPageProps) {
   const [savedItems, setSavedItems] = useState<SavedItem[]>(getSavedItems());
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,21 +53,23 @@ export function SavedItemsPage({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background max-w-[480px] lg:max-w-[640px] mx-auto w-full">
       {/* Status bar removed - PWA/WebView mobile */}
 
       {/* Header */}
       <div className="bg-background border-b border-border sticky top-0 z-10">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="h-9 w-9"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            {!embedded && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className="h-9 w-9"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            )}
             <div>
               <h1 className="font-semibold">Favorites</h1>
               <p className="text-xs text-muted-foreground">

@@ -21,6 +21,7 @@ import { LanguageRegionPage } from './LanguageRegionPage';
 
 interface ProfileRouterProps {
   onBack: () => void;
+  embedded?: boolean;
 }
 
 function LoadingFallback() {
@@ -34,7 +35,7 @@ function LoadingFallback() {
   );
 }
 
-export function ProfileRouter({ onBack }: ProfileRouterProps) {
+export function ProfileRouter({ onBack, embedded }: ProfileRouterProps) {
   const { currentProfileView, addressEditId, organizationEditId, navigation } = useProfileNavigation(onBack);
 
   return (
@@ -44,6 +45,7 @@ export function ProfileRouter({ onBack }: ProfileRouterProps) {
           <ProfileHub
             onBack={navigation.goBack}
             onNavigate={navigation}
+            embedded={embedded}
           />
         )}
 

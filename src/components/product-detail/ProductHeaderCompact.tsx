@@ -11,23 +11,21 @@ import { motion } from "motion/react";
 import { Badge } from "../ui/badge";
 import { PricingModelBadge } from "../product-card/PricingModelBadge";
 import { DurationBadge } from "../product-card/DurationBadge";
-import type { CanonicalListing } from "../../types/canonical";
-import type { ExtendedProduct } from "./types";
+import { type CanonicalListing, mapCanonicalToLegacyType } from "../../types/canonical";
 import { formatEventDateRange } from "../../utils/helpers";
+import { formatPrice } from "../../utils/formatPrice";
 
 interface ProductHeaderCompactProps {
   product: CanonicalListing;
-  extendedProduct: ExtendedProduct;
   isOwner?: boolean;
 }
 
 export function ProductHeaderCompact({
   product,
-  extendedProduct,
   isOwner = false,
 }: ProductHeaderCompactProps) {
   // Map canonical listing_type + offer_mode to legacy type
-  const legacyType = product.listing_type === 'product' ? product.offer_mode : product.listing_type;
+  const legacyType = mapCanonicalToLegacyType(product.listing_type, product.offer_mode);
   
   // Determinar si es tipo PRODUCT (sale, trade, free, sale_or_trade)
   const isProduct =
@@ -38,7 +36,7 @@ export function ProductHeaderCompact({
 
   // Canonical price display
   const priceDisplay = product.price_amount && product.price_currency 
-    ? `${product.price_amount} ${product.price_currency}` 
+    ? formatPrice(product.price_amount, product.price_currency)
     : undefined;
 
   return (
@@ -70,58 +68,21 @@ export function ProductHeaderCompact({
               ) : legacyType === "trade" ? (
                 <span className="text-xl text-purple-600">For Trade</span>
               ) : (
-                <>
-                  <span className="text-xl text-primary text-[16px]">
-                    {priceDisplay || "0 USD"}
-                  </span>
-                  {extendedProduct.discount && (
-                    <Badge variant="destructive" className="text-xs h-5">
-                      {extendedProduct.discount}% OFF
-                    </Badge>
-                  )}
-                </>
+                <span className="text-xl text-primary text-[16px]">
+                  {priceDisplay || "0"}
+                </span>
               )}
               {legacyType === "sale_or_trade" && (
                 <span className="text-sm text-muted-foreground">or trade</span>
               )}
             </div>
 
-            {/* Línea 2: Precio original + Edit (owner) */}
-            {(extendedProduct.originalPrice || isOwner) && (
+            {/* Línea 2: Edit (owner) */}
+            {isOwner && (
               <div className="flex items-center gap-2 flex-wrap text-xs">
-                {extendedProduct.originalPrice && (
-                  <span className="text-muted-foreground line-through">
-                    {extendedProduct.originalPrice}
-                  </span>
-                )}
-                {isOwner && (
-                  <button className="text-primary ml-auto hover:underline">
-                    Edit Price →
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Línea 3: Negotiable (discreto, secundario) */}
-            {extendedProduct.negotiable && legacyType !== "free" && legacyType !== "trade" && (
-              <div className="text-xs text-muted-foreground">
-                💰 Negotiable
-              </div>
-            )}
-
-            {/* Línea 4: Looking for (si es trade) */}
-            {extendedProduct.lookingFor && extendedProduct.lookingFor.length > 0 && (
-              <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                <Repeat className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="font-medium">Looking for: </span>
-                  {extendedProduct.lookingFor.map((tag, i) => (
-                    <span key={i}>
-                      #{tag}
-                      {i < extendedProduct.lookingFor!.length - 1 && ", "}
-                    </span>
-                  ))}
-                </div>
+                <button className="text-primary ml-auto hover:underline">
+                  Edit Price →
+                </button>
               </div>
             )}
           </>
